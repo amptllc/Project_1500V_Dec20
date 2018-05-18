@@ -1,0 +1,1812 @@
+;----------------------------------------------------------------------------
+;
+;	File:		iar_move_long.s03
+;
+;	Version:	6.00
+;
+;	Created:	19/Aug/02 IOLW [6.00]
+;
+;
+;	Description:	This file contain routines for moving blocks between
+;			the 8051s different memoryspaces.
+;
+;       REVISON INFORMATION
+;
+;       $Revision: 1.19 $
+;
+;       Log information is available at the end of this file
+;
+;----------------------------------------------------------------------------
+
+#include "iar_common.h"
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: All the below functions are expanded through the copy data macro.
+;	           ?MOVE_LONG8_IDATA_IDATA
+;	           ?MOVE_LONG8_IDATA_PDATA
+;	           ?MOVE_LONG8_IDATA_XDATA
+;	           ?MOVE_LONG8_IDATA_CODE
+;	           ?MOVE_LONG8_PDATA_IDATA
+;	           ?MOVE_LONG8_PDATA_PDATA
+;	           ?MOVE_LONG8_PDATA_XDATA
+;	           ?MOVE_LONG8_PDATA_CODE
+;	           ?MOVE_LONG8_XDATA_IDATA
+;	           ?MOVE_LONG8_XDATA_PDATA
+;
+;
+;	Description: Moves a block of bytes, max 256.
+;
+;	Register input:
+;                    A   : Size of the data to move
+;                    @R1 or @DPTR : Points to destination in IDATA, PDATA, XDATA or CODE.
+;                    @R0 or @DPTR : Points to source data in IDATA, PDATA, XDATA or CODE.
+;
+;	Register output:
+;                    A    = Undefined (but always 0).
+;                    R0   = Undefined.
+;                    R1   = Undefined (if used).
+;                    DPTR = Undefined (if used).
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx     Requires DPS: DPTRx 
+;                               Modifies DPTR: DPTRx     Returns  DPS: DPTRx
+;
+;	Stack usage: 1
+;
+;-----------------------------------------------------------------------------
+
+copy_data8 MACRO	dst src dstInstr srcInstr destReg srcReg
+	MODULE	?MOVE_LONG8_\1_\2
+        RSEG    RCODE:CODE:NOROOT
+	PUBLIC	?MOVE_LONG8_\1_\2
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+	cfi_DATA_BLOCK_start ?MOVE_LONG8_\1_\2
+
+	cfi A undefined
+	cfi R0 undefined
+        IF      '\2'='IDATA'
+	cfi R1 undefined
+	ENDIF
+        IF      '\2'='PDATA'
+	cfi R1 undefined
+	ENDIF
+        IF      '\2'='XDATA'
+	cfi DPTR0 undefined
+	ENDIF
+        IF      '\2'='CODE'
+	cfi DPTR0 undefined
+	ENDIF
+
+?MOVE_LONG8_\1_\2:
+	XCH	A,R2
+	PUSH	A
+	cfi_PUSH_REG R2
+move_byte:
+        IF      '\2'='CODE'
+        CLR     A
+	MOVC	A,@A+\6
+        ELSE
+	\4	A,@\6
+        ENDIF
+        \3	@\5,A
+	INC	\5
+	INC	\6
+	DJNZ	R2,move_byte
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R2,A
+	cfi R2 samevalue
+	RET
+
+	cfi_DATA_BLOCK_end ?MOVE_LONG8_\1_\2
+	ENDMOD
+        ENDM
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: ?MOVE_LONG8_XDATA_XDATA
+;                  ?MOVE_LONG8_XDATA_CODE
+;                  ?MOVE_LONG16_XDATA_XDATA
+;                  ?MOVE_LONG16_XDATA_CODE
+;
+;	Description: Moves a block of bytes, max 64k for derivatives that has
+;                    only One DPTR.
+;
+;       NOTE: R3 is used if this macro is called with 16 as second parameter.
+;
+;	Register input:
+;                    A     : Size of the data to move, Low.
+;          if used ( R3    : 1 + Size of the data to move, High. )
+;                    R4    : Points to destination in XDATA, Low.
+;                    R5    : Points to destination in XDATA, High.
+;          if used ( R6    : Points to destination in XDATA, Extended. )
+;                    @DPTR : Points to source data in XDATA or CODE.
+;
+;	Register output:
+;                    A    = Undefined.
+;          if used ( R3   = undefined. )
+;                    R4   = Undefined.
+;                    R5   = Undefined.
+;                  ( R6   = Undefined. )
+;                    DPTR = Undefined.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0 
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: 1
+;
+;-----------------------------------------------------------------------------
+copy_large_large MACRO dst src
+	MODULE	?MOVE_LONG\2_XDATA_\1
+        RSEG    RCODE:CODE:NOROOT
+	PUBLIC	?MOVE_LONG\2_XDATA_\1
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+	cfi_DATA_BLOCK_start ?MOVE_LONG\2_XDATA_\1
+	cfi A undefined
+	IF      '\2'='16'
+	cfi R3 undefined
+	ENDIF
+	cfi R4 undefined
+	cfi R5 undefined
+#ifdef __EXTENDED_DPTR__
+	cfi R6 undefined
+#endif
+	cfi DPTR0 undefined
+
+?MOVE_LONG\2_XDATA_\1:
+	XCH	A,R2
+	PUSH	A
+	cfi_PUSH_REG R2
+move_byte:
+        ; Read up the source into A register.
+	IF      '\1'='XDATA'
+	MOVX	A,@DPTR
+	ELSE
+	CLR     A
+	MOVC	A,@A+DPTR
+	ENDIF
+	INC     DPTR
+
+        XCH     A,DPL
+        XCH     A,R4
+        XCH     A,DPL
+        XCH     A,DPH
+        XCH     A,R5
+        XCH     A,DPH
+#ifdef __EXTENDED_DPTR__
+        XCH     A,?DPX
+        XCH     A,R6
+        XCH     A,?DPX
+#endif
+	MOVX	@DPTR,A
+	INC     DPTR
+	
+        XCH     A,DPL
+        XCH     A,R4
+        XCH     A,DPL
+        XCH     A,DPH
+        XCH     A,R5
+        XCH     A,DPH
+#ifdef __EXTENDED_DPTR__
+        XCH     A,?DPX
+        XCH     A,R6
+        XCH     A,?DPX
+#endif
+	
+	DJNZ	R2,move_byte
+	IF      '\2'='16'
+	DJNZ	R3,move_byte
+	ENDIF
+
+	POP	A
+	cfi_STACK_DEALL 1
+	XCH	A,R2
+	cfi R2 samevalue
+	RET
+
+	cfi_DATA_BLOCK_end ?MOVE_LONG\2_XDATA_\1
+	ENDMOD
+        ENDM
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: ?MOVE_LONG8_XDATA_XDATA_2DPTR
+;                  ?MOVE_LONG8_XDATA_CODE_2DPTR
+;                  ?MOVE_LONG16_XDATA_XDATA_2DPTR
+;                  ?MOVE_LONG16_XDATA_CODE_2DPTR
+;
+;	Description: Moves a block of bytes, max 64k for derivatives that has
+;                    only One DPTR.
+;
+;       NOTE: R3 is used if this macro is called with 16 as second parameter.
+;
+;	Register input:
+;                    A              : Size of the data to move, Low.
+;          if used ( R3             : 1 + Size of the data to move, High. )
+;                    selected @DPTR : Points to source in XDATA or CODE.
+;                    next     @DPTR : Points to destination in XDATA or CODE.
+;
+;	Register output:
+;                    A            = Undefined.
+;          if used ( R3           = undefined. )
+;                    current DPTR = Undefined.
+;                    next    DPTR = Undefined. )
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: pair             Requires DPS: DPTRx (source)
+;                               Modifies DPTR: DPTRx, DPTRy     Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: pair             Requires DPS: DPTRx (source)
+;                               Modifies DPTR: DPTRx, DPTRy     Returns  DPS: DPTRx
+;
+;	Stack usage: 1
+;
+;-----------------------------------------------------------------------------
+copy_large_large_2dptr MACRO dst src
+	MODULE	?MOVE_LONG\2_XDATA_\1_2DPTR
+        RSEG    RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	PUBLIC	?MOVE_LONG\2_XDATA_\1_2DPTR
+
+	cfi_DATA_BLOCK_start ?MOVE_LONG\2_XDATA_\1_2DPTR
+	cfi A undefined
+	IF      '\2'='16'
+	cfi R3 undefined
+	ENDIF
+	cfi DPTR0 undefined
+	cfi DPTR1 undefined
+
+?MOVE_LONG\2_XDATA_\1_2DPTR:
+	XCH	A,R2
+	PUSH	A
+	cfi_PUSH_REG R2
+move_byte:
+        ; Read up the source into A register.
+	IF      '\1'='XDATA'
+	MOVX	A,@DPTR
+	ELSE
+	CLR     A
+	MOVC	A,@A+DPTR
+	ENDIF
+	INC     DPTR
+	
+	TOGGLE_DPTR
+
+	MOVX	@DPTR,A
+	INC     DPTR
+
+	TOGGLE_DPTR
+
+	DJNZ	R2,move_byte
+	IF      '\2'='16'
+	DJNZ	R3,move_byte
+	ENDIF
+
+	POP	A
+	cfi_STACK_DEALL 1
+	XCH	A,R2
+	cfi R2 samevalue
+	RET
+
+	cfi_DATA_BLOCK_end ?MOVE_LONG\2_XDATA_\1_2DPTR
+	ENDMOD
+        ENDM
+
+;=============================================================
+;       HERE WE EXPAND THE MODULES DEFINED IN MACRO copy_data
+;=============================================================
+        copy_data8  IDATA,IDATA,MOV,MOV,R1,R0
+        copy_data8  IDATA,PDATA,MOV,MOVX,R1,R0
+        copy_data8  IDATA,XDATA,MOV,MOVX,R0,DPTR
+        copy_data8  IDATA,CODE,MOV,MOVC,R0,DPTR
+        
+        copy_data8  PDATA,IDATA,MOVX,MOV,R1,R0
+        copy_data8  PDATA,PDATA,MOVX,MOVX,R1,R0
+        copy_data8  PDATA,XDATA,MOVX,MOVX,R0,DPTR
+        copy_data8  PDATA,CODE,MOVX,MOVC,R0,DPTR
+        
+        copy_data8  XDATA,IDATA,MOVX,MOV,DPTR,R0
+        copy_data8  XDATA,PDATA,MOVX,MOVX,DPTR,R0
+
+        copy_large_large  XDATA,8
+        copy_large_large  CODE,8
+        copy_large_large  XDATA,16
+        copy_large_large  CODE,16
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+        copy_large_large_2dptr XDATA,8
+        copy_large_large_2dptr CODE,8
+        copy_large_large_2dptr XDATA,16
+        copy_large_large_2dptr CODE,16
+#endif
+
+#define GP1L	R1
+#define	GP1M	R2
+#define GP1H	R3
+
+#define GP2L	R4
+#define	GP2M	R5
+#define GP2H	R6
+
+#define	SIZE_H	R7
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?MOVE_LONG_IDATA_GPTR
+;
+;	Description: Move an object from GENERIC to IDATA
+;
+;	Register input:
+;		R0   Pointer to dest (IDATA).
+;		GP1  R3:R2:R1 pointer to src
+;		R7   Nr of bytes to move
+;
+;	Register output:
+;		R0   pointer to dest
+;
+;	Register changed:
+;               Carry = Undefined
+;		A
+;
+;       Multiple DPTR
+;               DPTR/DPS: Unchanged
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?MOVE_LONG_IDATA_GPTR
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MOVE_LONG_IDATA_GPTR
+	EXTERN	?MOVE_LONG8_IDATA_IDATA
+	EXTERN	?MOVE_LONG8_IDATA_XDATA
+	EXTERN	?MOVE_LONG8_IDATA_CODE
+#if (__NUMBER_OF_DPTRS__ > 1)
+        EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+#endif
+	cfi_DATA_BLOCK_start ?MOVE_LONG_IDATA_GPTR
+	cfi A  undefined
+	cfi R0 undefined
+
+
+?MOVE_LONG_IDATA_GPTR:
+	CJNE	GP1H,#0x00,NOT_XDATA
+
+	; IDATA <- XDATA
+	
+	; save regs
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPH0
+        MOV     ?DPX,#0
+#endif
+	MOV	A,R0
+	PUSH	A
+	cfi_PUSH_REG R0
+	; setup src
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; dest already in R0
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_IDATA_XDATA		; R0 = dest, DPTR = src
+
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R0,A
+	cfi R0 samevalue
+#ifdef __EXTENDED_DPTR__
+	POP ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+NOT_XDATA:
+	CJNE	GP1H,#0x01,NOT_IDATA
+
+	; IDATA <- IDATA
+
+	; save regs
+	MOV	A,R0
+	PUSH	A
+	cfi_PUSH_REG R0
+	MOV	A,R1
+	PUSH	A
+	cfi_PUSH_REG R1
+	; setup src and dest
+	MOV	A,GP1L				; XCH GP1L(R1) and R0
+	XCH	A,R0
+	MOV	GP1L,A
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_IDATA_IDATA		; R1 = dest, R0 = src
+	; restore saved regs
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R1,A
+	cfi R1 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R0,A
+	cfi R0 samevalue
+	RET
+
+NOT_IDATA:
+	; IDATA <- CODE
+
+	; save regs
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+#endif
+	MOV	A,R0
+	PUSH A
+	cfi_PUSH_REG R0
+
+	; setup src
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; dest already in R0
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_IDATA_CODE		; R0 = dest, DPTR = src
+
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R0,A
+	cfi R0 samevalue
+#ifdef __EXTENDED_DPTR__
+        POP     ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+	cfi_DATA_BLOCK_end ?MOVE_LONG_IDATA_GPTR
+
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?MOVE_LONG_PDATA_GPTR
+;
+;	Description: Move an object from GENERIC to PDATA
+;
+;	Register input:
+;		R0       = Pointer to dest (PDATA).
+;		R3:R2:R1 = pointer to src
+;		R7       = Number of elements to move
+;
+;	Register output:
+;		R0       = pointer to dest (same as in)
+;		R3:R2:R1 = pointer to src  (same as in)
+;		R7       = Number of elements to move (same as in)
+;
+;	Register changed:
+;               Carry = Undefined
+;		A
+;
+;       Multiple DPTR
+;               DPTR/DPS: Unchanged
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?MOVE_LONG_PDATA_GPTR
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MOVE_LONG_PDATA_GPTR
+	EXTERN	?MOVE_LONG8_PDATA_IDATA
+	EXTERN	?MOVE_LONG8_PDATA_XDATA
+	EXTERN	?MOVE_LONG8_PDATA_CODE
+#if (__NUMBER_OF_DPTRS__ > 1)
+        EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+#endif
+	cfi_DATA_BLOCK_start ?MOVE_LONG_PDATA_GPTR
+	cfi A undefined
+
+?MOVE_LONG_PDATA_GPTR:
+	CJNE	GP1H,#0x00,NOT_XDATA
+
+	; PDATA <- XDATA
+
+	; save regs
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+#endif
+	MOV	A,R0
+	PUSH	A
+	cfi_PUSH_REG R0
+	; setup src
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; dest already in R0
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_PDATA_XDATA		; R0 = dest, DPTR = src
+
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R0,A
+	cfi R0 samevalue
+#ifdef __EXTENDED_DPTR__
+        POP     ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+NOT_XDATA:
+	CJNE	GP1H,#0x01,NOT_IDATA
+
+	; PDATA <- IDATA
+
+	; save regs
+	MOV	A,R0
+	PUSH	A
+	cfi_PUSH_REG R0
+	MOV	A,R1
+	PUSH	A
+	cfi_PUSH_REG R1
+	; setup src and dest
+	MOV	A,GP1L				; XCH GP1L(R1) and R0
+	XCH	A,R0
+	MOV	GP1L,A
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_PDATA_IDATA		; R1 = dest, R0 = src
+	; restore saved regs
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R1,A
+	cfi R1 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R0,A
+	cfi R0 samevalue
+	RET
+
+
+NOT_IDATA:
+	; PDATA <- CODE
+
+	; save regs
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+#endif
+	MOV	A,R0
+	PUSH    A
+	cfi_PUSH_REG R0
+	; setup src
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; dest already in R0
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_PDATA_CODE		; R0 = dest, DPTR = src
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R0,A
+	cfi R0 samevalue
+#ifdef __EXTENDED_DPTR__
+        POP     ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+	cfi_DATA_BLOCK_end ?MOVE_LONG_PDATA_GPTR
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?MOVE_LONG_XDATA_GPTR
+;
+;	Description: Move an object from GENERIC to XDATA
+;
+;	Register input:
+;		(R6):R5:R4 = Pointer to dest (XDATA).
+;		R3:R2:R1   = pointer to src
+;		R7         = Number of elements (low)
+;		R0         = Number of elements (high + 1)
+;
+;	Register output:
+;		(R6):R5:R4 = pointer to dest (same as in)
+;		R3:R2:R1   = pointer to src  (same as in)
+;
+;	Register changed:
+;		A     = Undefined
+;               Carry = Undefined
+;
+;       Multiple DPTR:
+;               DPTR/DPS: Unchanged
+;
+;	Stack usage: 7 + ?MOVE_LONG16_XDATA_XDATA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?MOVE_LONG_XDATA_GPTR
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MOVE_LONG_XDATA_GPTR
+	EXTERN	?MOVE_LONG8_XDATA_IDATA
+	EXTERN	?MOVE_LONG16_XDATA_XDATA
+	EXTERN	?MOVE_LONG16_XDATA_CODE
+#if (__NUMBER_OF_DPTRS__ > 1)
+        EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+#endif
+	cfi_DATA_BLOCK_start ?MOVE_LONG_XDATA_GPTR
+	cfi A undefined
+
+?MOVE_LONG_XDATA_GPTR:
+	CJNE	GP1H,#0x00,NOT_XDATA
+
+	; XDATA <- XDATA
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+        MOV	A,R6
+	PUSH	A
+	cfi_PUSH_REG R6
+#endif
+	MOV	A,R3
+	PUSH	A
+	cfi_PUSH_REG R3
+	MOV	A,R4
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+	; setup src
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; dest already in R5:R4
+	; setup size
+	MOV	A,R0
+	MOV	R3,A
+	MOV	A,R7
+	CALL	?MOVE_LONG16_XDATA_XDATA	; (R6:)R5:R4 = dest, DPTR = src
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+	cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+	cfi R4 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R3,A
+	cfi R3 samevalue
+#ifdef __EXTENDED_DPTR__
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R6,A
+	cfi R6 samevalue
+        POP     ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+NOT_XDATA:
+	CJNE	GP1H,#0x01,NOT_IDATA
+
+	; XDATA <- IDATA
+
+	; save regs
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH    DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+#endif
+	MOV     A,R3
+	PUSH	A
+	cfi_PUSH_REG R3
+	MOV	A,R4
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+	; setup src
+	MOV	A,GP1L
+	MOV	R0,A
+	; setup dest
+	MOV	DPL,R4
+	MOV     DPH,R5
+	; setup size
+	MOV     A,R7
+	CALL	?MOVE_LONG8_XDATA_IDATA		; DPTR = dest, R0 = src
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+	cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+	cfi R4 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R3,A
+	cfi R3 samevalue
+#ifdef __EXTENDED_DPTR__
+        POP     ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP     DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+NOT_IDATA:
+	; XDATA <- CODE
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+        MOV	A,R6
+	PUSH	A
+	cfi_PUSH_REG R6
+#endif
+	MOV	A,R3
+	PUSH	A
+	cfi_PUSH_REG R3
+	MOV	A,R4
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+	; dest already in R5:R4
+	; setup src
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; dest already in R0
+	; setup size
+	MOV 	A,R0
+	MOV	R3,A
+	MOV	A,R7
+	CALL	?MOVE_LONG16_XDATA_CODE		; (R6:)R5:R4 = dest, DPTR = src
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+	cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+	cfi R4 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R3,A
+	cfi R3 samevalue
+#ifdef __EXTENDED_DPTR__
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R6,A
+	cfi R6 samevalue
+        POP     ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+	cfi_DATA_BLOCK_end ?MOVE_LONG_XDATA_GPTR
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?MOVE_LONG_GPTR_IDATA
+;
+;	Description: Move an object from IDATA to GENERIC
+;
+;	Register input:
+;		GP1  R3:R2:R1 points to dest
+;		R0   Pointer to src (IDATA).
+;		R7   low byte of size
+;
+;	Register output:
+;		GP1   pointer to dest
+;
+;	Register changed:
+;               Carry = Undefined
+;		A
+;		R0
+;
+;       Multiple DPTR:
+;               DPTR/DPS: Unchanged
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?MOVE_LONG_GPTR_IDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MOVE_LONG_GPTR_IDATA
+	EXTERN	?MOVE_LONG8_IDATA_IDATA
+	EXTERN	?MOVE_LONG8_XDATA_IDATA
+#if (__NUMBER_OF_DPTRS__ > 1)
+        EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+#endif
+
+	cfi_DATA_BLOCK_start ?MOVE_LONG_GPTR_IDATA
+	cfi A undefined
+	cfi R0 undefined
+
+?MOVE_LONG_GPTR_IDATA:
+	CJNE	GP1H,#0x00,NOT_XDATA
+
+	; XDATA <- IDATA
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+#endif
+
+	; setup dest
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; src already in R0
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_XDATA_IDATA		; DPTR = dest, R0 = src
+#ifdef __EXTENDED_DPTR__
+	POP ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+NOT_XDATA:
+	CJNE	GP1H,#0x01,NOT_IDATA
+
+	; IDATA <- IDATA
+
+	; save regs
+	MOV	A,R1
+	PUSH	A
+	cfi_PUSH_REG R1
+	; src already in R0
+	; dest already in R1
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_IDATA_IDATA		; R1 = dest, R0 = src
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R1,A
+	cfi R1 samevalue
+	RET
+	
+NOT_IDATA:
+	; CODE <- IDATA
+	RET
+
+	cfi_DATA_BLOCK_end ?MOVE_LONG_GPTR_IDATA
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?MOVE_LONG_GPTR_PDATA
+;
+;	Description: Move an object from PDATA to GENERIC
+;
+;	Register input:
+;		GP1  R3:R2:R1 points to dest
+;		R0   Pointer to src (PDATA).
+;		R7    low byte of size
+;
+;	Register output:
+;		GP1   pointer to dest
+;
+;	Register changed:
+;               Carry = Undefined
+;		A
+;		R0
+;
+;       Multiple DPTR
+;               DPTR/DPS: Unchanged
+;
+;	Stack usage: 4 + MOVE_LONG usage
+;
+;-----------------------------------------------------------------------------
+	MODULE	?MOVE_LONG_GPTR_PDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MOVE_LONG_GPTR_PDATA
+	EXTERN	?MOVE_LONG8_IDATA_PDATA
+	EXTERN	?MOVE_LONG8_XDATA_PDATA
+#if (__NUMBER_OF_DPTRS__ > 1)
+        EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+#endif
+
+	cfi_DATA_BLOCK_start ?MOVE_LONG_GPTR_PDATA
+	cfi A  undefined
+	cfi R0 undefined
+
+?MOVE_LONG_GPTR_PDATA:
+	CJNE	GP1H,#0x00,NOT_XDATA
+
+	; XDATA <- PDATA
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+#endif
+
+	; setup dest
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; src already in R0
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_XDATA_PDATA		; DPTR = dest, R0 = src
+#ifdef __EXTENDED_DPTR__
+	POP ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+NOT_XDATA:
+	CJNE	GP1H,#0x01,NOT_IDATA
+
+	; IDATA <- PDATA
+
+	; save regs
+	MOV	A,R1
+	PUSH	A
+	cfi_PUSH_REG R1
+	; src already in R0
+	; dest already in R1
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_IDATA_PDATA		; R1 = dest, R0 = src
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R1,A
+	cfi R1 samevalue
+	RET
+	
+NOT_IDATA:
+	; CODE <- IDATA
+	RET
+
+	cfi_DATA_BLOCK_end ?MOVE_LONG_GPTR_PDATA
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?MOVE_LONG_GPTR_XDATA
+;
+;	Description: Move an object from XDATA to GENERIC
+;
+;	Register input:
+;		GP1  R3:R2:R1 points to dest
+;		DPTR Pointer to src (XDATA).
+;		R7   low byte of size
+;		R0   high byte of size
+;
+;	Register output:
+;		GP1   pointer to dest
+;
+;	Register changed:
+;		A
+;		R0
+;		DPTR
+;               Carry = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0 
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?MOVE_LONG_GPTR_XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MOVE_LONG_GPTR_XDATA
+	EXTERN	?MOVE_LONG8_IDATA_XDATA
+	EXTERN	?MOVE_LONG16_XDATA_XDATA
+
+	cfi_DATA_BLOCK_start ?MOVE_LONG_GPTR_XDATA
+	cfi A  undefined
+	cfi R0 undefined
+	cfi DPTR0 undefined
+
+?MOVE_LONG_GPTR_XDATA:
+	CJNE	GP1H,#0x00,NOT_XDATA
+
+	; XDATA <- XDATA
+
+	; save regs
+	MOV	A,R3
+	PUSH	A
+	cfi_PUSH_REG R3
+	MOV	A,R4
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+#ifdef __EXTENDED_DPTR__
+        MOV	A,R6
+	PUSH	A
+	cfi_PUSH_REG R6
+        MOV     R6,#0
+#endif
+	; setup dest
+	MOV	A,GP1L
+	MOV	R4,A
+	MOV	A,GP1M
+	MOV	R5,A
+	; src already in DPTR
+	; setup high size
+	MOV	A,R0
+	MOV	R3,A
+	MOV	A,R7
+	CALL	?MOVE_LONG16_XDATA_XDATA	; R5:R4 = dest,  DPTR = src
+#ifdef __EXTENDED_DPTR__
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R6,A
+	cfi R6 samevalue
+#endif
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+	cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+	cfi R4 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R3,A
+	cfi R3 samevalue
+	RET
+
+NOT_XDATA:
+	CJNE	GP1H,#0x01,NOT_IDATA
+
+	; IDATA <- XDATA
+	
+	; dest already in DPTR
+	; setup src
+	MOV	A,GP1L
+	MOV	R0,A
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_IDATA_XDATA		; R0 = dest, DPTR = src
+	; fall through
+	
+NOT_IDATA:
+	; CODE <- IDATA
+	RET
+
+	cfi_DATA_BLOCK_end ?MOVE_LONG_GPTR_XDATA
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?MOVE_LONG_GPTR_CODE
+;
+;	Description: Move an object from IDATA to CODE
+;
+;	Register input:
+;		GP1   R3:R2:R1 points to dest
+;		DPTR  Pointer to src (CODE).
+;		R7    low byte of size
+;		R0    high byte of size
+;
+;	Register output:
+;		R0   pointer to dest
+;
+;	Register changed:
+;		A
+;		R0
+;		DPTR
+;               Carry = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0 
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?MOVE_LONG_GPTR_CODE
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MOVE_LONG_GPTR_CODE
+	EXTERN	?MOVE_LONG8_IDATA_CODE
+	EXTERN	?MOVE_LONG16_XDATA_CODE
+
+	cfi_DATA_BLOCK_start ?MOVE_LONG_GPTR_CODE
+	cfi A  undefined
+	cfi R0 undefined
+	cfi DPTR0 undefined
+
+?MOVE_LONG_GPTR_CODE:
+	CJNE	GP1H,#0x00,NOT_XDATA
+
+	; XDATA <- CODE
+
+	; save regs
+	MOV	A,R3
+	PUSH	A
+	cfi_PUSH_REG R3
+	MOV	A,R4
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+#ifdef __EXTENDED_DPTR__
+	MOV	A,R6
+	PUSH	A
+	cfi_PUSH_REG R6
+	MOV	R6,#0
+#endif
+	; setup dest
+	MOV	A,GP1L
+	MOV 	R4,A
+	MOV	A,GP1M
+	MOV	R5,A
+	; src already in DPTR
+	; setup size
+	MOV	A,R0
+	MOV	R3,A
+	MOV	A,R7	
+	CALL	?MOVE_LONG16_XDATA_CODE		; R5:R4 = dest, DPTR = src
+#ifdef __EXTENDED_DPTR__
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R6,A
+	cfi R6 samevalue
+#endif
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+	cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+	cfi R4 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R3,A
+	cfi R3 samevalue
+	RET
+
+NOT_XDATA:
+	CJNE	GP1H,#0x01,NOT_IDATA
+
+	; IDATA <- CODE
+
+	; setup dest
+	MOV	A,GP1L
+	MOV	R0,A
+	; src already in DPTR
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_IDATA_CODE		; R0 = dest, DPTR = src
+	; fall through
+	
+NOT_IDATA:
+	; CODE <- CODE
+	RET
+
+	cfi_DATA_BLOCK_end ?MOVE_LONG_GPTR_CODE
+	ENDMOD
+
+	
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?MOVE_LONG_GPTR_GPTR
+;
+;	Description: Move an object from GENERIC to IDATA
+;
+;	Register input:
+;		GP2  R3:R2:R1 pointer to dest
+;		GP1  R6:R5:R4 pointer to src
+;		R7   low byte of size
+;		R0   high byte of size
+;
+;	Register output:
+;		GP1   pointer to dest
+;
+;	Register changed:
+;		A
+;		R0
+;		GP2
+;               Carry = Undefined
+;
+;       Multiple DPTR
+;               DPTR/DPS:       Unchanged
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?MOVE_LONG_GPTR_GPTR
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MOVE_LONG_GPTR_GPTR
+	EXTERN	?MOVE_LONG8_IDATA_IDATA
+	EXTERN	?MOVE_LONG8_IDATA_PDATA
+	EXTERN	?MOVE_LONG8_IDATA_XDATA
+	EXTERN  ?MOVE_LONG16_XDATA_XDATA
+	EXTERN  ?MOVE_LONG8_XDATA_IDATA
+	EXTERN  ?MOVE_LONG16_XDATA_CODE
+	EXTERN  ?MOVE_LONG8_IDATA_CODE
+#if (__NUMBER_OF_DPTRS__ > 1)
+        EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+#endif
+
+	cfi_DATA_BLOCK_start ?MOVE_LONG_GPTR_GPTR
+	cfi A  undefined
+	cfi R0 undefined
+	cfi R1 undefined
+	cfi R2 undefined
+	cfi R3 undefined
+
+?MOVE_LONG_GPTR_GPTR:
+	CJNE	GP1H,#0x00,NOT_XDATA_SRC
+	CJNE	GP2H,#0x00,NOT_XDATA_XDATA
+
+	;
+	; XDATA SRC
+	;
+
+	; XDATA <- XDATA
+
+	; save regs
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+#endif
+	; dest already already in (R6):R5:R4
+	; load src to DPTR
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; setup return pointer
+	MOV	A,GP2L
+	MOV	GP1L,A
+	MOV	A,GP2M
+	MOV	GP1M,A
+	; setup size
+	MOV	A,R0
+	MOV	R3,A
+	MOV	A,R7
+	CALL	?MOVE_LONG16_XDATA_XDATA	; R5:R4 = dest, DPTR = src
+	; setup return pointer
+	MOV	GP1H,#0x00			; XDATA
+#ifdef __EXTENDED_DPTR__
+	POP ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+NOT_XDATA_XDATA:
+	CJNE	GP2H,#0x01,NOT_IDATA_XDATA
+
+	; IDATA <- XDATA
+
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+#endif
+	; load src to DPTR
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; load dest to R0
+	MOV	A,GP2L
+	MOV	R0,A
+	; setup return pointer
+	MOV	GP1L,A
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_IDATA_XDATA		; R0 = dest, DPTR = src
+	; setup return pointer
+	MOV	GP1M,#0x00
+	MOV	GP1H,#0x01			; IDATA return
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+NOT_IDATA_XDATA:
+	; CODE <- XDATA -> Do nothing
+	RET
+
+
+	;
+	; IDATA SRC
+	;
+
+NOT_XDATA_SRC:
+	CJNE	GP1H,#0x01,NOT_IDATA_SRC
+	CJNE	GP2H,#0x00,NOT_XDATA_IDATA
+
+	; XDATA <- IDATA
+
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+#endif
+	; load src
+	MOV	A,GP1L
+	MOV	R0,A
+	;load dest and return pointer
+	MOV	A,GP2L
+	MOV	DPL,A
+	MOV	GP1L,A
+	MOV	A,GP2M
+	MOV	DPH,A
+	MOV	GP1M,A
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_XDATA_IDATA		; DPTR = dest, R0 = src
+	; setup return pointer
+	MOV	GP1H,0x00			; XDATA
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+NOT_XDATA_IDATA:
+	CJNE	GP2H,#0x01,NOT_IDATA_IDATA
+
+	; IDATA <- IDATA
+
+
+	; setup src
+	MOV	A,GP1L		; R0 <- R1
+	MOV	R0,A
+	; save return pointer and setup dest
+	MOV	A,GP2L	
+	PUSH	A
+	cfi_PUSH_REG GP2L
+	MOV	R1,A		; R1 <- R4
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_IDATA_IDATA		; R1 = dest, R0 = src
+	; setup return pointer
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	GP1L,A
+	MOV	GP1M,#0x00
+	MOV	GP1H,#0x01			; IDATA
+	RET
+	
+NOT_IDATA_IDATA
+	; CODE <- IDATA
+	RET
+
+
+	;
+	; CODE SRC
+	;
+
+NOT_IDATA_SRC:
+	CJNE	GP2H,#0x00,NOT_XDATA_CODE
+
+	; XDATA <- CODE
+
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+#endif
+	; load src
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; dest already in (R6):R5:R4
+	; setup return pointer
+	MOV	A,GP2L
+	MOV	GP1L,A
+	MOV	A,GP2M
+	MOV	GP1M,A
+	; setup size
+	MOV	A,R0
+	MOV	R3,A
+	MOV	A,R7
+	CALL	?MOVE_LONG16_XDATA_CODE		; (R6):R5:R4 = dest, DPTR = src
+	; setup return pointer
+	MOV	GP1H,#0x00			; XDATA
+#ifdef __EXTENDED_DPTR__
+        POP ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+NOT_XDATA_CODE:
+	CJNE	GP2H,#0x01,NOT_IDATA_CODE
+
+	; IDATA <- CODE
+
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        PUSH    ?DPS
+	cfi_PUSH_REG DPSEL
+        SELECT_DPTR0()
+#endif
+	PUSH	DPL
+	cfi_PUSH_REG DPL0
+	PUSH	DPH
+	cfi_PUSH_REG DPH0
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        PUSH    ?DPX
+	cfi_PUSH_REG DPX0
+        MOV     ?DPX,#0
+#endif
+	; load src
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+	; load dest
+	MOV	A,GP2L
+	MOV	R0,A
+	; setup return pointer
+	MOV	GP1L,A
+	; setup size
+	MOV	A,R7
+	CALL	?MOVE_LONG8_IDATA_CODE		; R0 = dest, DPTR = src
+	; setup return pointer
+	MOV	GP1M,#0x00
+	MOV	GP1H,#0x01			; IDATA
+#ifdef __EXTENDED_DPTR__
+        POP ?DPX
+	cfi_STACK_DEALL 1
+	cfi DPX0 samevalue
+#endif
+	POP	DPH
+	cfi_STACK_DEALL 1
+	cfi DPH0 samevalue
+	POP	DPL
+	cfi_STACK_DEALL 1
+	cfi DPL0 samevalue
+#if (defined(__DPTR_SEPARATE__) && (__NUMBER_OF_DPTRS__ > 1))
+        POP     ?DPS
+	cfi_STACK_DEALL 1
+	cfi DPSEL samevalue
+#endif
+	RET
+
+NOT_IDATA_CODE:
+	; CODE <- CODE -> do nothing
+	RET
+        
+	cfi_DATA_BLOCK_end ?MOVE_LONG_GPTR_GPTR
+	ENDMOD
+
+        END
+
+#undef GP1L
+#undef GP1M
+#undef GP1H
+
+#undef GP2L
+#undef GP2M
+#undef GP2H
+
+#undef SIZE_H
+
+
+;
+;   Revision control system
+;       $Id: iar_move_long.s51 1.19 2007/06/07 09:22:00Z larssu Exp $
+;       $Log: iar_move_long.s51 $
+;       Revision 1.19  2007/06/07 09:22:00Z  larssu
+;       NOROOT'ify RCODE segments
+;       Revision 1.18  2004/11/10 16:31:03Z  owi
+;       Revision 1.17  2004/08/02 10:26:48Z  owi
+;       Revision 1.16  2004/03/15 13:15:29Z  owi
+;       Revision 1.15  2003/12/01 14:42:40Z  owi
+;       Revision 1.14  2003/12/01 14:36:59Z  owi
+;       Revision 1.13  2003/11/28 14:33:47Z  owi
+;       Revision 1.12  2003/11/21 12:25:17Z  ola
+;       Revision 1.11  2003/11/13 08:49:34Z  IDAW
+;       A "PUSH DPH" instruction had fallen out...
+;       Revision 1.10  2003/11/12 09:04:52Z  ola
+;       Revision 1.9  2003/09/24 08:46:10Z  ola
+;       Initial revision
+;

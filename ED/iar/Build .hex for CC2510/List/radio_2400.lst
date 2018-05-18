@@ -1,0 +1,406 @@
+###############################################################################
+#                                                                             #
+# IAR 8051 C/C++ Compiler V7.30B/W32                    02/Apr/2018  11:06:42 #
+# Copyright 2004-2007 IAR Systems. All rights reserved.                       #
+#                                                                             #
+#    Core               =  plain                                              #
+#    Code model         =  near                                               #
+#    Data model         =  large                                              #
+#    Calling convention =  xdata reentrant                                    #
+#    Constant location  =  data                                               #
+#    Dptr setup         =  1,16                                               #
+#    Source file        =  E:\Project_1500V_dec20\ED\code\AndStackED\source\r #
+#                          adio_2400.c                                        #
+#    Command line       =  E:\Project_1500V_dec20\ED\code\AndStackED\source\r #
+#                          adio_2400.c -D NDEBUG -D chip=2510 -D LOWER_IMAGE  #
+#                          -D MidString -D MIDSTRING -lCN                     #
+#                          "E:\Project_1500V_dec20\ED\iar\Build .hex for      #
+#                          CC2510\List\" -lA "E:\Project_1500V_dec20\ED\iar\B #
+#                          uild .hex for CC2510\List\" -o                     #
+#                          "E:\Project_1500V_dec20\ED\iar\Build .hex for      #
+#                          CC2510\Obj\" -e -z9 --core=plain --dptr=16,1       #
+#                          --data_model=large --code_model=near               #
+#                          --calling_convention=xdata_reentrant               #
+#                          --place_constants=data --nr_virtual_regs 32 -I     #
+#                          E:\Project_1500V_dec20\ED\iar\..\CODE\AndStackED\I #
+#                          NCLUDE\ -I E:\Project_1500V_dec20\ED\iar\..\CODE\L #
+#                          IBRARY\HAL\INCLUDE\ -I E:\Project_1500V_dec20\ED\i #
+#                          ar\..\CODE\LIBRARY\HAL_BUI\INCLUDE\ -I             #
+#                          C:\IARSystems-CD-730B\8051\INC\                    #
+#    List file          =  E:\Project_1500V_dec20\ED\iar\Build .hex for       #
+#                          CC2510\List\radio_2400.lst                         #
+#    Object file        =  E:\Project_1500V_dec20\ED\iar\Build .hex for       #
+#                          CC2510\Obj\radio_2400.r51                          #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+E:\Project_1500V_dec20\ED\code\AndStackED\source\radio_2400.c
+      1          /*
+      2          +------------------------------------------------------------------------------
+      3          | Purpose:    Functions for radio and packet handling
+      4          +------------------------------------------------------------------------------
+      5          | Decription: All functions related to radio configuration and packet
+      6          |             handling for the packet error rate test application.
+      7          +----------------------------------------------------------------------------*/
+      8          
+      9          /*==== DECLARATION CONTROL ===================================================*/
+     10          /*==== INCLUDES ==============================================================*/
+     11          //#include <string.h>
+     12          #include "hal_main.h"
+     13          #include "main.h"
+     14          #include "parameter_block.h"
+     15          
+     16          /*==== GLOBAL VARS ===========================================================*/
+
+   \                                 In  segment XDATA_Z, align 1, keep-with-next
+     17          INT16 perRssiOffset;             // RSSI offset for receiver, depends on chip model and data rate
+   \                     perRssiOffset:
+   \   000000                DS 2
+   \   000002                REQUIRE __INIT_XDATA_Z
+     18          /*==== PUBLIC FUNCTIONS ======================================================*/
+     19          /******************************************************************************
+     20          * @fn  radioConfigure
+     21          * @brief
+     22          *        Configures the radio, either CC1110 or CC2510, supporting a set
+     23          *        of preset data rates and frequency options. Also, the transmitter's
+     24          *        transmit power level and receiver's RSSI offset is set.
+     25          * Parameters:
+     26          * @param  UINT32 dataRate            Data rate in bits per second (bps)
+     27          * @param  UINT32 frequency           RX/TX radio frequency to use (kHz)
+     28          * @return void
+     29          ******************************************************************************/
+     30          //                                              0x0E  
+     31          // DF0C-DF11                                   MDMCFG4 MDMCFG3 MDMCFG2  MDMCFG1  MDMCFG0  DEVIATN
+     32          //static const 
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+     33          BYTE mdm_rate1[6]                           = { 0x0E,   0x55,   0x73,    0x43,    0x59,    0 };
+   \                     mdm_rate1:
+   \   000000                DS 6
+   \   000006                REQUIRE `?<Initializer for mdm_rate1>`
+   \   000006                REQUIRE __INIT_XDATA_I
+     34          
+     35                                                       // 0x69                    0xC3?
+     36          // DF0C-DF11                                   MDMCFG4 MDMCFG3 MDMCFG2  MDMCFG1  MDMCFG0  DEVIATN
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+     37          static const BYTE mdm_rate3[20]             = { 0x79,   0x7,    0x01,   0x23,    0x59,     0x45, //};   
+   \                     mdm_rate3:
+   \   000000                DS 20
+   \   000014                REQUIRE `?<Initializer for mdm_rate3>`
+   \   000014                REQUIRE __INIT_XDATA_I
+     38          //                                               *        *
+     39          // 12000                                        0x69    0x7
+     40          // 2400                                         0x76    0xA3            0x33               0x51
+     41          // 1200                                         0x75    0xA3
+     42          // DF12-DF1F                                   MCSM2 MCSM1  MCSM0  FOCCFG  BSCFG  AGCCTRL2  AGCCTRL1  AGCCTRL0  FREND1  FREND0  
+     43                                                          0x7,  0x00, 0x14,  0x16,   0x6C,  0x43,     0x40,     0x91,     0x56,   0x10,  
+     44          //                                                    0x20         0x16,   0x6C     *
+     45          // 2400                                                                           0x03
+     46          //                                             FSCAL3  FSCAL2  FSCAL1  FSCAL0
+     47                                                          0xA9,   0x0A,   0x00,   0x11 };
+     48          /*
+     49          // DF0C-DF11                                   MDMCFG4 MDMCFG3 MDMCFG2  MDMCFG1  MDMCFG0  DEVIATN
+     50          static const BYTE mdm_rate3_2400[20]        = { 0x76,   0xA3,   0x01,   0x23,    0x59,     0x51, //};   
+     51          //                                               *        *
+     52          // 12000                                        0x69    0x7
+     53          // 2400                                         0x76    0xA3            0x33               0x51
+     54          // 1200                                         0x75    0xA3
+     55          // DF12-DF1F                                   MCSM2 MCSM1  MCSM0  FOCCFG  BSCFG  AGCCTRL2  AGCCTRL1  AGCCTRL0  FREND1  FREND0  
+     56                                                          0x7,  0x00, 0x14,  0x16,   0x6C,  0x03,     0x40,     0x91,     0x56,   0x10,  
+     57          //                                                    0x20         0x16,   0x6C     *
+     58          // 2400                                                                           0x03
+     59          //                                             FSCAL3  FSCAL2  FSCAL1  FSCAL0
+     60                                                          0xA9,   0x0A,   0x00,   0x11 };
+     61          */
+     62          //                                             TEST2 TEST1 TEST0
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+     63          static const BYTE tst20_defvals[3]          = { 0x81, 0x35, 0x09 }; 
+   \                     tst20_defvals:
+   \   000000                DS 3
+   \   000003                REQUIRE `?<Initializer for tst20_defvals>`
+   \   000003                REQUIRE __INIT_XDATA_I
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+     64          static const BYTE tst1_defvals[3]           = { 0x88, 0x31, 0x09 }; 
+   \                     tst1_defvals:
+   \   000000                DS 3
+   \   000003                REQUIRE `?<Initializer for tst1_defvals>`
+   \   000003                REQUIRE __INIT_XDATA_I
+     65          //                                              0x1D           0xC7                0xB2
+     66          //                                              FOCCFG  BSCFG  AGCCTRL2  AGCCTRL1  AGCCTRL0  FREND1 FREND0 FSCAL3
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+     67          /*static const*/ BYTE foc_bs_agc_rate12[8]  = { 0x1D,   0x1C,  0xC7,     0x40,     0xB2,     0xB6,  0x10,  0xEA };
+   \                     foc_bs_agc_rate12:
+   \   000000                DS 8
+   \   000008                REQUIRE `?<Initializer for foc_bs_agc_rate12>`
+   \   000008                REQUIRE __INIT_XDATA_I
+     68          //                                                                                 0x91      0x56
+     69          //  DF02-     DF04                              PKTLEN          PKTCTRL1  PKTCTRL0
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+     70          static const BYTE pkt_defvals[3]            = { PACKET_LENGTH,  0x85,     0x45 };
+   \                     pkt_defvals:
+   \   000000                DS 3
+   \   000003                REQUIRE `?<Initializer for pkt_defvals>`
+   \   000003                REQUIRE __INIT_XDATA_I
+     71          //                                                              0x80      
+     72          // 2400                                                         0xA0      0x40
+     73          
+     74          
+     75          extern ParameterBlock page;
+     76          // was 200, 5000, 5
+     77          #define MKS_IN_TICK     500
+     78          #define TICKS_IN_SEC    2000
+     79          #define TICKS_IN_MS     2
+     80          extern INT16  _slot;
+     81          extern INT16  _join_slot;
+     82          extern INT16  _gw_delay;
+     83          extern INT16  _loop_delay;
+     84          
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     85          void radioConfigure( BYTE dataRate ) {
+   \                     radioConfigure:
+   \   000000   74F8         MOV     A,#-0x8
+   \   000002   12....       LCALL   ?FUNC_ENTER_XDATA
+   \   000005                ; Saved register size: 8
+   \   000005                ; Auto size: 0
+   \   000005   E9           MOV     A,R1
+   \   000006   FE           MOV     R6,A
+     86              // Set modulation and other radio parameters
+     87              //if( page.use12kbod ){   
+     88                  mymemcpy( (BYTE *)0xDF0C, (BYTE *)mdm_rate3,      20 );  
+   \   000007                ; Setup parameters for call to function mymemcpy
+   \   000007   7914         MOV     R1,#0x14
+   \   000009   7C..         MOV     R4,#(mdm_rate3 & 0xff)
+   \   00000B   7D..         MOV     R5,#((mdm_rate3 >> 8) & 0xff)
+   \   00000D   7A0C         MOV     R2,#0xc
+   \   00000F   7BDF         MOV     R3,#-0x21
+   \   000011   12....       LCALL   mymemcpy
+     89                  _slot         = ( 40 * TICKS_IN_MS );
+   \   000014   90....       MOV     DPTR,#_slot
+   \   000017   12....       LCALL   ?Subroutine0
+     90                  _join_slot    = ( 24 * TICKS_IN_MS );
+   \                     ??CrossCallReturnLabel_0:
+   \   00001A   90....       MOV     DPTR,#_join_slot
+   \   00001D   7430         MOV     A,#0x30
+   \   00001F   12....       LCALL   ??Subroutine0_0
+     91                  _gw_delay     = ( 30 * TICKS_IN_MS );
+   \                     ??CrossCallReturnLabel_1:
+   \   000022   90....       MOV     DPTR,#_gw_delay
+   \   000025   743C         MOV     A,#0x3c
+   \   000027   12....       LCALL   ??Subroutine0_0
+     92                  _loop_delay   = ( 40 * TICKS_IN_MS );
+   \                     ??CrossCallReturnLabel_2:
+   \   00002A   90....       MOV     DPTR,#_loop_delay
+   \   00002D   12....       LCALL   ?Subroutine0
+     93              /*}else{
+     94                  mymemcpy( (BYTE *)0xDF0C, (BYTE *)mdm_rate3_2400, 20 );
+     95                  _slot         = ( 5 * 40 * TICKS_IN_MS );
+     96                  _join_slot    = ( 5 * 24 * TICKS_IN_MS );
+     97                  _gw_delay     = ( 5 * 30 * TICKS_IN_MS );
+     98                  _loop_delay   = ( 5 * 40 * TICKS_IN_MS );
+     99              }*/
+    100              perRssiOffset = 74; FSCTRL1  = 0x0A;  // Frequency synthesizer control.
+   \                     ??CrossCallReturnLabel_3:
+   \   000030   90....       MOV     DPTR,#perRssiOffset
+   \   000033   744A         MOV     A,#0x4a
+   \   000035   12....       LCALL   ??Subroutine0_0
+   \                     ??CrossCallReturnLabel_4:
+   \   000038   740A         MOV     A,#0xa
+   \   00003A   90DF07       MOV     DPTR,#-0x20f9
+   \   00003D   F0           MOVX    @DPTR,A
+    101              if(dataRate > DATA_RATE_3_CC2511 ){
+   \   00003E   EE           MOV     A,R6
+   \   00003F   C3           CLR     C
+   \   000040   940D         SUBB    A,#0xd
+   \   000042   404D         JC      ??radioConfigure_0
+    102                  // Settings from SmartRFStudio for CC2511, VERSION == 0x04
+    103                  // 500 kBaud, MSK modulation, 812 kHz RX filter bandwidth.
+    104                  mymemcpy( (BYTE *) 0xDF0C, (BYTE *) mdm_rate1, 6 );
+   \   000044                ; Setup parameters for call to function mymemcpy
+   \   000044   7906         MOV     R1,#0x6
+   \   000046   7C..         MOV     R4,#(mdm_rate1 & 0xff)
+   \   000048   7D..         MOV     R5,#((mdm_rate1 >> 8) & 0xff)
+   \   00004A   7A0C         MOV     R2,#0xc
+   \   00004C   7BDF         MOV     R3,#-0x21
+   \   00004E   12....       LCALL   mymemcpy
+    105                  FSCTRL1  = 0x10;   // Frequency synthesizer control.
+   \   000051   7410         MOV     A,#0x10
+   \   000053   F0           MOVX    @DPTR,A
+    106                  perRssiOffset = 72;// Set proper RSSI offset for receiver
+   \   000054   90....       MOV     DPTR,#perRssiOffset
+   \   000057   7448         MOV     A,#0x48
+   \   000059   12....       LCALL   ??Subroutine0_0
+    107                  mymemcpy( (BYTE *)0xDF23, (BYTE *)tst1_defvals, 3 );
+   \                     ??CrossCallReturnLabel_5:
+   \   00005C                ; Setup parameters for call to function mymemcpy
+   \   00005C   7903         MOV     R1,#0x3
+   \   00005E   7C..         MOV     R4,#(tst1_defvals & 0xff)
+   \   000060   7D..         MOV     R5,#((tst1_defvals >> 8) & 0xff)
+   \   000062   7A23         MOV     R2,#0x23
+   \   000064   7BDF         MOV     R3,#-0x21
+   \   000066   12....       LCALL   mymemcpy
+    108                  mymemcpy( (BYTE *)0xDF15, (BYTE *)foc_bs_agc_rate12, 8 );
+   \   000069                ; Setup parameters for call to function mymemcpy
+   \   000069   7908         MOV     R1,#0x8
+   \   00006B   7C..         MOV     R4,#(foc_bs_agc_rate12 & 0xff)
+   \   00006D   7D..         MOV     R5,#((foc_bs_agc_rate12 >> 8) & 0xff)
+   \   00006F   7A15         MOV     R2,#0x15
+   \   000071   7BDF         MOV     R3,#-0x21
+   \   000073   12....       LCALL   mymemcpy
+    109                  if( dataRate == DATA_RATE_2_CC2511 ){
+   \   000076   7419         MOV     A,#0x19
+   \   000078   6E           XRL     A,R6
+   \   000079   7023         JNZ     ??radioConfigure_1
+    110                      FSCTRL1  = 0x0A;
+   \   00007B   740A         MOV     A,#0xa
+   \   00007D   90DF07       MOV     DPTR,#-0x20f9
+   \   000080   F0           MOVX    @DPTR,A
+    111                      FSCAL3   = 0xA9;
+   \   000081   74A9         MOV     A,#-0x57
+   \   000083   90DF1C       MOV     DPTR,#-0x20e4
+   \   000086   F0           MOVX    @DPTR,A
+    112                      MDMCFG4  = page.bandwidth250; 
+   \   000087   90....       MOV     DPTR,#(page + 163)
+   \   00008A   E0           MOVX    A,@DPTR
+   \   00008B   90DF0C       MOV     DPTR,#-0x20f4
+   \   00008E   F0           MOVX    @DPTR,A
+   \   00008F   800D         SJMP    ??radioConfigure_1
+    113                  }
+    114              }else mymemcpy( (BYTE *)0xDF23, (BYTE *)tst20_defvals, 3 );
+   \                     ??radioConfigure_0:
+   \   000091                ; Setup parameters for call to function mymemcpy
+   \   000091   7903         MOV     R1,#0x3
+   \   000093   7C..         MOV     R4,#(tst20_defvals & 0xff)
+   \   000095   7D..         MOV     R5,#((tst20_defvals >> 8) & 0xff)
+   \   000097   7A23         MOV     R2,#0x23
+   \   000099   7BDF         MOV     R3,#-0x21
+   \   00009B   12....       LCALL   mymemcpy
+    115              // We use P1_6, P1_7 for our timers, we do not have radio amplifiers 
+    116              zerofill( (BYTE *)0xDF2F, 3 );
+   \                     ??radioConfigure_1:
+   \   00009E                ; Setup parameters for call to function zerofill
+   \   00009E   7903         MOV     R1,#0x3
+   \   0000A0   7A2F         MOV     R2,#0x2f
+   \   0000A2   7BDF         MOV     R3,#-0x21
+   \   0000A4   12....       LCALL   zerofill
+    117              mymemcpy( (BYTE *)0xDF02, (BYTE *)pkt_defvals, 3 );
+   \   0000A7                ; Setup parameters for call to function mymemcpy
+   \   0000A7   7903         MOV     R1,#0x3
+   \   0000A9   7C..         MOV     R4,#(pkt_defvals & 0xff)
+   \   0000AB   7D..         MOV     R5,#((pkt_defvals >> 8) & 0xff)
+   \   0000AD   7A02         MOV     R2,#0x2
+   \   0000AF   7BDF         MOV     R3,#-0x21
+   \   0000B1   12....       LCALL   mymemcpy
+    118              /*
+    119              if( datarate == DATA_RATE_4_CC2511 ){
+    120                  MDMCFG4  = 0x76;
+    121                  MDMCFG3  = 0xA3;  
+    122                  MDMCFG1  = 0x33;  // 6 bytes preamble
+    123                  AGCCTRL2 = 0x03;
+    124                  PKTCTRL1 = 0xA0;  //
+    125                  PKTCTRL0 = 0x40;  // fixed packed length mode
+    126                  PKTLEN   = 32;
+    127                  DEVIATN  = 0x53;  // 64.453125 kHz
+    128              }
+    129              */
+    130              //return;
+    131          }
+   \   0000B4   7F01         MOV     R7,#0x1
+   \   0000B6   02....       LJMP    ?FUNC_LEAVE_XDATA
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+   \                     ?Subroutine0:
+   \   000000   7450         MOV     A,#0x50
+   \                     ??Subroutine0_0:
+   \   000002   F0           MOVX    @DPTR,A
+   \   000003   A3           INC     DPTR
+   \   000004   E4           CLR     A
+   \   000005   F0           MOVX    @DPTR,A
+   \   000006   22           RET
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for mdm_rate1>`:
+   \   000000   0E557343     DB 14, 85, 115, 67, 89, 0
+   \            5900    
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for mdm_rate3>`:
+   \   000000   79070123     DB 121, 7, 1, 35, 89, 69, 7, 0, 20, 22, 108, 67, 64, 145, 86, 16, 169
+   \            59450700
+   \            14166C43
+   \            40915610
+   \            A9      
+   \   000011   0A0011       DB 10, 0, 17
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for tst20_defvals>`:
+   \   000000   813509       DB 129, 53, 9
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for tst1_defvals>`:
+   \   000000   883109       DB 136, 49, 9
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for foc_bs_agc_rate12>`:
+   \   000000   1D1CC740     DB 29, 28, 199, 64, 178, 182, 16, 234
+   \            B2B610EA
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for pkt_defvals>`:
+   \   000000   228545       DB 34, 133, 69
+    132          /*==== END OF FILE ==========================================================*/
+
+   Maximum stack usage in bytes:
+
+     Function       ISTACK PSTACK XSTACK
+     --------       ------ ------ ------
+     radioConfigure     0      0      8
+       -> mymemcpy      0      0     16
+       -> mymemcpy      0      0     16
+       -> mymemcpy      0      0     16
+       -> mymemcpy      0      0     16
+       -> mymemcpy      0      0     16
+       -> zerofill      0      0     16
+       -> mymemcpy      0      0     16
+
+
+   Segment part sizes:
+
+     Function/Label                 Bytes
+     --------------                 -----
+     perRssiOffset                     2
+     mdm_rate1                         6
+     mdm_rate3                        20
+     tst20_defvals                     3
+     tst1_defvals                      3
+     foc_bs_agc_rate12                 8
+     pkt_defvals                       3
+     radioConfigure                  185
+     ?Subroutine0                      7
+     ?<Initializer for mdm_rate1>      6
+     ?<Initializer for mdm_rate3>     20
+     ?<Initializer for tst20_defvals>
+                                       3
+     ?<Initializer for tst1_defvals>
+                                       3
+     ?<Initializer for foc_bs_agc_rate12>
+                                       8
+     ?<Initializer for pkt_defvals>    3
+
+ 
+ 192 bytes in segment NEAR_CODE
+  43 bytes in segment XDATA_I
+  43 bytes in segment XDATA_ID
+   2 bytes in segment XDATA_Z
+ 
+ 235 bytes of CODE  memory
+  45 bytes of XDATA memory
+
+Errors: none
+Warnings: none

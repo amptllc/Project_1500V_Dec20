@@ -1,0 +1,751 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project>
+  <fileVersion>2</fileVersion>
+  <fileChecksum>3577901737</fileChecksum>
+  <configuration>
+    <name>Build .hex for CC2510</name>
+    <outputs>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\hop.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_descriptor_parser.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\radio.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\radio.r51</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdarg.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_lcd.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\hop.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_io_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\main.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\radio.c</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\main.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\reed-solomon.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_interrupt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_main.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\hal_adc_mgmt.r51</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\usb_interrupt.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\aes.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\hop.c</file>
+      <file>$TOOLKIT_DIR$\inc\clib\math.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\float.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_joystick_SmartRF04EB.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_framework.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_suspend.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\reed-solomon.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_button.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_power_clk_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_adc_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_defines.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_standard_requests.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\sysmac.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\reed-solomon.r51</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdio.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\main.r51</file>
+      <file>$PROJ_DIR$\..\hex\rx_print_cc2510.hex</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\radio_gateway.pbd</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_SmartRF04EB.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\hal_adc_mgmt.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_descriptor.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_reg.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\dma.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_interrupt_mgmt.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdlib.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\rf_usb_library_headers.h</file>
+      <file>$TOOLKIT_DIR$\config\lnk_base.xcl</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\reed-solomon.c</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\aes.pbi</file>
+      <file>$TOOLKIT_DIR$\config\lnk51ew_cc2510.xcl</file>
+      <file>$TOOLKIT_DIR$\inc\ioCC2510.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\usb_cdc.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\hal_adc_mgmt.pbi</file>
+      <file>$PROJ_DIR$\..\hex\gw.hex</file>
+      <file>$TOOLKIT_DIR$\inc\clib\string.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\main.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\rf_usb_library_config.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\aes.r51</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\main.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 32</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 13 27 7 25 40 26 47 35 5 24 20 52 39 23 48 15 42 53 37 1 12 21 38 28 22 31 4 29 51 41 18 19</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 13 27 7 25 40 26 47 35 5 24 20 52 39 48 15 42 53 37 1 12 21 38 28 22 31 4 29 51 41 18 19 23</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\radio.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 3</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 2</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 13 27 7 25 40 26 47 35 5 24 20 52 39</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 13 27 7 25 40 26 47 35 5 24 20 52 39</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 33 50</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\aes.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 54</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 45</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 13 27 7 25 40 26 47 35 5 24 20</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 13 27 7 25 40 26 47 35 5 24 20</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\hop.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 6</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 0</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 13 27 7 25 40 26 47 35 5 24 20</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 13 27 7 25 40 26 47 35 5 24 20</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\hex\rx_print_cc2510.hex</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 46 43 54 14 6 32 3 30</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Build .hex for CC2510\Obj\radio_gateway.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 45 49 0 10 2 11</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\hal_adc_mgmt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 14</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 49</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 26 13 27 7 25 40 47 35 5 24 20</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 26 13 27 7 25 40 47 35 5 24 20</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\reed-solomon.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 30</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 11</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 13 27 7 25 40 26 47 35 5 24 20 23 52 39</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 13 27 7 25 40 26 47 35 5 24 20 52 39 23</file>
+        </tool>
+      </inputs>
+    </file>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+    <forcedrebuild>
+      <name>[REBUILD_ALL]</name>
+    </forcedrebuild>
+  </configuration>
+  <configuration>
+    <name>Build .hex for CC2511 Dongle</name>
+    <outputs>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_descriptor_parser.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\dma.r51</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\dma.c</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdarg.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_lcd.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_io_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\main.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\radio.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_interrupt.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\main.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_main.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\usb_interrupt.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\aes.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\hop.c</file>
+      <file>$TOOLKIT_DIR$\inc\clib\math.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\float.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_joystick_SmartRF04EB.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_framework.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\hop.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_suspend.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\reed-solomon.h</file>
+      <file>$TOOLKIT_DIR$\inc\ioCC2511.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\radio.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_button.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_power_clk_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_adc_mgmt.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\aes.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\hal_adc_mgmt.pbi</file>
+      <file>$TOOLKIT_DIR$\lib\clib\cl-pli-nlxd-1e16x01.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_defines.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_standard_requests.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\sysmac.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\radio-old.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\dma.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\aes.pbi</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\radio-old.c</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\hal_adc_mgmt.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\main.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\hop.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\radio_gateway.pbd</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdio.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_SmartRF04EB.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\hal_adc_mgmt.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_descriptor.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_reg.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\reed-solomon.r51</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\dma.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_interrupt_mgmt.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\reed-solomon.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdlib.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\rf_usb_library_headers.h</file>
+      <file>$TOOLKIT_DIR$\config\lnk_base.xcl</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\reed-solomon.c</file>
+      <file>$TOOLKIT_DIR$\inc\ioCC2510.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\usb_cdc.h</file>
+      <file>$PROJ_DIR$\..\hex\gw.hex</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\bou_main.c</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\radio.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\clib\string.h</file>
+      <file>$PROJ_DIR$\lnk51ew_cc2510-gw.xcl</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\main.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\rf_usb_library_config.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\radio-old.r51</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\dma.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 1</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 33</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16 46 60</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16 46 60</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\main.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 37</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 9</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16 60 46 54 11 50 61 43 0 8 17 44 30 19 40 3 31 58 49 14 15</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16 60 46 54 11 50 61 43 0 8 17 44 30 19 40 3 31 58 49 14 15</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\radio.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 22</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 57</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16 60 46</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16 60 46</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 55</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\aes.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 26</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 34</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\hop.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 38</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 18</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\radio-old.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 62</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 32</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 58 31 10 29 5 24 47 25 21 53 41 4 23 16 60 46</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 58 31 10 29 5 24 47 25 21 53 41 4 23 16 60 46</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\radio_gateway.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 34 27 18 9 57</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\hal_adc_mgmt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 36</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 27</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 25 10 29 5 24 47 21 53 41 4 23 16</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 25 10 29 5 24 47 21 53 41 4 23 16</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\reed-solomon.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 45</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 48</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16 60 46 20</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 29 5 24 47 25 21 53 41 4 23 16 60 46 20</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\hex\gw.hex</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 59 51 26 36 38 37 22 28</file>
+        </tool>
+      </inputs>
+    </file>
+  </configuration>
+  <configuration>
+    <name>Debug on CC2510</name>
+    <outputs>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\reed-solomon.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_descriptor_parser.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\main.r51</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdarg.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_lcd.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\aes.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_io_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\main.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\radio.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_interrupt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_main.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\usb_interrupt.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\aes.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\hop.c</file>
+      <file>$TOOLKIT_DIR$\inc\clib\math.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\float.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_joystick_SmartRF04EB.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_framework.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_suspend.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\reed-solomon.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\hal_adc_mgmt.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_button.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_power_clk_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_adc_mgmt.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\aes.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\hal_adc_mgmt.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\hop.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\radio.pbi</file>
+      <file>$TOOLKIT_DIR$\lib\clib\cl-pli-nlxd-1e16x01.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_defines.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_standard_requests.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\sysmac.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\radio.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Exe\radio_gateway.d51</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdio.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_SmartRF04EB.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\hal_adc_mgmt.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_descriptor.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_reg.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\dma.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_interrupt_mgmt.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdlib.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\rf_usb_library_headers.h</file>
+      <file>$TOOLKIT_DIR$\config\lnk_base.xcl</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\reed-solomon.c</file>
+      <file>$TOOLKIT_DIR$\config\lnk51ew_cc2510.xcl</file>
+      <file>$TOOLKIT_DIR$\inc\ioCC2510.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\usb_cdc.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\string.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\hop.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\reed-solomon.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\radio_gateway.pbd</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\main.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\rf_usb_library_config.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\main.pbi</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\main.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 2</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 54</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 10 29 6 22 40 23 46 35 4 21 16 52 39 47 11 42 53 37 1 9 17 38 30 18 34 3 31 48 41 14 15 19</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 29 6 22 40 23 46 35 4 21 16 52 39 47 11 42 53 37 1 9 17 38 30 18 34 3 31 48 41 14 15 19</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\radio.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 32</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 27</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 10 29 6 22 40 23 46 35 4 21 16 52 39</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 29 6 22 40 23 46 35 4 21 16 52 39</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 33</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\aes.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 5</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 24</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 10 29 6 22 40 23 46 35 4 21 16</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 29 6 22 40 23 46 35 4 21 16</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\hop.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 26</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 49</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 10 29 6 22 40 23 46 35 4 21 16</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 29 6 22 40 23 46 35 4 21 16</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug on CC2510\Exe\radio_gateway.d51</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 45 43 5 20 26 2 32 50 28</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\hal_adc_mgmt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 20</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 25</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 23 10 29 6 22 40 46 35 4 21 16</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 23 10 29 6 22 40 46 35 4 21 16</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\reed-solomon.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 50</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 0</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 10 29 6 22 40 23 46 35 4 21 16 52 39 19</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 29 6 22 40 23 46 35 4 21 16 52 39 19</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug on CC2510\Obj\radio_gateway.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 24 25 49 54 27 0</file>
+        </tool>
+      </inputs>
+    </file>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+    <forcedrebuild>
+      <name>[REBUILD_ALL]</name>
+    </forcedrebuild>
+  </configuration>
+</project>
+
+

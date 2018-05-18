@@ -1,0 +1,132 @@
+    MODULE  call_alt_image.s51
+    RSEG RCODE (1)
+    PUBLIC call_alt_image
+    FUNCTION call_alt_image, 0203H
+      
+call_alt_image:           // does nto work correctly with asymmetric images
+    mov   R7, #0x3F
+    push  0x7
+    mov   R7, #0x60
+    push  0x7
+    reti
+    ENDMOD;
+    
+    MODULE  main_asm.s51
+    RSEG RCODE (1)
+    PUBLIC main_asm
+    FUNCTION main_asm, 0203H
+    
+main_asm:
+    //SET_WORD(T1CC0H, T1CC0L, 600 - 1);
+    MOV     0xdb,#0x2
+    MOV     0xda,#0x57
+    //        prescaler = 8      modulo mode            ie
+    //T1CTL   = 0x04  | 0x02;    T1CCTL0 = 0x44;
+    MOV     0xe4,#0x6
+    MOV     0xe5,#0x44
+
+    //mymemset( (BYTE *) 0xF500, 0, 0xFF );
+    //while( cnt-- ) *dst++ = 0;
+    MOV DPTR, #0xF500
+    CLR A
+    MOV R1, #0xFF
+Label_Clear_Mem:
+    MOVX @DPTR, A
+    INC DPTR
+    DJNZ R1, Label_Clear_Mem
+
+    // long jump to code, 1k or 16k ...
+    //si->ticks[ MppCycle ]  = 5;   // 1 ms
+    MOV  DPTR, #0xF500
+    MOV  A, #5
+    MOVX @DPTR, A
+    
+    //si->mppCycle        = _mppCycle;  //_mppCycle == 312 = 0x138  _mppCycle == 300 == 0x12C
+    MOV  DPTR, #0xF55B 
+    // added in order to provide 120 ms MPP cycle
+    MOV  A,    #0x2C
+    //MOV  A,    #0x38
+    MOVX @DPTR, A
+    INC  DPTR
+    MOV  A, #0x1
+    MOVX @DPTR, A
+    //si->firstAdcReading = _firstAdcMeasurement; // _firstAdcMeasurement == 100 = 0x64
+    INC  DPTR
+    MOV  A, #0x64
+    MOVX @DPTR, A
+    
+    //WDCTL = 0x8; 
+    MOV     0xc9,#0x8
+    
+    //HAL_INT_ENABLE(INUM_T1,  INT_ON);       // enable Timer1 interrupt
+    SETB    0xb8.1
+    //INT_GLOBAL_ENABLE( INT_ON );
+    SETB    0xa8.7
+
+    mov   R7, #0x3F
+    push  0x7
+    MOV   DPTR, #0x04D5  // was 0x7CD4
+    MOVX  A,    @DPTR
+    CJNE  A,    #0x8,  high_image
+    mov   R7, #0x8
+    push  0x7
+    ret
+high_image:
+    mov   R7, #0x60
+    push  0x7
+    ret
+    ENDMOD
+    
+    MODULE  inc_running_tick.s51
+    RSEG RCODE (1)
+    PUBLIC inc_running_tick
+    FUNCTION inc_running_tick, 0203H
+inc_running_tick:
+    MOV DPTR, #0xF538
+    MOVX A, @DPTR
+    INC  A
+    MOVX @DPTR, A
+    JNZ  __t1_label1
+    INC DPTR
+    MOVX A, @DPTR
+    INC  A
+    MOVX @DPTR, A
+__t1_label1:
+    RET    
+    ENDMOD
+    
+    MODULE  mpp_work.s51
+    RSEG RCODE (1)
+    PUBLIC mpp_work
+    FUNCTION mpp_work, 0203H
+mpp_work:
+    // P1_0 ^= 1;
+    XRL 0x90, #1
+
+    //*ticks = _mppCycle;
+    //ticks[ 1 ] = _firstAdcMeasurement;                       // 20 ms
+    
+    //*ticks     = si->mppCycle;
+    //ticks[ 1 ] = si->firstAdcReading;
+    MOV DPTR, #0xF500
+    XRL 0x92, #1           // DPTR0 => DPTR1
+    MOV DPTR, #0xF55B
+    MOV R1,   #4
+COPYBYTES:
+    MOVX A, @DPTR           
+    INC DPTR
+    XRL 0x92, #1           // DPTR1 => DPTR0
+    MOVX @DPTR, A
+    INC DPTR
+    XRL 0x92, #1           // DPTR0 => DPTR1
+    DJNZ R1, COPYBYTES
+    XRL 0x92, #1           // DPTR1 => DPTR0
+    
+    //si->inCurCycle = 0;                                    // 62.5 ms
+    MOV DPTR, #0xF536
+    CLR A
+    MOVX @DPTR, A
+
+    RET
+    END;
+    

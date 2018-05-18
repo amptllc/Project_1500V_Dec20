@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/EB/include
+END
+CC2511UsbDongle.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/EB/include/CC2511UsbDongle.h
+END
+RF04EB.h
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/EB/include/RF04EB.h
+END
+lcd.h
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/EB/include/lcd.h
+END
+CC2430DB.h
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/EB/include/CC2430DB.h
+END
+SOC_BB.h
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/EB/include/SOC_BB.h
+END
+eeprom.h
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/EB/include/eeprom.h
+END

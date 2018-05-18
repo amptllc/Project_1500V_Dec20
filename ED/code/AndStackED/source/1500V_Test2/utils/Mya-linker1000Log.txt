@@ -1,0 +1,65 @@
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 1  => -boot
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  ../ED/hex/ny-boot.hex
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 3  => -low
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  ../ED/hex/ampt-ms-i-full-low+ret+crc.hex
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 5  => -high
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  ../ED/hex/ampt-ms-i-uhigh.hex
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 7  => -bunch
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  0
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 9  => -ch
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  2
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 11  => -no-search
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  -no-search
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 12  => -v-limit
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  0
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 14  => -addr
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  83F
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 16  => -sn
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  1110P000057
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 18  => -netId
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  6
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 20  => -vin-dis-radio
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  0
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 22  => -versionLowMain
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  130
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 24  => -versionHighMain
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  130
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 26  => -versionLow8K
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  130
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 28  => -versionHigh8K
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  130
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 30  => -module
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  1
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 32  => -mpp
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  1
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 34  => -250kbod
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  -250kbod
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 35  => -module8K
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  0
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 37  => -mpp8K
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  0
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 39  => -sku
+Mya-linker1000WithBad8KPB.c:1099 SKU 12345678 valid length of (8)
+Mya-linker1000WithBad8KPB.c:1126 SKU Converted : 305419896
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  12345678
+Mya-linker1000WithBad8KPB.c:1309 current argument being parsed: 41  => -ch8K
+Mya-linker1000WithBad8KPB.c:2054 Current argument is  2
+Mya-linker1000WithBad8KPB.c:471 INFO: link function, hex_dir : ./
+Mya-linker1000WithBad8KPB.c:476 INFO: link function, hex_dir with sn : ./1110P000057
+Mya-linker1000WithBad8KPB.c:481 INFO: link function, hex_dir and full out file name : ./1110P000057.hex
+Mya-linker1000WithBad8KPB.c:505 Ready to write to hex file ./1110P000057.hex
+Mya-linker1000WithBad8KPB.c:507 Ready to read boot image file ../ED/hex/ny-boot.hex
+
+
+ *** Mya-linker1000WithBad8KPB.c:516 INFO:CHECK exercising buf[8] == '5' code for boot image *** 
+
+Mya-linker1000WithBad8KPB.c:547 Ready to read image file ../ED/hex/ampt-ms-i-full-low+ret+crc.hex
+Mya-linker1000WithBad8KPB.c:562 Success reading image file ../ED/hex/ampt-ms-i-full-low+ret+crc.hex
+Mya-linker1000WithBad8KPB.c:547 Ready to read image file ../ED/hex/ampt-ms-i-uhigh.hex
+Mya-linker1000WithBad8KPB.c:562 Success reading image file ../ED/hex/ampt-ms-i-uhigh.hex
+Mya-linker1000WithBad8KPB.c:676 writeParameterBlockToHexFile: writing 8K/Boot Parameter Block starting at address 0400
+Mya-linker1000WithBad8KPB.c:725 size of ParameterBlock is 242
+Mya-linker1000WithBad8KPB.c:739 writeParameterBlockToHexFile finished as expected ...
+Mya-linker1000WithBad8KPB.c:668 writeParameterBlockToHexFile: writing Main Parameter Block starting at address 5C00
+Mya-linker1000WithBad8KPB.c:725 size of ParameterBlock is 242
+Mya-linker1000WithBad8KPB.c:739 writeParameterBlockToHexFile finished as expected ...

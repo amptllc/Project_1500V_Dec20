@@ -1,0 +1,80 @@
+Mya1500.c:1407 current argument being parsed: 1  => -boot
+Mya1500.c:2152 Current argument is  ../ED/hex/ny-boot.hex
+Mya1500.c:1407 current argument being parsed: 3  => -low
+Mya1500.c:2152 Current argument is  ../ED/hex/ampt-ms-i-full-low+ret+crc.hex
+Mya1500.c:1407 current argument being parsed: 5  => -high
+Mya1500.c:2152 Current argument is  ../ED/hex/ampt-ms-i-uhigh.hex
+Mya1500.c:1407 current argument being parsed: 7  => -bunch
+Mya1500.c:2152 Current argument is  0
+Mya1500.c:1407 current argument being parsed: 9  => -ch
+Mya1500.c:2152 Current argument is  2
+Mya1500.c:1407 current argument being parsed: 11  => -ch8K
+Mya1500.c:2152 Current argument is  2
+Mya1500.c:1407 current argument being parsed: 13  => -no-search
+Mya1500.c:2152 Current argument is  -no-search
+Mya1500.c:1407 current argument being parsed: 14  => -v-limit
+Mya1500.c:2152 Current argument is  0
+Mya1500.c:1407 current argument being parsed: 16  => -addr
+Mya1500.c:2152 Current argument is  83F
+Mya1500.c:1407 current argument being parsed: 18  => -sn
+Mya1500.c:2152 Current argument is  1012K000010
+Mya1500.c:1407 current argument being parsed: 20  => -netId
+Mya1500.c:2152 Current argument is  1
+Mya1500.c:1407 current argument being parsed: 22  => -vin-dis-radio
+Mya1500.c:2152 Current argument is  0
+Mya1500.c:1407 current argument being parsed: 24  => -versionLowMain
+Mya1500.c:2152 Current argument is  126
+Mya1500.c:1407 current argument being parsed: 26  => -versionHighMain
+Mya1500.c:2152 Current argument is  126
+Mya1500.c:1407 current argument being parsed: 28  => -versionLow8K
+Mya1500.c:2152 Current argument is  126
+Mya1500.c:1407 current argument being parsed: 30  => -versionHigh8K
+Mya1500.c:2152 Current argument is  126
+Mya1500.c:1407 current argument being parsed: 32  => -module
+Mya1500.c:2152 Current argument is  1
+Mya1500.c:1407 current argument being parsed: 34  => -mpp
+Mya1500.c:2152 Current argument is  1
+Mya1500.c:1407 current argument being parsed: 36  => -mpp8K
+Mya1500.c:2152 Current argument is  0
+Mya1500.c:1407 current argument being parsed: 38  => -module8K
+Mya1500.c:2152 Current argument is  0
+Mya1500.c:1407 current argument being parsed: 40  => -250kbod
+Mya1500.c:2152 Current argument is  -250kbod
+Mya1500.c:1407 current argument being parsed: 41  => -oc8K
+Mya1500.c:2152 Current argument is  0
+Mya1500.c:1407 current argument being parsed: 43  => -ov8K
+Mya1500.c:2152 Current argument is  0
+Mya1500.c:1407 current argument being parsed: 45  => -sku
+Mya1500.c:1142 Converted SKU 37170024:1000
+Mya1500.c:2152 Current argument is  37170024-1000
+Mya1500.c:1407 current argument being parsed: 47  => -no-search
+Mya1500.c:2152 Current argument is  -no-search
+Mya1500.c:1407 current argument being parsed: 48  => -fetFailCount
+Mya1500.c:2152 Current argument is  0
+Mya1500.c:1407 current argument being parsed: 50  => -dont-stay-in-rx
+Mya1500.c:2152 Current argument is  -dont-stay-in-rx
+Mya1500.c:1407 current argument being parsed: 51  => -ov
+Mya1500.c:2152 Current argument is  225
+Mya1500.c:1407 current argument being parsed: 53  => -oc
+Mya1500.c:2152 Current argument is  200
+Mya1500.c:1407 current argument being parsed: 55  => -ov-startup
+Mya1500.c:2152 Current argument is  50
+Mya1500.c:488 INFO: link function, hex_dir : ./
+Mya1500.c:493 INFO: link function, hex_dir with sn : ./1012K000010
+Mya1500.c:498 INFO: link function, hex_dir and full out file name : ./1012K000010.hex
+Mya1500.c:522 Ready to write to hex file ./1012K000010.hex
+Mya1500.c:524 Ready to read boot image file ../ED/hex/ny-boot.hex
+
+
+ *** Mya1500.c:533 INFO:CHECK exercising buf[8] == '5' code for boot image *** 
+
+Mya1500.c:565 Ready to read image file ../ED/hex/ampt-ms-i-full-low+ret+crc.hex
+Mya1500.c:580 Success reading image file ../ED/hex/ampt-ms-i-full-low+ret+crc.hex
+Mya1500.c:565 Ready to read image file ../ED/hex/ampt-ms-i-uhigh.hex
+Mya1500.c:580 Success reading image file ../ED/hex/ampt-ms-i-uhigh.hex
+Mya1500.c:694 writeParameterBlockToHexFile: writing 8K/Boot Parameter Block starting at address 0400
+Mya1500.c:743 size of ParameterBlock is 242
+Mya1500.c:757 writeParameterBlockToHexFile finished as expected ...
+Mya1500.c:686 writeParameterBlockToHexFile: writing Main Parameter Block starting at address 5C00
+Mya1500.c:743 size of ParameterBlock is 242
+Mya1500.c:757 writeParameterBlockToHexFile finished as expected ...

@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/RfUsbLibrary/source
+END
+usb_descriptor_parser.c
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/RfUsbLibrary/source/usb_descriptor_parser.c
+END
+usb_standard_requests.c
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/RfUsbLibrary/source/usb_standard_requests.c
+END
+usb_interrupt.c
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/RfUsbLibrary/source/usb_interrupt.c
+END
+usb_framework.c
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/RfUsbLibrary/source/usb_framework.c
+END
+usb_suspend.c
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/RfUsbLibrary/source/usb_suspend.c
+END

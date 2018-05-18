@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/source
+END
+hal_adc_mgmt.c
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/source/hal_adc_mgmt.c
+END
+util_critical_section.s51
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/source/util_critical_section.s51
+END
+wait.c
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/source/wait.c
+END
+hal_power_clk_mgmt.c
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/source/hal_power_clk_mgmt.c
+END

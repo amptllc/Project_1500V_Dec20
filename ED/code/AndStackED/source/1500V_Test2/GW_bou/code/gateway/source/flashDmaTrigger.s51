@@ -1,0 +1,11 @@
+#include "ioCC2511.h"
+    MODULE  flashDmaTrigger.s51
+    RSEG RCODE (1)
+    PUBLIC halFlashDmaTrigger
+    FUNCTION halFlashDmaTrigger, 0203H
+      
+    halFlashDmaTrigger:
+    ORL FCTL, #0x02;
+    RET;
+    END;
+  

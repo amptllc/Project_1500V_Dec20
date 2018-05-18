@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\usb_boot_sector.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\usb_boot_sector_windows.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\radio_gateway.ewp</path>
+  </project>
+  <batchBuild>
+    <batchDefinition>
+      <name>all_gateways</name>
+      <member>
+        <project>templproj</project>
+        <configuration>Release</configuration>
+      </member>
+      <member>
+        <project>usb_boot_sector</project>
+        <configuration>Build .hex for CC2511 Dongle</configuration>
+      </member>
+      <member>
+        <project>usb_boot_sector_windows</project>
+        <configuration>Build .hex for CC2511 Dongle</configuration>
+      </member>
+      <member>
+        <project>radio_gateway</project>
+        <configuration>Build .hex for CC2511 Dongle</configuration>
+      </member>
+    </batchDefinition>
+  </batchBuild>
+</workspace>
+
+

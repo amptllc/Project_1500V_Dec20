@@ -1,0 +1,904 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project>
+  <fileVersion>2</fileVersion>
+  <fileChecksum>3970750831</fileChecksum>
+  <configuration>
+    <name>Build .hex for CC2510</name>
+    <outputs/>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+  </configuration>
+  <configuration>
+    <name>Build .hex for CC2511 Dongle</name>
+    <outputs>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\hal_power_clk_mgmt.c</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_joystick_SmartRF04EB.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb_framework.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\ioCC2510.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\hal_power_clk_mgmt.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb_standard_requests.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\wait.pbi</file>
+      <file>$TOOLKIT_DIR$\config\lnk_base.xcl</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\flashDmaTrigger.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb_standard_requests.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\hal_adc_mgmt.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\EB\include\RF04EB.h</file>
+      <file>$TOOLKIT_DIR$\inc\ioCC2511.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFAPPEXLIBRARY\rf\include\rf_usb_dongle.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\rf_usb_library_headers.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\dma.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\radio.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb_descriptor_parser.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_descriptor.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\math.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_descriptor_parser.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_adc_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_interrupt_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_lcd.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_io_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_framework.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb_framework.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\flash.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_defines.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_interrupt.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\usb_cdc.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb_suspend.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\RFAPPEXLIBRARY\rf\include\rf_common.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\float.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdlib.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFAPPEXLIBRARY\buffer\include\fifo_buffer.h</file>
+      <file>$TOOLKIT_DIR$\config\lnk51ew_cc2511.xcl</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\main.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\main.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_button.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_suspend.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb_interrupt.r51</file>
+      <file>$TOOLKIT_DIR$\lib\clib\cl-pli-nlxd-1e16x01.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\rf_usb_app_ex_lib_headers.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\aes.r51</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\dma.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\util_critical_section.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_SmartRF04EB.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\rx_print_RevC_compatible.pbd</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\aes.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\flash.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\clib\string.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\rf_usb_library_config.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\radio.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\EB\include\lcd.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\hal_power_clk_mgmt.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\hop.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb_suspend.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb_interrupt.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\hop.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb_descriptor_parser.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_reg.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\main.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\util_critical_section.r51</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdarg.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\dma.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\clib\sysmac.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\hal_adc_mgmt.c</file>
+      <file>$PROJ_DIR$\..\hex\rx_print_cc2511-9-RevC.hex</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\hal_adc_mgmt.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\RFAPPEXLIBRARY\timer4_manager\include\timer4_manager.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RFUSBLIBRARY\include\usb_standard_requests.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\rf_usb_app_ex_lib_config.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_main.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_power_clk_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\radio.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\usb.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\include\usb_interrupt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_descriptor_parser.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\usb_descriptor.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_standard_requests.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_framework.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_interrupt.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_suspend.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\aes.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\dma.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\flash.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\hop.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\flashDmaTrigger.s51</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\main.c</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdio.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\usb_descriptor.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\wait.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\wait.c</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\hal_power_clk_mgmt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 4</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 56</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 76 75 29 25 23 22 13 3 48 24 40 1</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 76 75 29 25 23 22 13 3 48 24 40 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 70</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\util_critical_section.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 65</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 13 3</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Build .hex for CC2511 Dongle\Obj\rx_print_RevC_compatible.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 50 67 51 10 56 60 39 17 11 61 2 59 5 58 6</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\hal_adc_mgmt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 71</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 22 75 29 25 76 23 13 3 48 24 40 1</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 22 75 29 25 76 23 13 3 48 24 40 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\hex\rx_print_cc2511-9-RevC.hex</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 37 7 45 16 28 8 71 4 57 63 54 64 93 18 27 42 9 32 65 94 43</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\radio.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 54</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 17</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 52 68 75 29 25 76 23 22 13 3 48 24 40 1 38 46</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 68 75 29 25 76 23 22 13 3 48 24 40 1 38 46</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\usb.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 64</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 11</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1 38 46 31 44 74 36 33 72 12 55 15 53 19 21 30 26 62 73 41 14</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1 38 46 31 44 74 36 33 72 12 55 15 53 19 21 30 26 62 73 41 14</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_descriptor_parser.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 18</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 61</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 15 75 29 25 76 23 22 13 3 48 24 40 1 53 19 21 30 26 62 73 41</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 15 75 29 25 76 23 22 13 3 48 24 40 1 53 19 21 30 26 62 73 41</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\usb_descriptor.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 93</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 19 31</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_standard_requests.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 9</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 5</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 15 75 29 25 76 23 22 13 3 48 24 40 1 53 19 21 30 26 62 73 41</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 15 75 29 25 76 23 22 13 3 48 24 40 1 53 19 21 30 26 62 73 41</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_framework.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 27</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 2</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 15 75 29 25 76 23 22 13 3 48 24 40 1 53 19 21 30 26 62 73 41</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 15 75 29 25 76 23 22 13 3 48 24 40 1 53 19 21 30 26 62 73 41</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_interrupt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 42</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 59</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 15 75 29 25 76 23 22 13 3 48 24 40 1 53 19 21 30 26 62 73 41</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 15 75 29 25 76 23 22 13 3 48 24 40 1 53 19 21 30 26 62 73 41</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_suspend.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 32</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 58</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 15 75 29 25 76 23 22 13 3 48 24 40 1 53 19 21 30 26 62 73 41</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 15 75 29 25 76 23 22 13 3 48 24 40 1 53 19 21 30 26 62 73 41</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\aes.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 45</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 50</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\dma.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 16</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 67</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1 46 38</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1 46 38</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\flash.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 28</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 51</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1 38 46 52 68</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1 38 46 52 68</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\hop.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 57</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 60</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1 35 68</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1 35 68</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\flashDmaTrigger.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 8</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 13 3</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\main.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 63</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 39</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1 38 46 31 79 15 53 19 21 30 26 62 73 41 92 66 68 52 35 20 34</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1 38 46 31 79 15 53 19 21 30 26 62 73 41 92 66 68 52 35 20 34</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\wait.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 94</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 75 29 25 76 23 22 13 3 48 24 40 1</file>
+        </tool>
+      </inputs>
+    </file>
+  </configuration>
+  <configuration>
+    <name>Debug on CC2510</name>
+    <outputs>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\hal_power_clk_mgmt.c</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_joystick_SmartRF04EB.h</file>
+      <file>$TOOLKIT_DIR$\inc\ioCC2510.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb_framework.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\wait.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\dma.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\hal_adc_mgmt.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb_interrupt.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb_standard_requests.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\clib\math.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_adc_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_interrupt_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_lcd.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\main.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_io_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_defines.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb_descriptor_parser.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\hop.r51</file>
+      <file>$TOOLKIT_DIR$\inc\clib\float.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\radio.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb_suspend.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\aes.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\hal_adc_mgmt.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\wait.r51</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdlib.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_button.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\util_critical_section.s51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL_BUI\include\hal_bui_SmartRF04EB.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\radio.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\dma.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\hal_power_clk_mgmt.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\clib\string.h</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb_standard_requests.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb_descriptor_parser.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb_interrupt.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\util_critical_section.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\aes.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\flash.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\flashDmaTrigger.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb_framework.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdarg.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\sysmac.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\hal_adc_mgmt.c</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb_descriptor.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\main.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Exe\rx_print_RevC_compatible.d51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\usb_suspend.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\hop.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\hal_power_clk_mgmt.r51</file>
+      <file>$PROJ_DIR$\Debug on CC2510\Obj\flash.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_main.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_power_clk_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\radio.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\usb.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_descriptor_parser.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\usb_descriptor.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_standard_requests.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_framework.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_interrupt.c</file>
+      <file>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_suspend.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\aes.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\dma.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\flash.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\hop.c</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\flashDmaTrigger.s51</file>
+      <file>$PROJ_DIR$\..\code\gateway\source\main.c</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdio.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\wait.c</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\hal_power_clk_mgmt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 50</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 32</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 53 52 15 14 11 10 2 29 12 26 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 47</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\util_critical_section.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 37</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\hal_adc_mgmt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 23</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 10 52 15 14 53 11 2 29 12 26 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\radio.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 30</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 19</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 33 43 52 15 14 53 11 10 2 29 12 26 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\usb.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 28</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 21</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 15 14 53 11 10 2 29 12 26 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_descriptor_parser.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 16</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 35</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\usb_descriptor.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 45</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_standard_requests.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 34</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 8</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_framework.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 3</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 41</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_interrupt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 36</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 7</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\RfUsbLibrary\source\usb_suspend.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 20</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 48</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\aes.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 22</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 38</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 15 14 53 11 10 2 29 12 26 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\dma.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 5</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 31</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 15 14 53 11 10 2 29 12 26 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\flash.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 39</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 51</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 15 14 53 11 10 2 29 12 26 1 33 43</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\hop.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 17</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 49</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 15 14 53 11 10 2 29 12 26 1 25 43</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\flashDmaTrigger.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 40</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\gateway\source\main.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 46</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 13</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 15 14 53 11 10 2 29 12 26 1 68 42 43 33 25 9 18</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\wait.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 24</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 4</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 15 14 53 11 10 2 29 12 26 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+  </configuration>
+</project>
+
+

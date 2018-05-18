@@ -1,0 +1,196 @@
+/*-----------------------------------------------------------------------------
+| Purpose:     main header file
++------------------------------------------------------------------------------
+| Decription: This file contains settings and defines for the packet error rate
+|             test application.
++----------------------------------------------------------------------------*/
+/*==== DECLARATION CONTROL ==================================================*/
+#ifndef PER_TEST_MAIN_H
+#define PER_TEST_MAIN_H
+/*==== INCLUDES ==============================================================*/
+#include "dma.h"
+/*==== CONSTS ================================================================*/
+#define PARTNUM_CC2510               0x81   // Part number for the CC2510
+
+// Define oldest and newest chip revision supported by radio configuration
+#define CC2510_MIN_SUPPORTED_VERSION 0x04   // Oldest CC2510 revision supported
+#define CC2510_MAX_SUPPORTED_VERSION 0x04   // Newest CC2510 revision supported
+
+#define STROBE_TX                    0x03   // Strobe commands for the RFST
+#define STROBE_RX                    0x02   // register
+#define STROBE_CAL                   0x01  
+#define STROBE_IDLE                  0x04   
+
+#define IRQ_DONE                     0x10   // The IRQ_DONE bit in the RFIF-
+                                            // and RFIM-register
+#define DMAARM_CHANNEL0              0x01   // The value to arm the DMA channel 0 in the DMAARM register
+#define DMAARM_CHANNEL1              0x02   // The value to arm the DMA channel 1 in the DMAARM register
+#define DMAARM_CHANNEL2              0x04   // The value to arm the DMA channel 2 in the DMAARM register
+
+#define NUMBER_OF_MODES              4      // Operational mode constants
+#define RADIO_MODE_TX                0x10
+#define RADIO_MODE_RX                0x20
+#define RADIO_MODE_CONFIG            0x40
+#define RADIO_MODE_CALIBRATE         0x80
+#define RADIO_MODE_UNDEF             0
+
+#define ADC_REF             0x0D     // Reference
+
+/* Some adjustable settings */
+//#define PACKET_LENGTH_ED             50 //(17+10*4) // Payload length. Does not include
+#define PACKET_LENGTH_ED             34 //(17+10*4) // Payload length. Does not include
+                                             // 1 length byte (prefixing payload,
+                                             // containing this value) and 2
+                                             // appended bytes CRC. Does include
+                                             // 2 bytes network identifier and 4
+                                             // bytes sequence number, hence
+                                             // minimum value is 6.
+#define PACKET_LENGTH_GW             34 // 2*16+2 (length and address )  Payload length
+#define PACKET_LENGTH_GW_2          18  // 16 + 2 (length and address)
+
+#define AES_SIZE                    16
+
+
+#define RSSI_AVG_WINDOW_SIZE         2  //32     // Size of ring buffer for RSSI
+                                             // values to average over (sliding
+                                             // window). Max 256
+
+#define NETWORK_ID_KEY               0x5AA5 // Network ID key that identifies
+                                            // transmitter/receiver pair
+
+/* Some NOT SO adjustable settings ** See also LOCALS section if manipulated */
+// Preset frequency alternatives
+#define NUMBER_OF_FREQUENCIES_CC2510  4
+#define FREQUENCY_1_CC2510      2480000     // kHz. NOTE: If you want to alter
+#define FREQUENCY_2_CC2510      2460000     // these values you will also have
+#define FREQUENCY_3_CC2510      2440000     // to modify the register settings in
+#define FREQUENCY_4_CC2510      2420000     // radioConfigure() in
+#define FREQUENCY_A_CC2510      2405000
+
+#define NUMBER_OF_FREQUENCIES_CC2511  4
+#define FREQUENCY_1_CC2511      2480001     // kHz. NOTE: If you want to alter
+#define FREQUENCY_2_CC2511      2460001     // these values you will also have
+#define FREQUENCY_3_CC2511      2440001     // to modify the register settings in
+#define FREQUENCY_4_CC2511      2420001     // radioConfigure() in
+#define FREQUENCY_A_CC2511      2402001
+#define FREQUENCY_FCC_CC2511    2410001
+
+#define FREQUENCY_B_CC2511      2301001
+#define FREQUENCY_C_CC2511      2580001
+
+// radio.c
+// Preset data rate alternatives
+#define NUMBER_OF_DATA_RATES_CC2510   3
+#define DATA_RATE_1_CC2510       500000     // bps. NOTE: If you alter these
+#define DATA_RATE_2_CC2510       250000     // values you will also have to
+//#define DATA_RATE_3_CC2510        10000     // modify register settings in
+#define DATA_RATE_3_CC2510        12000     // modify register settings in
+                                            // radioConfigure() in
+                                            // per_test_radio.c
+#define NUMBER_OF_DATA_RATES_CC2511   4
+#define DATA_RATE_1_CC2511       500001     // bps. NOTE: If you alter these
+#define DATA_RATE_2_CC2511       250001     // values you will also have to
+//#define DATA_RATE_3_CC2511        10001     // modify register settings in
+#define DATA_RATE_3_CC2511        12001     // modify register settings in
+                                            // radioConfigure() in
+                                            // per_test_radio.c
+#define DATA_RATE_4_CC2511        30001
+
+//#define DATA_RATE_3A                1
+//#define DATA_RATE_4                 1
+
+/*==== MACROS ================================================================*/
+/*==== TYPES =================================================================*/
+/*==== GLOBALS ================================================================*/
+/*====  GLOBAL VARS ==========================================================*/
+
+// This is the text displayed on the LCD for each menu option and their mapping
+// to the defined values
+
+// Other global variables
+extern BYTE radioPktBufferRx[PACKET_LENGTH_ED + 3]; // to accomodate maximum possible package PACKET_LENGTH_ED + 3];     // Buffer for packets to send or receive, sized to match the receiver's needs
+extern BYTE radioPktBuffer  [4][PACKET_LENGTH_ED + 3];  // Buffer for packets to send or receive, sized to match the receiver's needs
+extern BYTE radioPktBufferTx[PACKET_LENGTH_GW + 3];     // Buffer for packets to send or receive, sized to match the receiver's needs
+
+static BOOL output = FALSE;                 // Controls when to update the LCD
+
+static BOOL pktSentFlag = FALSE;            // Flag set whenever a packet is sent
+static BOOL pktRcvdFlag = FALSE;            // Flag set whenever a packet is received
+static BYTE mode;                           // Radio operating mode, either RX or TX
+
+// Receiver variables for PER and RSSI statistics
+extern UINT32 perRcvdSeqNum;            // The sequence number of the last received packet
+extern UINT32 perExpectedSeqNum;        // The expected sequence number of the next packet
+extern UINT32 perBadPkts;               // The total number of packets received with correct ID, but wrong CRC
+extern UINT32 perRcvdPkts;              // The total number of received packets with correct ID, regardless of CRC
+static INT16 perRssiOffset;             // RSSI offset for receiver, depends on chip model and data rate
+static INT16 perRssiBuf[RSSI_AVG_WINDOW_SIZE] = {0};    // Ring buffer for RSSI values used for (sliding window) averaging
+static UINT8 perRssiBufCounter;         // Counter to keep track of the oldest/newest byte in RSSI ring buffer
+static INT16 perRssiSum;                // Sum of all RSSI values in buffer, as absolute RSSI value
+
+typedef struct {
+   DWORD dteRate;
+   BYTE charFormat;
+   BYTE parityType;
+   BYTE dataBits;
+} CDC_LINE_CODING_STRUCTURE;
+
+extern CDC_LINE_CODING_STRUCTURE lineCoding;
+
+extern DMA_DESC dmaConfig[3];                  // Struct for the DMA configuration
+
+
+/*==== FUNCTIONS =============================================================*/
+
+/* See per_test_dma.c for description */
+extern void dmaRadioSetup(UINT8 mode);
+
+/* See per_test_radio.c for description */
+extern void radioConfigure(UINT32 dataRate, UINT32 frequency);
+
+extern void pktSetTS(BYTE *rpb, UINT32 utc, UINT16 ms);
+
+extern BOOL pktCheckId(BYTE *rpb);
+extern BOOL pktCheckCrc(void);
+extern BOOL pktCheckValidity( void );
+extern INT16 convertRssiByte(BYTE RSSI_value);
+
+extern void loadKey( char *key );
+extern void loadIV(  char *iv );
+extern void encode( unsigned char size,  char *from, char *to );
+extern void decode( unsigned char size,  char *from, char *to );
+
+extern void handleMyStdUsb(void);
+// **************** Process USB class requests with OUT data phase ************************
+extern void usbcrHookProcessOut(void);
+// **************** Process USB class requests with IN data phase *************************
+extern void usbcrHookProcessIn(void);
+// ********************************  Unsupported USB hooks ********************************
+extern void usbvrHookProcessOut(void);
+extern void usbvrHookProcessIn(void);
+// ************************  unsupported/unhandled standard requests **********************
+extern void usbsrHookSetDescriptor(void);
+extern void usbsrHookSynchFrame(void);
+extern void usbsrHookClearFeature(void);
+extern void usbsrHookSetFeature(void);
+extern void usbsrHookModifyGetStatus(BYTE recipient, BYTE index, WORD __xdata *pStatus);
+extern void usbsrHookProcessEvent(BYTE event, UINT8 index);
+extern void usbirqHookProcessEvents(void);
+
+extern void writeTheLatest(BYTE *ptr, UINT16 len, BOOL needNewPage);
+extern void halFlashDmaTrigger(void);
+extern void refreshTheFlash(void);
+extern BOOL readTheLatest(BYTE *ptr, UINT16 len );
+
+extern BYTE pktGetOff (BYTE *rpb);
+extern BYTE pktGetRSSI(BYTE *rpb);
+extern UINT16 pktGetGroup(BYTE *rpb);
+extern BYTE pktGetNetId(BYTE *rpb);
+extern BYTE pktGetBunch(BYTE *rpb);
+extern BYTE pktGetMacByte(BYTE *rpb, int i);
+extern INT32 pktGetAdc( BYTE *rpb, unsigned char idx );
+extern UINT32 pktGetUTC(BYTE *rpb);
+extern UINT16 pktGetMS(BYTE *rpb);
+
+#endif  /* PER_TEST_MAIN_H */
+/*==== END OF FILE ==========================================================*/

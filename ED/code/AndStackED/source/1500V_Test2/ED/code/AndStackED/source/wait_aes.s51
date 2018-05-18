@@ -1,0 +1,23 @@
+    MODULE  wait_aes.s51
+    RSEG RCODE (1)
+    PUBLIC wait_aes
+    FUNCTION wait_aes, 0203H
+      
+wait_aes:
+    MOV A, 0xB3
+    ANL  A, #8h
+    JZ   wait_aes
+    RET
+    ENDMOD;
+
+    MODULE  wait_nops.s51
+    RSEG RCODE (1)
+    PUBLIC wait_nops
+    FUNCTION wait_nops, 0203H
+      
+wait_nops:
+    MOV R1, #0x20
+WAIT_NOPS_LABEL: NOP
+    DJNZ R1, WAIT_NOPS_LABEL
+    RET
+    END

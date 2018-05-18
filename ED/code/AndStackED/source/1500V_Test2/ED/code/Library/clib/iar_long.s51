@@ -1,0 +1,5248 @@
+;-----------------------------------------------------------------------------
+;
+;	File:		long.s03
+;
+;	Version:	6.00
+;
+;	Created:	25/Apr/02 IANB
+;	Revised:
+;
+;
+;	Description:	This file contain the aritmetic operations 
+;			(+, -, *, %, /, >>, <<, |, &, ^ compare and
+;			unary - and ~) for both signed and unsigned long 
+;			integers.
+;
+;       REVISON INFORMATION                                 
+;                                                           
+;       $Revision: 1.13 $
+;                                                           
+;       Log information is available at the end of this file
+;
+;-----------------------------------------------------------------------------
+
+#include "iar_common.h"
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)Signed long multiplication
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_MUL
+;
+;	Description: Multiply two long objects in IDATA
+;
+;			   S3 S2 S1 S0
+;		         * D3 D2 D1 D0
+;		           -----------
+;			         S0*D0
+;			      S1*D0
+;			      S0*D1
+;			   S2*D0
+;			   S1*D1
+;			   S0*D2
+;		        S3*D0
+;		        S2*D1
+;		        S1*D2
+;		      + S0*D3
+;		      ----------------
+;		      =    RR RR RR RR
+;			
+;	Register input:
+;		R0 Points to LSB in the destination object
+;		R1 Points to LSB in the source object
+;
+;	Register output:
+;		A  = R2
+;		B    Is undefined
+;		CY   Is undefined
+;		R0 = R0+3
+;
+;	Stack usage: 4
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MUL		; Replaceable module
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_MUL
+	PUBLIC	?L_MUL_REW
+        CFI BLOCK ?L_MUL USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	R0 undefined
+
+?L_MUL:	INC	R0
+	INC	R0
+	INC	R0
+
+        CFI ENDBLOCK ?L_MUL
+
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_MUL_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	A  undefined
+	CFI	B  undefined
+	CFI	R0 undefined
+	CFI	R1 undefined
+
+x:
+?L_MUL_REW:
+
+	MOV	A,R2
+	PUSH	ACC
+    CFI CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 1)
+    CFI R2 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 1, 1)
+	MOV	A,R3
+	PUSH	ACC
+    CFI CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 2)
+    CFI R3 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 2, 1)
+	MOV	B,@R0	; D3 * S0
+	MOV	A,@R1
+	MUL	AB
+	MOV	R2,A
+	DEC	R0
+	INC	R1
+
+	MOV	B,@R0	; D2 * S1
+	MOV	A,@R1
+	MUL	AB
+	ADD	A,R2
+	MOV	R2,A
+	DEC	R0
+	INC	R1
+
+	MOV	B,@R0	; D1 * S2
+	MOV	A,@R1
+	MUL	AB
+	ADD	A,R2
+	MOV	R2,A
+	DEC	R0
+	INC	R1
+
+	MOV	B,@R0	; D0 * S3
+	MOV	A,@R1
+	MUL	AB
+	ADD	A,R2
+	MOV	R2,A
+	DEC	R1
+
+	MOV	B,@R0	; D0 * S2
+	MOV	A,@R1
+	MUL	AB
+	MOV	R3,A
+	MOV	A,B
+	ADD	A,R2
+	MOV	R2,A
+	DEC	R1
+	INC	R0
+
+	MOV	B,@R0	; D1 * S1
+	MOV	A,@R1
+	MUL	AB
+	ADD	A,R3
+	MOV	R3,A
+	MOV	A,B
+	ADDC	A,R2
+	MOV	R2,A
+	DEC	R1
+	INC	R0
+
+	MOV	B,@R0	; D2 * S0
+	MOV	A,@R1
+	MUL	AB
+	ADD	A,R3
+	MOV	R3,A
+	MOV	A,B
+	ADDC	A,R2
+	MOV	R2,A
+	DEC	R0
+	DEC	R0
+	INC	R1
+
+	MOV	B,@R0	; D0 * S1
+	MOV	A,@R1
+	MUL	AB
+	XCH	A,B
+	ADD	A,R3
+	MOV	R3,A
+	CLR	A
+	ADDC	A,R2
+	MOV	R2,A
+	DEC	R1
+	INC	R0
+
+	MOV	A,@R1	; D1 * S0
+	XCH	A,B
+	XCH	A,@R0
+	MUL	AB
+	ADD	A,@R0
+	MOV	@R0,A
+	MOV	A,B
+	ADDC	A,R3
+	MOV	R3,A
+	CLR	A
+	ADDC	A,R2
+	MOV	R2,A
+	DEC	R0
+
+	MOV	B,@R0	; D0 * S0
+	MOV	A,@R1
+	MUL	AB
+	MOV	@R0,A
+	MOV	A,B
+	INC	R0
+	ADD	A,@R0
+	MOV	@R0,A
+	CLR	A
+	ADDC	A,R3
+	INC	R0
+	MOV	@R0,A
+	CLR	A
+	ADDC	A,R2
+	INC	R0
+	MOV	@R0,A
+
+	POP	ACC
+    CFI CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 1)
+	MOV	R3,A
+    CFI R3 samevalue
+	POP	ACC
+    CFI CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	MOV	R2,A
+    CFI R2 samevalue
+	RET
+        CFI ENDBLOCK ?L_MUL_REW
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)Signed long multiplication with an unsigned character
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_MUL8
+;
+;	Description: Multiply a long object in IDATA with an unsigned
+;		     character.
+;
+;	Register input:
+;		R0 Points to LSB in the long object
+;		R1 Contains the unsigned character.
+;
+;	Register output:
+;		A    MSB of the result.
+;		B    Undefined.
+;		CY   Undefined.
+;		R0 = R0+3
+;		R1   Not changed.
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MUL8
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_MUL8
+	PUBLIC	?L_MUL8_REW
+
+        CFI BLOCK ?L_MUL8_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	R0 undefined
+
+?L_MUL8_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_MUL8_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_MUL8 USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	A  undefined
+	CFI	B  undefined
+	CFI	R0 undefined
+
+x:
+?L_MUL8:
+
+	MOV	A,@R0
+	MOV	B,R1
+	MUL	AB
+	MOV	@R0,A
+	INC	R0
+	MOV	A,R1
+	XCH	A,B
+
+	XCH	A,@R0
+	MUL	AB
+	ADD	A,@R0
+	MOV	@R0,A
+	INC	R0
+	CLR	A
+	ADDC	A,B
+
+	XCH	A,@R0
+	MOV	B,R1
+	MUL	AB
+	ADD	A,@R0
+	MOV	@R0,A
+	INC	R0
+	CLR	A
+	ADDC	A,B
+
+	XCH	A,@R0
+	MOV	B,R1
+	MUL	AB
+	ADD	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_MUL8
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_MUL8_PX
+;
+;	Description: Multiply a long object in PDATA with an unsigned
+;		     character.
+;
+;	Register input:
+;		R0 Points to LSB in the long object
+;		R1 Contains the unsigned character.
+;
+;	Register output:
+;		A  = R2
+;		B    Undefined.
+;		CY   Undefined.
+;		R0 = R0+3
+;		R1   Not changed.
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MUL8_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_MUL8_PX
+	PUBLIC	?L_MUL8_PX_REW
+
+        CFI BLOCK ?L_MUL8_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	R0 undefined
+
+?L_MUL8_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_MUL8_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_MUL8_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	A  undefined
+	CFI	B  undefined
+	CFI	R0 undefined
+
+x:
+?L_MUL8_PX:
+
+	MOV	A,R2
+	PUSH	ACC
+    CFI CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 1)
+    CFI R2 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 1, 1)
+	MOVX	A,@R0
+	MOV	B,R1
+	MUL	AB
+	MOVX	@R0,A
+	INC	R0
+	MOV	R2,B
+
+	MOVX	A,@R0
+	MOV	B,R1
+	MUL	AB
+	ADD	A,R2
+	MOVX	@R0,A
+	INC	R0
+	CLR	A
+	ADDC	A,B
+	MOV	R2,A
+
+	MOVX	A,@R0
+	MOV	B,R1
+	MUL	AB
+	ADD	A,R2
+	MOVX	@R0,A
+	INC	R0
+	CLR	A
+	ADDC	A,B
+	MOV	R2,A
+
+	MOVX	A,@R0
+	MOV	B,R1
+	MUL	AB
+	ADD	A,R2
+	MOVX	@R0,A
+
+	POP	ACC
+    CFI CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	MOV	R2,A
+    CFI R2 samevalue
+	RET
+        CFI ENDBLOCK ?L_MUL8_PX
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_MUL8_X
+;
+;	Description: Multiply a long object in PDATA with an unsigned
+;		     character.
+;
+;	Register input:
+;		DPTR Points to LSB in the long object
+;		R1   Contains the unsigned character.
+;
+;	Register output:
+;		A    = R2
+;		B      Undefined.
+;		CY     Undefined.
+;		DPTR = DPTR+3
+;		R1     Not changed.
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MUL8_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_MUL8_X
+
+        CFI BLOCK ?L_MUL8_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	A     undefined
+	CFI	B     undefined
+	CFI	DPTR0 undefined
+
+?L_MUL8_X:
+
+	MOV	A,R2
+	PUSH	ACC
+    CFI CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 1)
+    CFI R2 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 1, 1)
+
+	MOVX	A,@DPTR
+	MOV	B,R1
+	MUL	AB
+	MOVX	@DPTR,A
+	INC	R0
+	MOV	R2,B
+
+	MOVX	A,@DPTR
+	MOV	B,R1
+	MUL	AB
+	ADD	A,R2
+	MOVX	@DPTR,A
+	INC	R0
+	CLR	A
+	ADDC	A,B
+	MOV	R2,A
+
+	MOVX	A,@DPTR
+	MOV	B,R1
+	MUL	AB
+	ADD	A,R2
+	MOVX	@DPTR,A
+	INC	R0
+	CLR	A
+	ADDC	A,B
+	MOV	R2,A
+
+	MOVX	A,@DPTR
+	MOV	B,R1
+	MUL	AB
+	ADD	A,R2
+	MOVX	@DPTR,A
+
+	POP	ACC
+    CFI CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	MOV	R2,A
+    CFI R2 samevalue
+	RET
+        CFI ENDBLOCK ?L_MUL8_X
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)signed long divison and modulus
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?UL_DIV_MOD
+;
+;	Description: Unsigned long division and modulus.
+;
+;	Register input:
+;		R0 Points to LSB in the dividend
+;		R1 Points to LSB in the divisor
+;
+;		Note: R0 and R1 must always point to different memory locations
+;
+;	Register output:
+;	       @R0 = The result
+;	       @R1 = The reminder
+;		A  = Is undefined
+;		B    Is undefined
+;		CY   Is undefined
+;
+;	Important notes:
+;		The source and destination cannot be the same physical
+;		memory area since they are used as accumulators.
+;
+;	Stack usage: 4
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UL_DIV_MOD		; Replaceable module
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?UL_DIV_MOD
+
+	RSEG	RCODE:CODE:NOROOT
+
+        CFI BLOCK ?UL_DIV_MOD USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	A  undefined
+	CFI	B  undefined
+	CFI	R0 undefined
+	CFI	R1 undefined
+
+
+?UL_DIV_MOD:
+	; Save R7-R4 - set to zero and use as remainder
+	CLR	A
+	XCH	A,R7
+	PUSH	A
+    CFI CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 1)
+    CFI R7 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 1, 1)
+	CLR	A
+	XCH	A,R6
+	PUSH	A
+    CFI CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 2)
+    CFI R6 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 2, 1)
+	CLR	A
+	XCH	A,R5
+	PUSH	A
+    CFI CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 3)
+    CFI R5 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 3, 1)
+	CLR	A
+	XCH	A,R4
+	PUSH	A
+    CFI CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 4)
+    CFI R4 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 4, 1)
+	MOV	B,#32		; set loop count
+
+DIV_LOOP:
+	CLR	C		; Clear carry
+	MOV	A,@R0		; Quote = (Quote << 1) + Carry
+	RLC	A
+	MOV	@R0,A
+	INC	R0
+	MOV	A,@R0
+	RLC	A
+	MOV	@R0,A
+	INC	R0
+	MOV	A,@R0
+	RLC	A
+	MOV	@R0,A
+	INC	R0
+	MOV	A,@R0
+	RLC	A
+	MOV	@R0,A
+	DEC	R0		; Reset pointer
+	DEC	R0
+	DEC	R0
+
+	MOV	A,R4		; Remainder = (Remainder << 1) + Carry
+	RLC	A
+	MOV	R4,A
+	MOV	A,R5
+	RLC	A
+	MOV	R5,A
+	MOV	A,R6
+	RLC	A
+	MOV	R6,A
+	MOV	A,R7
+	RLC	A
+	MOV	R7,A
+
+	CLR	C		; Compare remainder and divisor
+	MOV	A,R4
+	SUBB	A,@R1
+	INC	R1
+	MOV	A,R5
+	SUBB	A,@R1
+	INC	R1
+	MOV	A,R6
+	SUBB	A,@R1
+	INC	R1
+	MOV	A,R7
+	SUBB	A,@R1
+	DEC	R1
+	DEC	R1
+	DEC	R1
+
+	JC	NO_ADJUST
+
+	; carry = 0, no need to clear
+	MOV	R7,A		; Remainder = remainder - divisor
+	MOV	A,R4
+	SUBB	A,@R1
+	MOV	R4,A
+	INC	R1
+	MOV	A,R5
+	SUBB	A,@R1
+	MOV	R5,A
+	INC	R1
+	MOV	A,R6
+	SUBB	A,@R1
+	MOV	R6,A
+	DEC	R1		; Reset pointer
+	DEC	R1
+
+	INC	@R0		; increment LSB in quote
+	
+NO_ADJUST:
+	DJNZ	B,DIV_LOOP
+
+	MOV	A,R4		; Copy remainder to @R1 (operand 2)
+	MOV	@R1,A
+	INC	R1
+	MOV	A,R5	
+	MOV	@R1,A
+	INC 	R1
+	MOV	A,R6	
+	MOV	@R1,A
+	INC 	R1
+	MOV	A,R7	
+	MOV	@R1,A
+	DEC 	R1
+	DEC	R1
+	DEC	R1
+
+	POP	A		; Restore saved registers
+    CFI CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 3)
+	MOV	R4,A
+    CFI R4 samevalue
+	POP	A
+    CFI CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 2)
+	MOV	R5,A
+    CFI R5 samevalue
+	POP	A
+    CFI CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 1)
+	MOV	R6,A
+    CFI R6 samevalue
+	POP	A
+    CFI CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	MOV	R7,A
+    CFI R7 samevalue
+
+	RET
+        CFI ENDBLOCK ?UL_DIV_MOD
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_DIV_MOD
+;
+;	Description: Signed division and modulus
+;
+;	Register input:
+;		R0 Points to LSB in the dividend (destination object)
+;		R1 Points to LSB in the divisor
+;
+;	Register output:
+;	       @R0 = The result
+;	       @R1 = The reminder
+;		A  = Is undefined
+;		B    Is undefined
+;		CY   Is undefined
+;
+;	Important notes:
+;		The source and destination cannot be the sam physical
+;		memory area since they are used as accumulators.
+;
+;	Stack usage: 4
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_DIV_MOD		; Replaceable module
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_DIV_MOD
+	EXTERN	?L_NEG
+	EXTERN	?L_NEG_R1
+	EXTERN	?UL_DIV_MOD
+        CFI BLOCK ?L_DIV_MOD USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	A  undefined
+	CFI	B  undefined
+	CFI	R0 undefined
+	CFI	R1 undefined
+
+NEG_DIV_NEG:
+	LCALL	?L_NEG
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	LCALL	?UL_DIV_MOD
+	LCALL	?L_NEG_R1
+	DEC	R1
+	DEC	R1
+	DEC	R1
+	RET
+
+X_DIV_NEG:
+	LCALL	?L_NEG_R1
+	DEC	R1
+	DEC	R1
+	DEC	R1
+        INC     R0
+        INC     R0
+        INC     R0
+	MOV	A,@R0
+        DEC     R0
+        DEC     R0
+        DEC     R0
+	JB	ACC.7,NEG_DIV_NEG
+
+; POS_DIV_NEG:
+	LCALL	?UL_DIV_MOD
+	LCALL	?L_NEG
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	RET
+
+?L_DIV_MOD:
+	INC	R1
+	INC	R1
+	INC	R1
+	MOV	A,@R1
+	DEC	R1
+	DEC	R1
+	DEC	R1
+	JB	ACC.7,X_DIV_NEG
+
+	INC	R0	
+	INC	R0	
+	INC	R0	
+	MOV	A,@R0
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	JB	ACC.7,NEG_DIV_POS
+
+; POS_DIV_POS:
+	LJMP	?UL_DIV_MOD
+
+NEG_DIV_POS:
+	LCALL	?L_NEG
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	LCALL	?UL_DIV_MOD
+	LCALL	?L_NEG
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	LCALL	?L_NEG_R1
+	DEC	R1
+	DEC	R1
+	DEC	R1
+	RET
+
+	CFI ENDBLOCK ?L_DIV_MOD
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function(s):	(Un)Signed long negate.
+;
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_NEG_R1
+;
+;	Description: Negates a long object in IDATA.
+;
+;	Register input:
+;		R1 Points to the objects LSB
+;
+;	Register output:
+;		A  Is equal to the objects MSB
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_NEG_R1
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_NEG_R1_REW
+        CFI BLOCK ?L_NEG_R1_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	R1 undefined
+
+?L_NEG_R1_REW:
+
+	DEC	R1
+	DEC	R1
+	DEC	R1
+	CFI ENDBLOCK ?L_NEG_R1_REW
+	REQUIRE	?L_NEG_R1
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_NEG_R1
+        CFI BLOCK ?L_NEG_R1 USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	A  undefined
+	CFI	R1 undefined
+
+?L_NEG_R1:
+
+	CLR	A
+	CLR	C
+	SUBB	A,@R1
+	MOV	@R1,A
+        INC     R1
+	CLR	A
+	SUBB	A,@R1
+	MOV	@R1,A
+        INC     R1
+	CLR	A
+	SUBB	A,@R1
+	MOV	@R1,A
+        INC	R1
+	CLR	A
+	SUBB	A,@R1
+	MOV	@R1,A
+	RET
+
+	CFI ENDBLOCK ?L_NEG_R1
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_NEG
+;
+;	Description: Negates a long object in IDATA.
+;
+;	Register input:
+;		R0 Points to the objects LSB
+;
+;	Register output:
+;		A  Is equal to the objects MSB
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_NEG
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_NEG
+	PUBLIC	?L_NEG_REW
+        CFI BLOCK ?L_NEG_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI	R0 undefined
+
+?L_NEG_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?L_NEG_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT
+        CFI BLOCK ?L_NEG USING cfi_common
+        CFI NOFUNCTION		
+
+	CFI	A  undefined
+	CFI	R0 undefined
+
+x:
+?L_NEG:
+
+	CLR	A
+	CLR	C
+	SUBB	A,@R0
+	MOV	@R0,A
+        INC     R0
+	CLR	A
+	SUBB	A,@R0
+	MOV	@R0,A
+        INC     R0
+	CLR	A
+	SUBB	A,@R0
+	MOV	@R0,A
+        INC	R0
+	CLR	A
+	SUBB	A,@R0
+	MOV	@R0,A
+	RET
+
+        CFI ENDBLOCK ?L_NEG
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_NEG_X
+;
+;	Description: Negates a long object in XDATA.
+;
+;	Register input:
+;		DPTRx Points to the objects LSB
+;
+;	Register output:
+;		A    Is equal to the objects MSB
+;		CY   Is undefined if rewind DPTR.
+;		DPTRx = DPTRx+3
+;
+;       Multiple DPTR
+;               DPTR: all allowed in ?L_NEG_X
+;
+;               ?L_NEG_X_REW: in separate mode DPTR0 must be selected
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+
+	MODULE	?L_NEG_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_NEG_X
+	PUBLIC	?L_NEG_X_REW
+        CFI BLOCK ?L_NEG_X_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI	A     undefined
+	CFI	DPTR0 undefined
+	
+?L_NEG_X_REW:
+
+	MOV	A,DPL
+	ADD	A,#0FDH
+	MOV	DPL,A
+	JC	?L_NEG_X
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        MOV A,DPH
+        SUBB A,#0
+        MOV DPH,A
+        JC ?L_NEG_X
+        DEC ?DPX
+#else
+        DEC	DPH
+#endif
+
+	CFI ENDBLOCK ?L_NEG_X_REW
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_NEG_X USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI	A     undefined
+	CFI	DPTR0 undefined
+
+?L_NEG_X:
+
+	MOVX	A,@DPTR
+	CPL	A
+	ADD	A,#1
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	CPL	A
+	ADDC	A,#0
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	CPL	A
+	ADDC	A,#0
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	CPL	A
+	ADDC	A,#0
+	MOVX	@DPTR,A
+	RET
+	CFI ENDBLOCK ?L_NEG_X
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_NEG_PX
+;
+;	Description: Negates a long object in PDATA.
+;
+;	Register input:
+;		R0 Points to the objects LSB
+;
+;	Register output:
+;		A  Is equal to the objects MSB
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+
+	MODULE	?L_NEG_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_NEG_PX
+	PUBLIC	?L_NEG_PX_REW
+        CFI BLOCK ?L_NEG_PX_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI	R0 undefined
+
+?L_NEG_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?L_NEG_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_NEG_PX USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI	A  undefined
+	CFI	R0 undefined
+
+x:
+?L_NEG_PX:
+
+	MOVX	A,@R0
+	CPL	A
+	ADD	A,#1
+	MOVX	@R0,A
+	INC	R0
+	MOVX	A,@R0
+	CPL	A
+	ADDC	A,#0
+	MOVX	@R0,A
+	INC	R0
+	MOVX	A,@R0
+	CPL	A
+	ADDC	A,#0
+	MOVX	@R0,A
+	INC	R0
+	MOVX	A,@R0
+	CPL	A
+	ADDC	A,#0
+	MOVX	@R0,A
+	RET
+
+	CFI ENDBLOCK ?L_NEG_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function(s):	(Un)Signed long complement
+;
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_NOT
+;
+;	Description: Inverts a long object in IDATA.
+;
+;	Register input:
+;		R0 Points to the objects LSB
+;
+;	Register output:
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_NOT
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_NOT
+	PUBLIC	?L_NOT_REW
+        CFI BLOCK ?L_NOT_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI	R0 undefined
+
+?L_NOT_REW:
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?L_NOT_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_NOT USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI	A  undefined
+	CFI	R0 undefined
+
+x:
+?L_NOT:
+
+	XCH	A,@R0
+	CPL	A
+	XCH	A,@R0
+	INC	R0
+	XCH	A,@R0
+	CPL	A
+	XCH	A,@R0
+	INC	R0
+	XCH	A,@R0
+	CPL	A
+	XCH	A,@R0
+	INC	R0
+	XCH	A,@R0
+	CPL	A
+	XCH	A,@R0
+	RET
+	CFI ENDBLOCK ?L_NOT
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_NOT_X
+;
+;	Description: Inverts a long object in XDATA.
+;
+;	Register input:
+;		DPTR Points to the objects LSB
+;
+;	Register output:
+;		A    Is equal to the objects MSB
+;		CY   Is undefined if rewind DPTR.
+;		DPTR = DPTR+3
+;
+;       Multiple DPTR
+;               DPTR: all allowed in ?L_NEG_X
+;
+;               ?L_NOT_X_REW: in separate mode DPTR0 must be selected
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_NOT_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_NOT_X
+	PUBLIC	?L_NOT_X_REW
+        CFI BLOCK ?L_NOT_X_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI	DPTR0 undefined
+
+?L_NOT_X_REW:
+	MOV	A,DPL
+	ADD	A,#0FDH
+	MOV	DPL,A
+	JC	?L_NOT_X
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        MOV A,DPH
+        SUBB A,#0
+        MOV DPH,A
+        JC ?L_NOT_X
+        DEC ?DPX
+#else
+        DEC	DPH
+#endif
+
+	CFI ENDBLOCK ?L_NOT_X_REW
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_NOT_X USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI	A  undefined
+	CFI	DPTR0 undefined
+
+?L_NOT_X:
+	MOVX	A,@DPTR
+	CPL	A
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	CPL	A
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	CPL	A
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	CPL	A
+	MOVX	@DPTR,A
+	RET
+	CFI ENDBLOCK ?L_NOT_X
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_NOT_PX
+;
+;	Description: Inverts a long object in PDATA.
+;
+;	Register input:
+;		R0 Points to the objects LSB
+;
+;	Register output:
+;		A  Is equal to the objects MSB
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_NOT_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_NOT_PX
+	PUBLIC	?L_NOT_PX_REW
+        CFI BLOCK ?L_NOT_PX_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI	R0 undefined
+
+?L_NOT_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?L_NOT_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_NOT_PX USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI	A  undefined
+	CFI	R0 undefined
+
+x:
+?L_NOT_PX:
+
+	MOVX	A,@R0
+	CPL	A
+	MOVX	@R0,A
+	INC	R0
+	MOVX	A,@R0
+	CPL	A
+	MOVX	@R0,A
+	INC	R0
+	MOVX	A,@R0
+	CPL	A
+	MOVX	@R0,A
+	INC	R0
+	MOVX	A,@R0
+	CPL	A
+	MOVX	@R0,A
+	RET
+
+	CFI ENDBLOCK ?L_NOT_PX
+	ENDMOD
+
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Signed long shift right (>>)
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?SL_SHR
+;
+;	Description: Shift a long object arithmetic right in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in the object
+;		A  Is the number of shifts to be made
+;
+;	Register output:
+;		A  Is zero
+;		CY Is undefined
+;		R0 Is not changed
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SL_SHR
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?SL_SHR
+	PUBLIC	?SL_SHR_REW
+        CFI BLOCK ?SL_SHR_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?SL_SHR_REW:
+	JNZ	start
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	RET
+	CFI ENDBLOCK ?SL_SHR_REW
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?SL_SHR USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?SL_SHR:
+	JZ	noshift
+
+shift:
+	INC	R0
+	INC	R0
+	INC	R0
+	CFI ENDBLOCK ?SL_SHR
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?SL_SHR_start USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A  undefined
+	CFI R0 undefined
+
+x:
+start:
+	XCH	A,@R0
+	MOV	C,ACC.7
+	RRC	A
+	XCH	A,@R0
+	DEC	R0
+
+	XCH	A,@R0
+	RRC	A
+	XCH	A,@R0
+	DEC	R0
+		
+	XCH	A,@R0
+	RRC	A
+	XCH	A,@R0
+	DEC	R0
+
+	XCH	A,@R0
+	RRC	A
+	XCH	A,@R0
+
+	DJNZ	ACC,shift
+
+noshift:
+	RET
+
+	CFI ENDBLOCK ?SL_SHR_start
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Unsigned long shift right (>>)
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?UL_SHR
+;
+;	Description: Shift a long object right in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in the object
+;		A  Is the number of shifts to be made
+;
+;	Register output:
+;		A  Is zero
+;		CY Is undefined
+;		R0 Is not changed
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UL_SHR		; Replaceable module
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?UL_SHR
+	PUBLIC	?UL_SHR_REW
+        CFI BLOCK ?UL_SHR_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?UL_SHR_REW:
+	JNZ	start
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	RET
+	CFI ENDBLOCK ?UL_SHR_REW
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?UL_SHR USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?UL_SHR:
+	JZ	noshift
+
+shift:
+	INC	R0
+	INC	R0
+	INC	R0
+
+	CFI ENDBLOCK ?UL_SHR
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT
+        CFI BLOCK ?UL_SHR_start USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A  undefined
+	CFI R0 undefined
+
+x:
+start:
+	XCH	A,@R0
+	CLR	C
+	RRC	A
+	XCH	A,@R0
+	DEC	R0
+
+	XCH	A,@R0
+	RRC	A
+	XCH	A,@R0
+	DEC	R0
+		
+	XCH	A,@R0
+	RRC	A
+	XCH	A,@R0
+	DEC	R0
+
+	XCH	A,@R0
+	RRC	A
+	XCH	A,@R0
+
+	DJNZ	ACC,shift
+
+noshift:
+	RET
+	CFI ENDBLOCK ?UL_SHR_start
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)signed long shift left (<<)
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_SHL
+;
+;	Description: Shift a long object left in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in the object
+;		A  Is the number of shifts to be made
+;
+;	Register output:
+;		A    Is zero
+;		CY   Is undefined
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_SHL		; Replaceable module
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_SHL
+	PUBLIC	?L_SHL_REW
+        CFI BLOCK ?L_SHL USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A  undefined
+	CFI R0 undefined
+
+?L_SHL:
+	JNZ	start
+	INC	R0
+	INC	R0
+	INC	R0
+	RET
+	CFI ENDBLOCK ?L_SHL
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_SHL_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A  undefined
+	CFI R0 undefined
+
+?L_SHL_REW:
+	JZ	noshift
+
+shift:
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?L_SHL_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_SHL_start USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A  undefined
+	CFI R0 undefined
+
+x:
+start:
+	XCH	A,@R0
+	CLR	C
+	RLC	A
+	XCH	A,@R0
+	INC	R0
+
+	XCH	A,@R0
+	RLC	A
+	XCH	A,@R0
+	INC	R0
+		
+	XCH	A,@R0
+	RLC	A
+	XCH	A,@R0
+	INC	R0
+
+	XCH	A,@R0
+	RLC	A
+	XCH	A,@R0
+
+	DJNZ	ACC,shift
+
+noshift:
+	RET
+	CFI ENDBLOCK ?L_SHL_start
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)Signed long addition
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_ADD
+;
+;	Description: Add two objects in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in object #1 (destination)
+;		R1 Points to LSB in object #2 (source)
+;
+;	Register output:
+;		CY = Is set if borrow from bit 31
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_ADD
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_ADD
+	PUBLIC	?L_ADD_REW
+        CFI BLOCK ?L_ADD_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_ADD_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_ADD_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT
+        CFI BLOCK ?L_ADD USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+x:
+?L_ADD:
+
+	MOV	A,@R0
+	ADD	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ADDC	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ADDC	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ADDC	A,@R1
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_ADD
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_ADD_X
+;
+;	Description: Add a XDATA object to an IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		CY   = Is set if borrow from bit 31
+;		A    = MSB of the result
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;       Multiple DPTR:
+;               DPTR: all allowed in ?L_ADD_X and ?L_AND_X_REW
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_ADD_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_ADD_X
+	PUBLIC	?L_ADD_X_REW
+        CFI BLOCK ?L_ADD_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_ADD_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_ADD_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_ADD_X USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A     undefined
+	CFI R0    undefined
+	CFI DPTR0 undefined
+
+x:
+?L_ADD_X:
+
+	MOVX	A,@DPTR
+	ADD	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ADDC	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ADDC	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ADDC	A,@R0
+	MOV	@R0,A
+	RET
+
+        CFI ENDBLOCK ?L_ADD_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_ADD_C
+;
+;	Description: Add a CODE object to an IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the CODE object
+;
+;	Register output:
+;		CY   = Is set if borrow from bit 31
+;		A    = MSB of the result
+;		R0   = R0+3
+;
+;       Multiple DPTR:
+;               DPTR: all allowed in ?L_ADD_C and ?L_AND_C_REW
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_ADD_C
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_ADD_C
+	PUBLIC	?L_ADD_C_REW
+        CFI BLOCK ?L_ADD_C_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_ADD_C_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_ADD_C_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_ADD_C USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?L_ADD_C:
+
+	CLR	A
+	MOVC	A,@A+DPTR
+	ADD	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#1
+	MOVC	A,@A+DPTR
+	ADDC	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#2
+	MOVC	A,@A+DPTR
+	ADDC	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#3
+	MOVC	A,@A+DPTR
+	ADDC	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_ADD_C
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_ADD_PX
+;
+;	Description: Add a PDATA object to an IDATA object
+;
+;	Register input:
+;		R0 Points to LSB in the IDATA object
+;		R1 Points to LSB in the PDATA object
+;
+;	Register output:
+;		CY = Is set if borrow from bit 31
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_ADD_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_ADD_PX
+	PUBLIC	?L_ADD_PX_REW
+        CFI BLOCK ?L_ADD_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_ADD_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_ADD_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_ADD_PX USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_ADD_PX:
+
+	MOVX	A,@R1
+	ADD	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ADDC	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ADDC	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ADDC	A,@R0
+	MOV	@R0,A
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	RET
+        CFI ENDBLOCK ?L_ADD_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_ADD8
+;
+;	Description: Add an unsigned char to a long IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		A    Is the unsigned char object
+;
+;	Register output:
+;		CY   = Is set if borrow from bit 31
+;		A    = MSB of the result
+;		R0   = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_ADD8
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_ADD8
+	PUBLIC	?L_ADD8_REW
+        CFI BLOCK ?L_ADD8_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_ADD8_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_ADD8_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_ADD8 USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?L_ADD8:
+
+	ADD	A,@R0
+	MOV	@R0,A
+	INC	R0
+	CLR	A
+	ADDC	A,@R0
+	MOV	@R0,A
+	INC	R0
+	CLR	A
+	ADDC	A,@R0
+	MOV	@R0,A
+	INC	R0
+	CLR	A
+	ADDC	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_ADD8
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_ADD_TO_X
+;
+;	Description: Add an IDATA object to a XDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		CY   = Is set if borrow from bit 31
+;		A    = MSB of the result
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;
+;       Multiple DPTR:
+;               DPTR: all allowed in ?L_ADD_TO_X and ?L_ADD_TO_X_REW
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_ADD_TO_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_ADD_TO_X
+	PUBLIC	?L_ADD_TO_X_REW
+        CFI BLOCK ?L_ADD_TO_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+	
+?L_ADD_TO_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_ADD_TO_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_ADD_TO_X USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?L_ADD_TO_X:
+
+	MOVX	A,@DPTR
+	ADD	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ADDC	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ADDC	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ADDC	A,@R0
+	MOVX	@DPTR,A
+	RET
+        CFI ENDBLOCK ?L_ADD_TO_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_ADD_TO_PX
+;
+;	Description: Add an IDATA object to a PDATA object
+;
+;	Register input:
+;		R0 Points to LSB in the IDATA object
+;		R1 Points to LSB in the PDATA object
+;
+;	Register output:
+;		CY = Is set if borrow from bit 31
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_ADD_TO_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_ADD_TO_PX
+	PUBLIC	?L_ADD_TO_PX_REW
+        CFI BLOCK ?L_ADD_TO_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_ADD_TO_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_ADD_TO_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_ADD_TO_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+	
+x:
+?L_ADD_TO_PX:
+
+	MOVX	A,@R1
+	ADD	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ADDC	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ADDC	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ADDC	A,@R0
+	MOVX	@R1,A
+	RET
+        CFI ENDBLOCK ?L_ADD_TO_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)Signed long subtraction
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_SUB
+;
+;	Description: Subtract two objects in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in object #1 (destination)
+;		R1 Points to LSB in object #2 (source)
+;
+;	Register output:
+;		CY = Is set if a borrow is needed for bit 31
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+
+	MODULE	?L_SUB
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_SUB
+	PUBLIC	?L_SUB_REW
+        CFI BLOCK ?L_SUB_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_SUB_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_SUB_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_SUB USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_SUB:
+
+	CLR	C
+	MOV	A,@R0
+	SUBB	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	SUBB	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	SUBB	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	SUBB	A,@R1
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_SUB
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_SUB_X
+;
+;	Description: Subtract a XDATA object from an IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		CY   = Is set if a borrow is needed for bit 31
+;		A    = MSB of the result
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;
+;       Multiple DPTR:
+;               DPTR: all allowed in ?L_SUB_X and ?L_SUB_X_REW
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_SUB_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_SUB_X
+	PUBLIC	?L_SUB_X_REW
+        CFI BLOCK ?L_SUB_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_SUB_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_SUB_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_SUB_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?L_SUB_X:
+
+	CLR	C
+	MOVX	A,@DPTR
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_SUB_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_SUB_C
+;
+;	Description: Subtract a CODE object from an IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the CODE object
+;
+;	Register output:
+;		CY   = Is set if a borrow is needed for bit 31
+;		A    = MSB of the result
+;		R0   = R0+3
+;
+;       Multiple DPTR:
+;               DPTR: all allowed in ?L_SUB_C and ?L_SUB_C_REW
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_SUB_C
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_SUB_C
+	PUBLIC	?L_SUB_C_REW
+        CFI BLOCK ?L_SUB_C_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_SUB_C_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_SUB_C_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_SUB_C USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?L_SUB_C:
+
+	CLR	C
+	CLR	A
+	MOVC	A,@A+DPTR
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#1
+	MOVC	A,@A+DPTR
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#2
+	MOVC	A,@A+DPTR
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#3
+	MOVC	A,@A+DPTR
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_SUB_C
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_SUB_PX
+;
+;	Description: Subtract a PDATA object from an IDATA object
+;
+;	Register input:
+;		R0 Points to LSB in the IDATA object
+;		R1 Points to LSB in the PDATA object
+;
+;	Register output:
+;		CY = Is set if a borrow is needed for bit 31
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_SUB_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_SUB_PX
+	PUBLIC	?L_SUB_PX_REW
+        CFI BLOCK ?L_SUB_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_SUB_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_SUB_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_SUB_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_SUB_PX:
+
+	CLR	C
+	MOVX	A,@R1
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_SUB_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_SUB8
+;
+;	Description: Subtract an unsigned char object from a long IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		A    Is the unsigned char object
+;
+;	Register output:
+;		CY   = Is set if a borrow is needed for bit 31
+;		A    = MSB of the result
+;		R0   = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_SUB8
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_SUB8
+	PUBLIC	?L_SUB8_REW
+        CFI BLOCK ?L_SUB8_REW USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI R0 undefined
+
+?L_SUB8_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_SUB8_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_SUB8 USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	
+x:
+?L_SUB8:
+
+	CLR	C
+	XCH	A,@R0
+	SUBB	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,@R0
+	SUBB	A,#0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,@R0
+	SUBB	A,#0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,@R0
+	SUBB	A,#0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_SUB8
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_SUB_FROM_X
+;
+;	Description: Subtract an IDATA object from a XDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		CY   = Is set if a borrow is needed for bit 31
+;		A    = MSB of the result
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;	Stack usage: 2
+;
+;       Multiple DPTR:
+;               DPTR: all allowed in ?L_SUB_FROM_X and ?L_SUB_FROM_X_REW
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_SUB_FROM_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_SUB_FROM_X
+	PUBLIC	?L_SUB_FROM_X_REW
+        CFI BLOCK ?L_SUB_FROM_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_SUB_FROM_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_SUB_FROM_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_SUB_FROM_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?L_SUB_FROM_X:
+
+	CLR	C
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	MOVX	@DPTR,A
+	RET
+        CFI ENDBLOCK ?L_SUB_FROM_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_SUB_FROM_PX
+;
+;	Description: Subtract an IDATA object from a PDATA object
+;
+;	Register input:
+;		R0 Points to LSB in the IDATA object
+;		R1 Points to LSB in the PDATA object
+;
+;	Register output:
+;		CY = Is set if a borrow is needed for bit 31
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_SUB_FROM_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_SUB_FROM_PX
+	PUBLIC	?L_SUB_FROM_PX_REW
+        CFI BLOCK ?L_SUB_FROM_PX_REW USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI R0 undefined
+
+?L_SUB_FROM_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_SUB_FROM_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_SUB_FROM_PX USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_SUB_FROM_PX:
+
+	CLR	C
+	MOVX	A,@R1
+	SUBB	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	SUBB	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	SUBB	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	SUBB	A,@R0
+	MOVX	@R1,A
+	RET
+        CFI ENDBLOCK ?L_SUB_FROM_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)Signed long bit AND
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_AND
+;
+;	Description: Bit AND two objects in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in object #1 (destination)
+;		R1 Points to LSB in object #2 (source)
+;
+;	Register output:
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_AND
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_AND
+	PUBLIC	?L_AND_REW
+        CFI BLOCK ?L_AND_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_AND_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_AND_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_AND USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_AND:
+
+	MOV	A,@R0
+	ANL	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ANL	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ANL	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ANL	A,@R1
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_AND
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_AND_X
+;
+;	Description: Bit AND a XDATA object to an IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		A    = MSB of the result
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;       Multiple DPTR:
+;               DPTR: all allowed in ?L_AND_X and ?L_AND_X_REW
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_AND_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_AND_X
+	PUBLIC	?L_AND_X_REW
+        CFI BLOCK ?L_AND_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+	
+?L_AND_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+        CFI ENDBLOCK ?L_AND_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_AND_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+ 
+x:
+?L_AND_X:
+
+	MOVX	A,@DPTR
+	ANL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ANL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ANL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ANL	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_AND_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_AND_C
+;
+;	Description: Bit AND a CODE object to an IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the CODE object
+;
+;	Register output:
+;		A    = MSB of the result
+;		R0   = R0+3
+;
+;       Multiple DPTR:
+;               DPTR: all allowed in ?L_AND_C and ?L_AND_C_REW
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_AND_C
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_AND_C
+	PUBLIC	?L_AND_C_REW
+        CFI BLOCK ?L_AND_C_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_AND_C_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_AND_C_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_AND_C USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	
+x:
+?L_AND_C:
+
+	CLR	A
+	MOVC	A,@A+DPTR
+	ANL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#1
+	MOVC	A,@A+DPTR
+	ANL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#2
+	MOVC	A,@A+DPTR
+	ANL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#3
+	MOVC	A,@A+DPTR
+	ANL	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_AND_C
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_AND_PX
+;
+;	Description: Bit AND a PDATA object to an IDATA object
+;
+;	Register input:
+;		R0 Points to LSB in the IDATA object
+;		R1 Points to LSB in the PDATA object
+;
+;	Register output:
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_AND_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_AND_PX
+	PUBLIC	?L_AND_PX_REW
+        CFI BLOCK ?L_AND_PX_REW USING cfi_common
+        CFI NOFUNCTION
+?L_AND_PX_REW:
+
+	CFI R0 undefined
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_AND_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_AND_PX USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_AND_PX:
+
+	MOVX	A,@R1
+	ANL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ANL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ANL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ANL	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_AND_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_AND_TO_X
+;
+;	Description: Bit AND an IDATA object to a XDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		A    = MSB of the result
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;       Multiple DPTR:
+;               DPTR: all allowed in ?L_AND_TO_X and ?L_AND_TO_X_REW
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_AND_TO_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_AND_TO_X
+	PUBLIC	?L_AND_TO_X_REW
+        CFI BLOCK ?L_AND_TO_X_REW USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI R0 undefined
+
+?L_AND_TO_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_AND_TO_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_AND_TO_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?L_AND_TO_X:
+
+	MOVX	A,@DPTR
+	ANL	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ANL	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ANL	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ANL	A,@R0
+	MOVX	@DPTR,A
+	RET
+        CFI ENDBLOCK ?L_AND_TO_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_AND_TO_PX
+;
+;	Description: Bit AND an IDATA object to a PDATA object
+;
+;	Register input:
+;		R0 Points to LSB in the IDATA object
+;		R1 Points to LSB in the PDATA object
+;
+;	Register output:
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_AND_TO_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_AND_TO_PX
+	PUBLIC	?L_AND_TO_PX_REW
+        CFI BLOCK ?L_AND_TO_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+	
+?L_AND_TO_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_AND_TO_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_AND_TO_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_AND_TO_PX:
+
+	MOVX	A,@R1
+	ANL	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ANL	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ANL	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ANL	A,@R0
+	MOVX	@R1,A
+	RET
+        CFI ENDBLOCK ?L_AND_TO_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_TEST
+;
+;	Description: Bit test two objects in IDATA 
+;
+;	Register input:
+;		R0 Points to LSB in object #1
+;		R1 Points to LSB in object #2
+;
+;	Register output:
+;		A    Is zero if no bit matched.
+;		R0 = R0+3 if A is zero else undefined.
+;		R1 = R1+3 if A is zero else undefined.
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_TEST
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_TEST
+	PUBLIC	?L_TEST_REW
+        CFI BLOCK ?L_TEST_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_TEST_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_TEST_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_TEST USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_TEST:
+
+	MOV	A,@R0
+	ANL	A,@R1
+	JNZ	nz
+
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ANL	A,@R1
+	JNZ	nz
+
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ANL	A,@R1
+	JNZ	nz
+
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ANL	A,@R1
+nz:	RET
+        CFI ENDBLOCK ?L_TEST
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_TEST_X
+;
+;	Description: Bit test two objects. 
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		A      Is zero if no bit matched.
+;		R0   = R0 + 3 if A is zero else undefined.
+;		DPTR = DPTR+3 if A is zero else undefined.
+;
+;       Multiple DPTR:
+;               DPTR: all allowed in ?L_TEST_X and ?L_TEST_X_REW
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_TEST_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_TEST_X
+	PUBLIC	?L_TEST_X_REW
+        CFI BLOCK ?L_TEST_X_REW USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI R0 undefined
+
+?L_TEST_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_TEST_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_TEST_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?L_TEST_X:
+
+	MOVX	A,@DPTR
+	ANL	A,@R0
+	JNZ	nz
+
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ANL	A,@R0
+	JNZ	nz
+
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ANL	A,@R0
+	JNZ	nz
+
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ANL	A,@R0
+nz:	RET
+        CFI ENDBLOCK ?L_TEST_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_TEST_C
+;
+;	Description: Bit test two objects. 
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the CODE object
+;
+;	Register output:
+;		A      Is zero if no bit matched.
+;		R0   = R0 + 3 if A is zero else undefined.
+;
+;       Multiple DPTR:
+;               DPTR: all allowed in ?L_TEST_C and ?L_TEST_C_REW
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_TEST_C
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_TEST_C
+	PUBLIC	?L_TEST_C_REW
+        CFI BLOCK ?L_TEST_C_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_TEST_C_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_TEST_C_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_TEST_C USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?L_TEST_C:
+
+	CLR	A
+	MOVC	A,@A+DPTR
+	ANL	A,@R0
+	JNZ	nz
+
+	INC	R0
+	MOV	A,#1
+	MOVC	A,@A+DPTR
+	ANL	A,@R0
+	JNZ	nz
+
+	INC	R0
+	MOV	A,#2
+	MOVC	A,@A+DPTR
+	ANL	A,@R0
+	JNZ	nz
+
+	INC	R0
+	MOV	A,#3
+	MOVC	A,@A+DPTR
+	ANL	A,@R0
+nz:	RET
+        CFI ENDBLOCK ?L_TEST_C
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_TEST_PX
+;
+;	Description: Bit test two objects
+;
+;	Register input:
+;		R0 Points to LSB in the IDATA object
+;		R1 Points to LSB in the PDATA object
+;
+;	Register output:
+;		A    Is zero if no bit matched.
+;		R0 = R0+3 if A is zero else undefined.
+;		R1 = R1+3 if A is zero else undefined.
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_TEST_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_TEST_PX
+	PUBLIC	?L_TEST_PX_REW
+        CFI BLOCK ?L_TEST_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_TEST_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_TEST_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_TEST_PX USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_TEST_PX:
+
+	MOVX	A,@R1
+	ANL	A,@R0
+	JNZ	nz
+
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ANL	A,@R0
+	JNZ	nz
+
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ANL	A,@R0
+	JNZ	nz
+
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ANL	A,@R0
+nz:	RET
+        CFI ENDBLOCK ?L_TEST_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)Signed long bit OR
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_IOR
+;
+;	Description: Bit OR two objects in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in object #1 (destination)
+;		R1 Points to LSB in object #2 (source)
+;
+;	Register output:
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_IOR
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_IOR
+	PUBLIC	?L_IOR_REW
+        CFI BLOCK ?L_IOR_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_IOR_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_IOR_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_IOR USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_IOR:
+
+	MOV	A,@R0
+	ORL	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ORL	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ORL	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	ORL	A,@R1
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_IOR
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_IOR_X
+;
+;	Description: Bit OR a XDATA object to an IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		A    = MSB of the result
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_IOR_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_IOR_X
+	PUBLIC	?L_IOR_X_REW
+        CFI BLOCK ?L_IOR_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_IOR_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_IOR_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_IOR_X USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?L_IOR_X:
+
+	MOVX	A,@DPTR
+	ORL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ORL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ORL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ORL	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_IOR_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_IOR_C
+;
+;	Description: Bit OR a CODE object to an IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the CODE object
+;
+;	Register output:
+;		A    = MSB of the result
+;		R0   = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_IOR_C
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_IOR_C
+	PUBLIC	?L_IOR_C_REW
+        CFI BLOCK ?L_IOR_C_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_IOR_C_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_IOR_C_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_IOR_C USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?L_IOR_C:
+
+	CLR	A
+	MOVC	A,@A+DPTR
+	ORL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#1
+	MOVC	A,@A+DPTR
+	ORL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#2
+	MOVC	A,@A+DPTR
+	ORL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#3
+	MOVC	A,@A+DPTR
+	ORL	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_IOR_C
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_IOR_PX
+;
+;	Description: Bit OR a PDATA object to an IDATA object
+;
+;	Register input:
+;		R0 Points to LSB in the IDATA object
+;		R1 Points to LSB in the PDATA object
+;
+;	Register output:
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_IOR_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_IOR_PX
+	PUBLIC	?L_IOR_PX_REW
+        CFI BLOCK ?L_IOR_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_IOR_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_IOR_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_IOR_PX USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_IOR_PX:
+
+	MOVX	A,@R1
+	ORL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ORL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ORL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ORL	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_IOR_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_IOR_TO_X
+;
+;	Description: Bit OR an IDATA object to a XDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		A    = MSB of the result
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_IOR_TO_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_IOR_TO_X
+	PUBLIC	?L_IOR_TO_X_REW
+        CFI BLOCK ?L_IOR_TO_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+	
+?L_IOR_TO_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_IOR_TO_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_IOR_TO_X USING cfi_common
+        CFI NOFUNCTION
+	
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?L_IOR_TO_X:
+
+	MOVX	A,@DPTR
+	ORL	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ORL	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ORL	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	ORL	A,@R0
+	MOVX	@DPTR,A
+	RET
+        CFI ENDBLOCK ?L_IOR_TO_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_IOR_TO_PX
+;
+;	Description: Bit OR an IDATA object to a PDATA object
+;
+;	Register input:
+;		R0 Points to LSB in the IDATA object
+;		R1 Points to LSB in the PDATA object
+;
+;	Register output:
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_IOR_TO_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_IOR_TO_PX
+	PUBLIC	?L_IOR_TO_PX_REW
+        CFI BLOCK ?L_IOR_TO_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_IOR_TO_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_IOR_TO_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_IOR_TO_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_IOR_TO_PX:
+
+	MOVX	A,@R1
+	ORL	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ORL	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ORL	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	ORL	A,@R0
+	MOVX	@R1,A
+	RET
+        CFI ENDBLOCK ?L_IOR_TO_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)Signed long bit XOR
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_XOR
+;
+;	Description: Bit XOR two objects in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in object #1 (destination)
+;		R1 Points to LSB in object #2 (source)
+;
+;	Register output:
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_XOR
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_XOR
+	PUBLIC	?L_XOR_REW
+        CFI BLOCK ?L_XOR_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_XOR_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_XOR_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_XOR USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_XOR:
+
+	MOV	A,@R0
+	XRL	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	XRL	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	XRL	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	XRL	A,@R1
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_XOR
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_XOR_X
+;
+;	Description: Bit XOR a XDATA object to an IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		A    = MSB of the result
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_XOR_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_XOR_X
+	PUBLIC	?L_XOR_X_REW
+        CFI BLOCK ?L_XOR_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_XOR_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_XOR_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_XOR_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+x:
+?L_XOR_X:
+
+	MOVX	A,@DPTR
+	XRL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XRL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XRL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XRL	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_XOR_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_XOR_C
+;
+;	Description: Bit XOR a CODE object to an IDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the CODE object
+;
+;	Register output:
+;		A    = MSB of the result
+;		R0   = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_XOR_C
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_XOR_C
+	PUBLIC	?L_XOR_C_REW
+        CFI BLOCK ?L_XOR_C_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_XOR_C_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_XOR_C_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_XOR_C USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?L_XOR_C:
+
+	CLR	A
+	MOVC	A,@A+DPTR
+	XRL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#1
+	MOVC	A,@A+DPTR
+	XRL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#2
+	MOVC	A,@A+DPTR
+	XRL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#3
+	MOVC	A,@A+DPTR
+	XRL	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_XOR_C
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_XOR_PX
+;
+;	Description: Bit XOR a PDATA object to an IDATA object
+;
+;	Register input:
+;		R0 Points to LSB in the IDATA object
+;		R1 Points to LSB in the PDATA object
+;
+;	Register output:
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_XOR_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_XOR_PX
+	PUBLIC	?L_XOR_PX_REW
+        CFI BLOCK ?L_XOR_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+	
+?L_XOR_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_XOR_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_XOR_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_XOR_PX:
+
+	MOVX	A,@R1
+	XRL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XRL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XRL	A,@R0
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XRL	A,@R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_XOR_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_XOR_TO_X
+;
+;	Description: Bit XOR an IDATA object to a XDATA object
+;
+;	Register input:
+;		R0   Points to LSB in the IDATA object
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		A    = MSB of the result
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_XOR_TO_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_XOR_TO_X
+	PUBLIC	?L_XOR_TO_X_REW
+        CFI BLOCK ?L_XOR_TO_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_XOR_TO_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_XOR_TO_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_XOR_TO_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?L_XOR_TO_X:
+
+	MOVX	A,@DPTR
+	XRL	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XRL	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XRL	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XRL	A,@R0
+	MOVX	@DPTR,A
+	RET
+        CFI ENDBLOCK ?L_XOR_TO_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_XOR_TO_PX
+;
+;	Description: Bit XOR an IDATA object to a PDATA object
+;
+;	Register input:
+;		R0 Points to LSB in the IDATA object
+;		R1 Points to LSB in the PDATA object
+;
+;	Register output:
+;		A  = MSB of the result
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_XOR_TO_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_XOR_TO_PX
+	PUBLIC	?L_XOR_TO_PX_REW
+        CFI BLOCK ?L_XOR_TO_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_XOR_TO_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_XOR_TO_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_XOR_TO_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_XOR_TO_PX:
+
+	MOVX	A,@R1
+	XRL	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XRL	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XRL	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XRL	A,@R0
+	MOVX	@R1,A
+	RET
+        CFI ENDBLOCK ?L_XOR_TO_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)Signed long (post) increment
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_INC
+;
+;	Description: Increment an object in IDATA
+;
+;	Register input:
+;		R1 Points to LSB in the IDATA object
+;
+;	Register output:
+;		A  Is zero if the whole object is zero else undefined set
+;		R1 Is undefined
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_INC
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_INC
+	PUBLIC	?L_INC_REW
+        CFI BLOCK ?L_INC_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R1 undefined
+
+?L_INC_REW:
+
+	DEC	R1
+	DEC	R1
+	DEC	R1
+
+        CFI ENDBLOCK ?L_INC_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_INC USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R1 undefined
+
+x:
+?L_INC:
+
+	INC	@R1
+	MOV	A,@R1
+	JNZ	noz
+
+	INC	R1
+	INC	@R1
+	MOV	A,@R1
+	JNZ	noz
+
+	INC	R1
+	INC	@R1
+	MOV	A,@R1
+	JNZ	noz
+
+	INC	R1
+	INC	@R1
+	MOV	A,@R1
+noz:	RET
+        CFI ENDBLOCK ?L_INC
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_INC_X
+;
+;	Description: Increment an object in XDATA
+;
+;	Register input:
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		CY   Is undefined if ?L_INC_X_REW is the entry
+;		A    Is zero if the whole object is zero else undefined set
+;		DPTR Is undefined
+;
+;       Multiple DPTR
+;               DPTR: all allowed in ?L_INC_X
+;
+;               ?L_INC_X_REW: in separate mode DPTR0 must be selected
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_INC_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_INC_X
+	PUBLIC	?L_INC_X_REW
+        CFI BLOCK ?L_INC_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI DPTR0 undefined
+
+?L_INC_X_REW:
+	MOV	A,DPL
+	ADD	A,#0FDH
+	MOV	DPL,A
+	JC	?L_INC_X
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        MOV     A,DPH
+        SUBB    A,#0
+        MOV     DPH,A
+        JC      ?L_INC_X
+        DEC     ?DPX
+#else
+        DEC	DPH
+#endif
+        CFI ENDBLOCK ?L_INC_X_REW
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_INC_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI DPTR0 undefined
+
+?L_INC_X:
+
+	MOVX	A,@DPTR
+	INC	A
+	MOVX	@DPTR,A
+	JNZ	noz
+
+	INC	DPTR
+	MOVX	A,@DPTR
+	INC	A
+	MOVX	@DPTR,A
+	JNZ	noz
+
+	INC	DPTR
+	MOVX	A,@DPTR
+	INC	A
+	MOVX	@DPTR,A
+	JNZ	noz
+
+	INC	DPTR
+	MOVX	A,@DPTR
+	INC	A
+	MOVX	@DPTR,A
+noz:	RET
+        CFI ENDBLOCK ?L_INC_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_INC_PX
+;
+;	Description: Increment an object in PDATA
+;
+;	Register input:
+;		R1   Points to LSB in the PDATA object
+;
+;	Register output:
+;		A    Is zero if the whole object is zero else undefined set
+;		R1   Is undefined
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_INC_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_INC_PX
+	PUBLIC	?L_INC_PX_REW
+        CFI BLOCK ?L_INC_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R1 undefined
+
+?L_INC_PX_REW:
+	DEC	R1
+	DEC	R1
+	DEC	R1
+
+        CFI ENDBLOCK ?L_INC_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_INC_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R1 undefined
+
+x:
+?L_INC_PX:
+
+	MOVX	A,@R1
+	INC	A
+	MOVX	@R1,A
+	JNZ	noz
+
+	INC	R1
+	MOVX	A,@R1
+	INC	A
+	MOVX	@R1,A
+	JNZ	noz
+
+	INC	R1
+	MOVX	A,@R1
+	INC	A
+	MOVX	@R1,A
+	JNZ	noz
+
+	INC	R1
+	MOVX	A,@R1
+	INC	A
+	MOVX	@R1,A
+noz:	RET
+        CFI ENDBLOCK ?L_INC_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)Signed long (post) decrement
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_DEC
+;
+;	Description: Decrement an object in IDATA
+;
+;	Register input:
+;		R1 Points to LSB in the IDATA object
+;
+;	Register output:
+;		A  Is zero if the whole object was zero before the
+;		   operation else undefined set.
+;
+;		R1 Is undefined
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_DEC
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_DEC
+	PUBLIC	?L_DEC_REW
+        CFI BLOCK ?L_DEC_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R1 undefined
+
+?L_DEC_REW:
+
+	DEC	R1
+	DEC	R1
+	DEC	R1
+
+        CFI ENDBLOCK ?L_DEC_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_DEC USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R1 undefined
+
+x:
+?L_DEC:
+
+	MOV	A,@R1
+	DEC	@R1
+	JNZ	noz
+
+	INC	R1
+	MOV	A,@R1
+	DEC	@R1
+	JNZ	noz
+
+	INC	R1
+	MOV	A,@R1
+	DEC	@R1
+	JNZ	noz
+
+	INC	R1
+	MOV	A,@R1
+	DEC	@R1
+noz:	RET
+        CFI ENDBLOCK ?L_DEC
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_DEC_X
+;
+;	Description: Decrement an object in XDATA
+;
+;	Register input:
+;		DPTR Points to LSB in the XDATA object
+;
+;	Register output:
+;		CY   Is undefined if ?L_DEC_X_REW is the entry
+;		A    Is undefined
+;		DPTR Is undefined
+;
+;       Multiple DPTR
+;               DPTR: all allowed in ?L_DEC_X
+;
+;               ?L_DEC_X_REW: in separate mode DPTR0 must be selected
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_DEC_X
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_DEC_X
+	PUBLIC	?L_DEC_X_REW
+        CFI BLOCK ?L_DEC_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI DPTR0 undefined
+
+?L_DEC_X_REW:
+	MOV	A,DPL
+	ADD	A,#0FDH
+	MOV	DPL,A
+	JC	?L_DEC_X
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        MOV     A,DPH
+        SUBB    A,#0
+        MOV     DPH,A
+        JC      ?L_DEC_X
+        DEC     ?DPX
+#else
+        DEC	DPH
+#endif
+        CFI ENDBLOCK ?L_DEC_X_REW
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_DEC_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI DPTR0 undefined
+
+?L_DEC_X:
+
+	MOVX	A,@DPTR
+	JNZ	noz
+
+	DEC	A
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	JNZ	noz
+
+	DEC	A
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	JNZ	noz
+
+	DEC	A
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOVX	A,@DPTR
+
+noz:	DEC	A
+	MOVX	@DPTR,A
+	RET
+        CFI ENDBLOCK ?L_DEC_X
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_DEC_PX
+;
+;	Description: Decrement an object in PDATA
+;
+;	Register input:
+;		DPTR Points to LSB in the PDATA object
+;
+;	Register output:
+;		A    Is undefined
+;		DPTR Is undefined
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_DEC_PX
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_DEC_PX
+	PUBLIC	?L_DEC_PX_REW
+        CFI BLOCK ?L_DEC_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R1 undefined
+	
+?L_DEC_PX_REW:
+	DEC	R1
+	DEC	R1
+	DEC	R1
+
+        CFI ENDBLOCK ?L_DEC_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_DEC_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R1 undefined
+	
+x:
+?L_DEC_PX:
+
+	MOVX	A,@R1
+	JNZ	noz
+
+	DEC	A
+	MOVX	@R1,A
+	INC	R1
+	MOVX	A,@R1
+	JNZ	noz
+
+	DEC	A
+	MOVX	@R1,A
+	INC	R1
+	MOVX	A,@R1
+	JNZ	noz
+
+	DEC	A
+	MOVX	@R1,A
+	INC	R1
+	MOVX	A,@R1
+
+noz:	DEC	A
+	MOVX	@R1,A
+	RET
+        CFI ENDBLOCK ?L_DEC_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Cast a signed character to a long object
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?SC_TO_L
+;
+;	Description: Cast a signed char into an IDATA object.
+;
+;	Register input:
+;		R0 Points to the LSB at the destination.
+;		A  Is the signed character
+;
+;	Register output:
+;		A    Has the same value as the MSB.
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SC_TO_L
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SC_TO_L
+        CFI BLOCK ?SC_TO_L USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+
+?SC_TO_L:
+	MOV	@R0,A
+	INC	R0
+	RLC	A
+	SUBB	A,ACC
+	MOV	@R0,A
+	INC	R0
+	MOV	@R0,A
+	INC	R0
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?SC_TO_L
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SC_TO_L_PX
+;
+;	Description: Cast a signed char into a PDATA object.
+;
+;	Register input:
+;		R0 Points to the LSB at the destination.
+;		A  Is the signed character
+;
+;	Register output:
+;		A    Has the same value as the MSB.
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SC_TO_L_PX
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SC_TO_L_PX
+        CFI BLOCK ?SC_TO_L_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+
+?SC_TO_L_PX:
+	MOVX	@R0,A
+	INC	R0
+	RLC	A
+	SUBB	A,ACC
+	MOVX	@R0,A
+	INC	R0
+	MOVX	@R0,A
+	INC	R0
+	MOVX	@R0,A
+	RET
+        CFI ENDBLOCK ?SC_TO_L_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SC_TO_L_X
+;
+;	Description: Cast a signed char into a XDATA object.
+;
+;	Register input:
+;		A    Is the signed character
+;		DPTR Points to the LSB at the destination.
+;
+;	Register output:
+;		A      Has the same value as the MSB.
+;		DPTR = DPTR+3
+;
+;       Multiple DPTR
+;               DPTR: all allowed in ?SC_TO_L_X
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SC_TO_L_X
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SC_TO_L_X
+        CFI BLOCK ?SC_TO_L_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI DPTR0 undefined
+
+?SC_TO_L_X:
+	MOVX	@DPTR,A
+	INC	DPTR
+	RLC	A
+	SUBB	A,ACC
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOVX	@DPTR,A
+	RET
+        CFI ENDBLOCK ?SC_TO_L_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Move long objects between memories.
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_MOV
+;
+;	Description: Move an object within IDATA
+;
+;	Register input:
+;		R0 Points to the LSB at the destination.
+;		R1 Points to the LSB in the source.
+;
+;	Register output:
+;		A    Has the same value as the MSB.
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MOV
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_MOV
+        CFI BLOCK ?L_MOV USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+?L_MOV:
+	MOV	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_MOV
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_MOV_A
+;
+;	Description: Move an object within IDATA
+;
+;	Register input:
+;		R0 Points to the LSB at the destination.
+;		A  Points to the LSB in the source.
+;
+;	Register output:
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MOV_A
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_MOV_A
+#ifdef OPTIMIZE_SIZE
+	EXTERN  ?L_MOV
+#endif
+        CFI BLOCK ?L_MOV_A USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+
+?L_MOV_A:
+	XCH	A,R1
+	PUSH	A
+
+    CFI CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 1)
+    CFI R1 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 1, 1)
+
+#ifdef OPTIMIZE_SIZE
+	CALL	?L_MOV
+#else
+	MOV	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	MOV	@R0,A
+#endif
+
+	POP	A
+    CFI CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	MOV	R1,A
+    CFI R1 samevalue
+	RET
+        CFI ENDBLOCK ?L_MOV_A
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_MOV_PX
+;
+;	Description: Move an object from PDATA to IDATA
+;
+;	Register input:
+;		R0 Points to the LSB at the destination (IDATA).
+;		R1 Points to the LSB in the source (PDATA).
+;
+;	Register output:
+;		A    Has the same value as the MSB.
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MOV_PX
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_MOV_PX
+        CFI BLOCK ?L_MOV_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+?L_MOV_PX:
+	MOVX	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_MOV_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_MOV_X
+;
+;	Description: Move an object from XDATA to IDATA
+;
+;	Register input:
+;		R0   Points to the LSB at the destination (IDATA).
+;		DPTR Points to the LSB in the source (XDATA).
+;
+;	Register output:
+;		A    Has the same value as the MSB.
+;		R0  =R0+3
+;		DPTR=DPTR+3
+;
+;       Multiple DPTR
+;               DPTR: all allowed in ?L_MOV_X
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MOV_X
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_MOV_X
+        CFI BLOCK ?L_MOV_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+?L_MOV_X:
+	MOVX	A,@DPTR
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_MOV_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_MOV_C
+;
+;	Description: Move an object from CODE to IDATA
+;
+;	Register input:
+;		R0   Points to the LSB at the destination (IDATA).
+;		DPTR Points to the LSB in the source (CODE).
+;
+;	Register output:
+;		A    Has the same value as the MSB.
+;		R0  =R0+3
+;		DPTR=DPTR+3
+;
+;       Multiple DPTR
+;               DPTR: all allowed in ?L_MOV_C
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MOV_C
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_MOV_C
+        CFI BLOCK ?L_MOV_C USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+?L_MOV_C:
+	CLR	A
+	MOVC	A,@A+DPTR
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#1
+	MOVC	A,@A+DPTR
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#2
+	MOVC	A,@A+DPTR
+	MOV	@R0,A
+	INC	R0
+	MOV	A,#3
+	MOVC	A,@A+DPTR
+	MOV	@R0,A
+	RET
+        CFI ENDBLOCK ?L_MOV_C
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_MOV_TO_PX
+;
+;	Description: Move an object from IDATA to PDATA
+;
+;	Register input:
+;		R0 Points to the LSB in the source (IDATA).
+;		R1 Points to the LSB in the destination (PDATA).
+;
+;	Register output:
+;		A    Has the same value as the MSB.
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MOV_TO_PX
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_MOV_TO_PX
+	PUBLIC	?L_MOV_TO_PX_REW
+	PUBLIC	?L_MOV_TO_PX_REWX
+        CFI BLOCK ?L_MOV_TO_PX_REWX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R1 undefined
+
+?L_MOV_TO_PX_REWX:
+
+	DEC	R1
+	DEC	R1
+	DEC	R1
+
+        CFI ENDBLOCK ?L_MOV_TO_PX_REWX
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_MOV_TO_PX_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+x:
+?L_MOV_TO_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_MOV_TO_PX_REW
+	REQUIRE	y
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_MOV_TO_PX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+y:
+?L_MOV_TO_PX:
+	MOV	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	MOVX	@R1,A
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	MOVX	@R1,A
+	RET
+        CFI ENDBLOCK ?L_MOV_TO_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_MOV_TO_PX_A
+;
+;	Description: Move an object from IDATA to PDATA
+;
+;	Register input:
+;		A Points to the LSB in the source (IDATA).
+;		R0  Points to the LSB in the destination (PDATA).
+;
+;	Register output:
+;		A    Undefined
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MOV_TO_PX_A
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_MOV_TO_PX_A
+        CFI BLOCK ?L_MOV_TO_PX_A USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+
+?L_MOV_TO_PX_A:
+	XCH	A,R1
+	PUSH	A
+    CFI CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 1)
+    CFI R1 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 1, 1)
+
+	MOV	A,@R1
+	MOVX	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	MOVX	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	MOVX	@R0,A
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	MOVX	@R0,A
+
+	POP	A
+    CFI CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	MOV	R1,A
+    CFI R1 samevalue
+	RET
+        CFI ENDBLOCK ?L_MOV_TO_PX_A
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_MOV_TO_X
+;
+;	Description: Move an object from IDATA to XDATA
+;
+;	Register input:
+;		R0   Points to the LSB in the source (IDATA).
+;		DPTR Points to the LSB in the destination (XDATA).
+;
+;	Register output:
+;		A    Has the same value as the MSB.
+;		R0  =R0+3
+;		DPTR=DPTR+3
+;
+;       Multiple DPTR
+;               DPTR: all allowed in ?L_MOV_TO_X and ?L_MOV_TO_X_REW
+;
+;               ?L_MOV_TO_X_REWX: requires DPTRO in separate mode
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_MOV_TO_X
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_MOV_TO_X
+	PUBLIC	?L_MOV_TO_X_REW
+	PUBLIC	?L_MOV_TO_X_REWX
+        CFI BLOCK ?L_MOV_TO_X_REWX USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI DPTR0 undefined
+
+?L_MOV_TO_X_REWX:
+
+	MOV	A,DPL
+	ADD	A,#0FDH
+	MOV	DPL,A
+	JC	?L_MOV_TO_X_REW
+#ifdef __EXTENDED_DPTR__
+        EXTERN  ?DPX
+        MOV	A,DPH
+        SUBB	A,#0
+        MOV	DPH,A
+        JC	?L_MOV_TO_X_REW
+        DEC	?DPX
+#else
+	DEC	DPH
+#endif
+        CFI ENDBLOCK ?L_MOV_TO_X_REWX
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_MOV_TO_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?L_MOV_TO_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+        CFI ENDBLOCK ?L_MOV_TO_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_MOV_TO_X USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?L_MOV_TO_X:
+	MOV	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOV	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOV	A,@R0
+	MOVX	@DPTR,A
+	INC	R0
+	INC	DPTR
+	MOV	A,@R0
+	MOVX	@DPTR,A
+	RET
+        CFI ENDBLOCK ?L_MOV_TO_X
+	END
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  $Id: iar_long.s51 1.13 2007/06/07 09:21:58Z larssu Exp $
+;  $Log: iar_long.s51 $
+;  Revision 1.13  2007/06/07 09:21:58Z  larssu
+;  NOROOT'ify RCODE segments
+;  Revision 1.12  2005/03/18 12:45:11Z  ola
+;  Revision 1.11  2004/11/18 11:34:34Z  owi
+;  Revision 1.10  2004/11/16 16:41:07Z  owi
+;  Revision 1.9  2004/11/10 16:31:03Z  owi
+;  Revision 1.8  2004/09/01 08:57:24Z  ola
+;  Revision 1.7  2004/03/12 15:46:05Z  owi
+;  Revision 1.6  2003/11/12 12:42:58Z  ola
+;  Revision 1.5  2003/11/11 17:32:28Z  ola
+;  Revision 1.4  2003/09/24 08:46:10Z  ola
+;  Revision 1.3  2003/09/23 15:20:19Z  ola
+;  Revision 1.1  2003/09/16 10:53:01Z  ola
+;  Initial revision
+;  Revision 1.19  2003/06/13 11:16:50Z  ola
+;  Revision 1.18  2003/05/26 14:10:06Z  owi
+;  Revision 1.17  2003/05/02 12:09:06Z  owi
+;  Revision 1.16  2003/04/08 16:07:20Z  owi
+;  Revision 1.15  2003/03/25 16:27:38Z  owi
+;  Revision 1.17  2003/03/16 22:24:18Z  owi
+;  Revision 1.16  2003/03/15 11:26:52Z  owi

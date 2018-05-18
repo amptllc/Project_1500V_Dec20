@@ -1,0 +1,389 @@
+;    MODULE  call_alt_image.s51
+;    RSEG RCODE (1)
+;    PUBLIC call_alt_image
+;    FUNCTION call_alt_image, 0203H
+;      
+;call_alt_image:           
+;    mov   R7, #0x3F
+;    push  0x7
+;    mov   R7, #0x60
+;    push  0x7
+;    reti
+;    ENDMOD;
+    
+    MODULE  main_asm.s51
+    RSEG RCODE (1)
+    PUBLIC call_alt_image
+    FUNCTION call_alt_image, 0203H
+    PUBLIC main_asm
+    FUNCTION main_asm, 0203H
+    PUBLIC main
+    FUNCTION main, 0203H    
+main:    
+main_asm:
+    //CLKCON |= OSC_BIT;                    // starting the RC Oscillator
+    ; LBC Start RC Osc, clock speed, timer tick speed to 12MHz (crystal is 24MHz)
+    ORL 0xC6, #0x49                         // was 0x40, then 0x49, now 0x40
+    ;NOP
+    MOV A,    #0x10
+    //SLEEP |= OSC_PD_BIT;                  // powering down the unused oscillator
+    ; LBC Power down unused oscillator
+    ; LBC ORL used because MOV affects Carry flag? (each 2 bytes, 1 cycle command)
+    ORL 0xBE, #0x04
+    //*((BYTE *)0xFFFF) = 0x10;
+    ; LBC going to move 0x10 to locations 0xFFFE and 0xFFFF
+    MOV DPTR, #0xFFFE                       // was 0xFFFF
+    ;MOV A,    #0x10
+    MOVX @DPTR, A
+    INC DPTR
+    MOVX @DPTR, A
+
+    CLR A
+    ; LBC scheduler interface at 0xF500, 32 bytes of tick array at 0xF500 
+    MOV DPTR, #0xF501
+    MOVX @DPTR, A
+    //SET_WORD(T1CC0H, T1CC0L, 600 - 1);
+//    MOV     0xDB,#0x2
+//    MOV     0xDA,#0x57
+    ; LBC setting up Timer1  (T1CC0H = 0xDB, set to 0x2, T1CC0L = 0xDA, set to 0xED)
+    ; LBC (T1CC0 value of 749, modulo count from 0 to 749)
+    ; LBC T1CTL (0xE4,Timer1 Control and Status) set to 0x6, PreScaler of 8, module mode using T1CC0
+    ; LBC T1CCTL0 (Timer1 Channel 0 capture/compare control = 0xE5)
+    ; LBC T1CCTL0, set to 01000100 (0x44), Interrupt enabled, compare mode)
+    MOV     0xDB,#0x2
+    MOV     0xDA,#0xED
+    //        prescaler = 8      modulo mode            ie
+    //T1CTL   = 0x04  | 0x02;    T1CCTL0 = 0x44;
+    MOV     0xE4,#0x6
+    MOV     0xE5,#0x44
+
+    mov 0,   #0x2
+    mov 1,   #0xAA
+    mov 2,   #0x55
+    mov 3,   0
+    ; LBC 0x83 is the DPH0 register (DPTR high register)
+    mov 0x83, #0x5C
+PB_Values_Test:    
+    ; LBC 0x82 is the DPL0 register (DPTR low register)
+    ; LBC 0x5C00 is the address for the Parameter Block used by Lower Image
+    ; LBC compare the contents of 0x5C00 and 0x5C01 to value 1, 
+    ; LBC and contents of 0x5CF0 and 0x5CF1 to 2 to value 2,
+    ; LBC if any of the four tests !<> jump to LOOP_PB_TEST (problem with PB)
+    ; LBC if all four tests pass, use the Parameter Block for the Lower Image
+    ; LBC LOOP_PB_TEST changes the DPH0 register to hold the upper byte
+    ; LBC for the address of the Parameter Block for the upper image
+    ; LBC and the "same" validation is undertaken for the 2nd Parameter Block 
+    ; LBC if all four successful, use Parameter Block for lower image
+    mov  0x82, #0x00
+    movx A, @DPTR
+    CJNE A, 1, LOOP_PB_TEST
+    INC  DPTR
+    movx A, @DPTR
+    CJNE A, 1, LOOP_PB_TEST
+    mov  0x82, #0xF0
+    movx A, @DPTR
+    CJNE A, 2, LOOP_PB_TEST
+    INC  DPTR
+    movx A, @DPTR
+    CJNE A, 2, LOOP_PB_TEST
+    SJMP Copy_From_PB
+LOOP_PB_TEST:
+    mov 0x83, #0x04
+    ; LBC will check Parameter Block for upper image (once, first time),
+    ; LBC second time will fall through to get values from Boot area.
+    DJNZ R0, PB_Values_Test
+COPY_FROM_BOOT_AREA: 
+    ; LBC if here then both Parameter Blocks failed verification.
+    ; LBC Register 7 - MPP, set to on
+    mov  7, #1
+    ; LBC Register 6 - Module, set to on
+    mov  6, #1
+    ; LBC 0x3DC is the location for the OV value in boot area
+    ; LBC place into Register 5
+    mov DPTR, #0x3DC
+    movx A, @DPTR
+    mov  R5, A
+    INC  DPTR
+    ; LBC 0x3DD is the location for the OC value in boot area
+    ; LBC place into register 4
+    movx A, @DPTR
+    mov  R4, A
+    SJMP Set_OV_OC_MPP_MOD
+Copy_From_PB:
+    mov 0x82, #0xB9
+    MOVX A, @DPTR
+    ; LBC DPTR set to either 0x5CB9 or 0x04B9 (contents are MPP value)
+    ; LBC Reg 7 contains MPP value
+    mov  R7, A
+    INC  DPTR
+    MOVX A, @DPTR
+    ; LBC DPTR set to either 0x5CBA or 0x04BA (contents are Module value)
+    ; LBC Reg 6 contains the module value
+    mov  R6, A
+    INC  DPTR
+    MOVX A, @DPTR
+    ; LBC DPTR set to either 0x5CBB or 0x04BB (contents are OV value)
+    ; LBC Reg 5 contains the OV value
+    mov  R5, A
+    INC  DPTR
+    MOVX A, @DPTR
+    ; LBC DPTR set to either 0x5CBC or 0x04BC (contents are OC value)
+    ; LBC Reg 4 contains the OC value
+    mov  R4, A
+    INC  DPTR
+Set_OV_OC_MPP_MOD:
+    //T3CC0 = ov; 
+    ;PUSH 5
+    ;POP  0xCD
+    ; LBC Register 5 contains the OV value. Set the T3CC0 SFR (0xCD)
+    ; LBC which is the Timer 3 Channel 0 Compare value.
+    MOV  0xCD, R5
+    //T3CC1 = oc;  
+    ;PUSH 4
+    ;POP  0xCF
+    ; LBC Register 4 contains the OC value. Set the T3CC1 SRF (0xCF)
+    ; LBC which is the Timer 3 Channel 1 Compare value.
+    MOV 0xCF, R4
+    //P1_3 = mpp; 
+    ; LBC move the contents of register 7 (MPP value) into the accumulator.
+    ; LBC decide whether to set or clear the P1.3 bit, indicating
+    ; LBC whether mpp tracking will be on or off.
+    mov A, 7
+    jz  clr_mpp
+    SETB 0x90.3
+    SJMP set_mod
+clr_mpp:
+    CLR  0x90.3
+set_mod:    
+    //P1_4 = mod; 
+    ; LBC move the contents of register 6 (module) into the accumulator.
+    ; LBC device whether to set or clear the P1.3 bit, indicating
+    ; LBC whether the module will be on or off.
+    mov A, 6
+    jz  clr_mod
+    SETB 0x90.4
+    SJMP after_mod
+clr_mod:
+    CLR  0x90.4
+after_mod:
+    //P1SEL = 0xC0;                          
+    ; LBC Selecting Port 1 Pin 7 and 6 to be Peripheral Function pins, other
+    ; LBC Port 1 pins are General purpose I/O. (P1SEL == 0xF4)
+    MOV 0xF4, #0xC0
+    // pins 7(oc) 6(ov) 4(on/off), 3(mpp), 1(LED), 0(mpp cycle) are for output
+    //P1DIR = 0xDB;   // 1101 1011
+    ; LBC (P1DIR == 0xFE), Pins 7,6,4,3,1,0 are set as output pins
+    MOV 0xFE, #0xDB
+    //T3CTL   = 0x50; // was 0x70, prescaler 1/4, normal operation, mode - free running
+    //MOV 0x9E, #0x50  // T2CTL
+    ; LBC (T3CTL == 0xCB, Timer 3 ConTroL)
+    ; LBC (0x50 == 01010000, Bits7-5, Prescaler value, 010, Tick Frequency/4
+    ; LBC Bit4, start timer, normal operation
+    ; LBC Bit3, Overflow interrupt mask, interrupt disabled.
+    ; LBC Bit2, Clear counter, writing a 1 clears counter
+    ; LBC Bits1-0, mode select, Free running, repeatedly counts from 0 to 0xFF
+    MOV 0xCB, #0x50
+     //T3CCTL0 = 0x24; // clear output on compare up, set on 0, enabled
+    ; LBC T3CCTL0 == 0xCC, Timer 3 Channel 0 Compare Control
+    ; LBC 0x24 -> 00100100
+    ; LBC Bit 7 not used, Bit 6 interrupt mask (0 disabled)
+    ; LBC Bits5-3, Channel 0 compare output mode select (100) 
+    ; LBC          Clear output on compare up, set on 0
+    ; LBC Bit 2, Compare mode enable (1 - enabled)
+    ; LBC Bits1-0, Reserved, always write 00
+    MOV 0xCC, #0x24
+    //T3CCTL1 = 0x24; // clear output on compare up, set on 0, enabled
+    ; LBC T3CCTL1 == 0xCE, Timer3 Channel 1 Compare Control
+    ; LBC 0x24 -> 00100100
+    ; LBC Bit 7 not used, Bit 6 interrupt mask (0 disabled)
+    ; LBC Bits5-3, Channel 0 compare output mode select (100) 
+    ; LBC          Clear output on compare up, set on 0
+    ; LBC Bit 2, Compare mode enable (1 - enabled)
+    ; LBC Bits1-0, Reserved, always write 00
+    MOV 0xCE, #0x24
+    //PERCFG  = 0x20; // Timer3 has alternate 2 location - P1_6 & P1_7
+    ; LBC (PERCFG, Peripheral control, == 0xF1)
+    ; LBC value of 0x20, sets Timer3 to alternate location 2, P1_6, P1_7
+    MOV 0xF1, #0x20
+    //P2SEL   = 0x20; // Timer3 has priority over USART1
+    ; LBC P2SEL, Port 2 Function Select, == 0xF5
+    ; LBC value of 0x20 => Timer3 has priority over USART1
+    MOV 0xF5, #0x20
+    //T3CTL |= 0x14;
+    ; LBC (T3CTL == 0xCB, Timer 3 ConTroL)
+    ; LBC PREVIOUSLY set to (0x50 == 01010000, Bits7-5, Prescaler value, 010, Tick Frequency/4
+    ; LBC Bit4, start timer, normal operation
+    ; LBC Bit3, Overflow interrupt mask, interrupt disabled.
+    ; LBC Bit2, Clear counter, writing a 1 clears counter
+    ; LBC Bits1-0, mode select, Free running, repeatedly counts from 0 to 0xFF
+    ; LBC Logical or'ing 0x50 with 0x14 changes bit2, so clearing counter.
+    ORL 0xCB, #0x14
+    
+    //mymemset( (BYTE *) 0xF500, 0, 0xFF );
+    //while( cnt-- ) *dst++ = 0;
+    //MOV DPTR, #0xF500
+    ; LBC SchedulerInterface structure starts at 0xF500 (0xF501 cleared above)
+    ; LBC write 0 to 255 consectutive bytes starting at address 0xF502
+    MOV DPTR, #0xF502
+    CLR A
+    MOV R1, #0xFF
+Label_Clear_Mem:
+    MOVX @DPTR, A
+    INC DPTR
+    DJNZ R1, Label_Clear_Mem
+
+    // long jump to code, 1k or 16k ...
+    //si->ticks[ MppCycle ]  = 5;   // 1 ms
+//    MOV  DPTR, #0xF500
+//    MOV  A, #0x95 ; was 0x2C ; was #5
+//    MOVX @DPTR, A
+    
+    //si->mppCycle        = _mppCycle;  //_mppCycle == 312 = 0x138  _mppCycle == 300 == 0x12C
+//    MOV  DPTR, #0xF55B 
+    // added in order to provide 120 ms MPP cycle
+//    MOV  A,    #0x95    ; was 0x2C
+    //MOV  A,    #0x38
+//    MOVX @DPTR, A
+//    INC  DPTR
+//;    MOV  A, #0x1
+//    MOV  A, #0
+//    MOVX @DPTR, A
+    //si->firstAdcReading = _firstAdcMeasurement; // _firstAdcMeasurement == 100 = 0x64
+//    INC  DPTR
+    ; LBC Address 0xF55D is the firstAdcReading field within the ScheduleInterface.
+    ; LBC initialize this memory location to 0x64 (100)
+    MOV  DPTR, #0xF55D 
+    MOV  A, #0x64
+    MOVX @DPTR, A
+    
+    //WDCTL = 0x8; 
+    ; LBC Enable WatchDog Timer (Bit3 - Enable, Bit2 - 0, Watchdog mode)
+    MOV     0xc9,#0x8
+    
+    //HAL_INT_ENABLE(INUM_T1,  INT_ON);       // enable Timer1 interrupt
+    ; LBC (IEN1, Interrupt Enable 1 Register = 0xB8)
+    ; LBC Bit 1 = Timer 1 interrupt enable; set to 1 to enable
+    SETB    0xb8.1
+    //INT_GLOBAL_ENABLE( INT_ON );
+    ; LBC (IEN0 Interrupt Enable 0 Register = 0xA8)
+    ; LBC Bit 7, set to 1, each interrupt source is individually enabled or disabled.
+    SETB    0xa8.7
+    
+//    mov   R4, 2
+    mov   A, #0xFF
+//compute_crc_of_main_image:
+    mov   0xBC, A                   ; seed the CRC16 computation
+    mov   0xBC, A                   ; seed the CRC16 computation
+    mov   DPTR, #0x800              ; start of the Main Image
+    mov   R7,   #0x54               ; high byte of counter + 1 !!!
+    mov   R6,   #0xFE               ; low byte of counter, was 0xFC
+compute_crc_loop:
+    ; LBC will loop through 0x54 times and then 0xFE times,
+    ; LBC incrementing the data pointer each time, then if either
+    ; LBC of the next two values via data pointer are not 0xFF,
+    ; LBC then boot via call_alt_image
+    MOVX  A, @DPTR
+    INC   DPTR
+    MOV   0xBD, A
+    DJNZ  R6, compute_crc_loop
+    DJNZ  R7, compute_crc_loop
+    ; CRC computed
+;    DJNZ  R4, skip_2_incs
+;    INC   DPTR
+;    INC   DPTR
+;skip_2_incs:    
+    MOVX  A, @DPTR
+    CJNE  A, 0xBC, call_alt_image
+    INC   DPTR
+    MOVX  A, @DPTR
+    CJNE  A, 0xBD, call_alt_image
+    //MOV   A, #0x00
+    //CJNE  R4,#0x01, read_image_addr_from_pb
+    //LJMP  compute_crc_of_main_image
+read_image_addr_from_pb:
+    
+    ;mov   R7, #0x3F  // not needed
+    ;push  0x7        // not needed
+    MOV   DPTR, #0x04D5  // was 0x7CD4
+    MOVX  A,    @DPTR
+    CJNE  A,    #0x8,   call_alt_image ; high_image
+    ; LBC will boot from 0x083F
+    mov   R7,   #0x3F
+    push  0x7
+    mov   R7,   #0x8
+    push  0x7
+    ret
+//eternal:        
+//    mov  0xC9, #0xA8
+//    mov  0xC9, #0x58
+//    sjmp eternal
+;high_image:
+;    mov   R7,   #0x60
+;    push  0x7
+;    ret
+call_alt_image:  
+//    ret                   // debug activity
+    ; LBC will boot from 0x603F
+    mov   R7, #0x3F
+    push  0x7
+    mov   R7, #0x60
+    push  0x7
+    reti
+    ENDMOD
+    
+    MODULE  inc_running_tick.s51
+    RSEG RCODE (1)
+    PUBLIC inc_running_tick
+    FUNCTION inc_running_tick, 0203H
+inc_running_tick:
+    MOV DPTR, #0xF538
+    MOVX A, @DPTR
+    INC  A
+    MOVX @DPTR, A
+    JNZ  __t1_label1
+    INC DPTR
+    MOVX A, @DPTR
+    INC  A
+    MOVX @DPTR, A
+__t1_label1:
+    RET    
+    ENDMOD
+    
+    MODULE  mpp_work.s51
+    RSEG RCODE (1)
+    PUBLIC mpp_work
+    FUNCTION mpp_work, 0203H
+mpp_work:
+    // P1_0 ^= 1;
+    XRL 0x90, #1
+
+    //WDCTL = 0x8; 
+    MOV     0xC9,#0x8
+
+    //*ticks = _mppCycle;
+    //ticks[ 1 ] = _firstAdcMeasurement;                       // 20 ms
+    
+    //*ticks     = si->mppCycle;
+    //ticks[ 1 ] = si->firstAdcReading;
+    MOV DPTR, #0xF500
+    XRL 0x92, #1           // DPTR0 => DPTR1
+    MOV DPTR, #0xF55B
+    MOV R1,   #4
+COPYBYTES:
+    MOVX A, @DPTR           
+    INC DPTR
+    XRL 0x92, #1           // DPTR1 => DPTR0
+    MOVX @DPTR, A
+    INC DPTR
+    XRL 0x92, #1           // DPTR0 => DPTR1
+    DJNZ R1, COPYBYTES
+    XRL 0x92, #1           // DPTR1 => DPTR0
+    
+    //si->inCurCycle = 0;                                    // 62.5 ms
+    MOV DPTR, #0xF536
+    CLR A
+    MOVX @DPTR, A
+
+    RET
+    END;
+    

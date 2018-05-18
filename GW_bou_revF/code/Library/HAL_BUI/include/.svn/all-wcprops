@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL_BUI/include
+END
+hal_bui_joystick_SmartRF04EB.h
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL_BUI/include/hal_bui_joystick_SmartRF04EB.h
+END
+hal_bui_SmartRF04EB.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL_BUI/include/hal_bui_SmartRF04EB.h
+END
+hal_bui_button.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL_BUI/include/hal_bui_button.h
+END
+hal_bui_lcd.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL_BUI/include/hal_bui_lcd.h
+END

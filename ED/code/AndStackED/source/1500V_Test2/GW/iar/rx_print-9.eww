@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\rx_print.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\rx_print_windows.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\rx_print_RevC_compatible.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\rx_print_windows_RevC_compatible.ewp</path>
+  </project>
+  <batchBuild>
+    <batchDefinition>
+      <name>all_gateways</name>
+      <member>
+        <project>rx_print_windows</project>
+        <configuration>Build .hex for CC2511 Dongle</configuration>
+      </member>
+      <member>
+        <project>rx_print</project>
+        <configuration>Build .hex for CC2511 Dongle</configuration>
+      </member>
+    </batchDefinition>
+  </batchBuild>
+</workspace>
+
+

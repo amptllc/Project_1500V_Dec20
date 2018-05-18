@@ -1,0 +1,42 @@
+MAC  Converted on Wed Jan  3 15:40:06 2018
+ to version 0 from version 33
+Key is EF6375ADFC241F3A72B8E1BFBAB4FC905C
+
+IV  is DCAAF98B6ABCDB0C74D4296F6C4C52916B
+
+
+boot ../ED/hex/ny-boot.hex low ../ED/hex/ampt-ms-i-full-low+ret+crc.hex high ../ED/hex/ampt-ms-i-uhigh.hex
+serial number:1810Z135642
+Bunch 0 id 0 stringId ffff, MAC 4856400211da
+dFk -0.000693 0.0556 0.613 -200
+vrefPolynom 2496 4e-07 73
+Vout 18.45 -2300 
+Vin1 16.73 0
+Iout 7.45 -548
+Vin2 16.63 -60
+Text 0.435 625
+Iin2 7.46 -558
+Iin1 7.61 -511
+VinTurnOn 0 
+VinSwitchOff 0
+VinDisableRadio 0
+VinLimit 0
+tkCurrent 2e-05
+tkPower 5e-05
+fetFailCount 0
+fetCurrentThreshold 0
+fetDeltaCurrent 0
+Oscillation Params: LowCurrentLimitTo255 -250 VoutLimitCount 20000 VoutLimit 1000
+IoutLimitCount 23000 IoutLimit 10000
+defaults: OV 0 OV_Startup 70 OV_Step 10 OC 0 MPP OFF Module OFF channel 3
+Temp Protection: TSuperHot 110 THot 100 TCold 90 OCStep 10 FallbackTime 10 OC Protection 60
+Current Noise: -1000 OV Volt K 255 OC Cur K 255 
+Repeater NO Slave NO Searching NO 12kbod YES LastByteAsChannel NO Hopping YES WatchDogReset YES Production YES
+ReportUTC YES fuseComm NO fuseOVOC NO useFEC NO stayInRX NO Speculative NO 250_kbod YES tryOtherImage YES
+Radio Power 0xFF 
+Repeater channel 0 R/S Power 0xFF Start R/S Channel 255 StartAddr 0x83F RepStep 25
+Critical R/S -92   Critical Direct -102     Cycles to R/S 40    Cycles to Direct 30 
+Cycles to Step R/S channel 3 Cycles to step Direct channel 4 Cycles to Soft Kick 8  Cycles to Hard Kick 80 
+edAddr: 2 gwAddr 1
+shunt 30 max-off 1 syncword 0xf0f0 
+SKU: 35170024:1000

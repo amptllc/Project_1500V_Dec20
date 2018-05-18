@@ -1,0 +1,155 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+//  File:  lnk51ew_cc2510.xcl
+//  Date:  2007.3.26-8:44
+//
+//  Description:
+//    This is a extended command line file for XLINK tool to be used when
+//    debug applications written for the Chipcon CC2510.
+//
+//  Important:
+//    Data cannot be located at address zero, this address is reserved for
+//    the null pointer.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Variables (used by lnk_base.xcl)
+// ================================
+//
+// Segment limits
+// --------------
+//
+//
+//    IDATA
+//
+//  0xFF
+-D_IDATA_START=0x20
+-D_IDATA_END=0xAF              // Last address of Idata memory - leave 0x20 for boot stack and 0x10 for something else
+//
+//
+//    PDATA
+//
+// CC2510-F32
+-D_PDATA_START=0xF000          // First address for PDATA memory.
+//-D_PDATA_END=0xF0FF            // Last address for PDATA memory.
+-D_PDATA_END=0xF0AF            // Last address for PDATA memory - leave 0x40 for boot stack and 0x10 for something else.
+//
+//    IXDATA
+//
+//-D_IXDATA_START=0xF000         // The internal xdata is 4k, CC2510-F32.
+-D_IXDATA_START=0xF600           // The internal xdata is 4k, CC2510-F32, we use 2.5 k here, leaving 0x100 for scheduler 
+                                 //  interface, 0x100 for flash refresh buffer, 0x80 for stack, rest for other da_boot vars
+-D_IXDATA_END=0xFDA1
+//                                FDA1 to FEFF used for reg savings (350 bytes)
+//                                FF00 to FFFF mapped to IDATA
+//
+//
+//    XDATA
+//
+// The internal XDATA is used as XDATA.
+-D_XDATA_START=_IXDATA_START
+-D_XDATA_END=_IXDATA_END
+//
+//
+//    CODE
+//
+//                                Code size:
+//-D_CODE_START=0x0000
+-D_CODE_START=0x400
+-D_CODE_END=0x3FFF             // 32KB code, CC2510-F32.
+
+//-D_CODE_END=0x3FFF           // 16KB code, CC2510-F16.
+//-D_CODE_END=0x1FFF           //  8KB code, CC2510-F8.
+//
+//
+//    NEAR CODE
+//
+-D_NEAR_CODE_END=_CODE_END     // Last address for near code.
+//
+//
+//    TINY CODE
+//
+-D_TINY_CODE_END=0x47FF         // Last address for tiny code.
+//
+//
+//
+// Special SFRs
+// ------------
+//
+//
+//    CODE bank setup
+//
+-D_FIRST_BANK_ADDR=0x10000
+-D_NR_OF_BANKS=0x00
+//
+//
+//    Register bank setup
+//
+-D?REGISTER_BANK=0             // Default register bank (0,1,2,3).
+-D_REGISTER_BANK_START=0       // Start address for default register bank (00,08,10,18).
+//
+//
+//    PDATA page setup
+//
+-D?PBANK_NUMBER=F0             // High byte of 16-bit address to the PDATA area, CC2510-F32.
+//-D?PBANK_NUMBER=F8           // High byte of 16-bit address to the PDATA area, CC2510-F16.
+//-D?PBANK_NUMBER=FC           // High byte of 16-bit address to the PDATA area, CC2510-F8.
+-D?PBANK=93                    // Most significant byte in MOVX A,@R0. (0x93 is sfr MPAGE).
+//
+//
+//    Virtual register setup
+//    ----------------------
+//
+-D_BREG_START=0x00             // The bit address where the BREG segments starts.
+                               // Must be placed on: _BREG_START%8=0 where _BREG_START <= 0x78.
+-D?VB=0x20                     // ?VB is used when referencing BREG as whole byte.
+                               // Must be placed on: ?VB=0x20+_BREG_START/8.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// To the reader: Ignore this section ------------------------------------------
+//
+//
+// Dummy definitions needed to satisfy lnk_base.xcl
+//
+//
+-D_FAR_DATA_NR_OF_BANKS=0x0E   // Number of banks in far data memory.
+-D_FAR_DATA_START=0x010001     // First address of far memory.
+-D_FAR_DATA_END=0xFFFFFF       // Last address of far memory.
+-D_FAR_CODE_START=_CODE_START  // First address for far code.
+-D_FAR_CODE_END=_CODE_END      // Last address for far code.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Include the lnk_base command file
+// =================================
+//
+//
+-f lnk_base.xcl
+//
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Chipcon device specific
+// =======================
+//
+//
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,173 @@
+###############################################################################
+#                                                                             #
+# IAR 8051 C/C++ Compiler V7.30B/W32                    06/Apr/2017  13:54:36 #
+# Copyright 2004-2007 IAR Systems. All rights reserved.                       #
+#                                                                             #
+#    Core               =  plain                                              #
+#    Code model         =  near                                               #
+#    Data model         =  large                                              #
+#    Calling convention =  xdata reentrant                                    #
+#    Constant location  =  data                                               #
+#    Dptr setup         =  1,16                                               #
+#    Source file        =  E:\1500V_Test2\ED\code\Library\HAL\source\hal_wait #
+#                          .c                                                 #
+#    Command line       =  E:\1500V_Test2\ED\code\Library\HAL\source\hal_wait #
+#                          .c -D NDEBUG -D chip=2510 -D LOWER_IMAGE -D        #
+#                          MidString -D MIDSTRING -lCN                        #
+#                          "E:\1500V_Test2\ED\iar\Build .hex for              #
+#                          CC2510\List\" -lA "E:\1500V_Test2\ED\iar\Build     #
+#                          .hex for CC2510\List\" -o                          #
+#                          "E:\1500V_Test2\ED\iar\Build .hex for              #
+#                          CC2510\Obj\" -e -z9 --core=plain --dptr=16,1       #
+#                          --data_model=large --code_model=near               #
+#                          --calling_convention=xdata_reentrant               #
+#                          --place_constants=data --nr_virtual_regs 32 -I     #
+#                          E:\1500V_Test2\ED\iar\..\CODE\AndStackED\INCLUDE\  #
+#                          -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HAL\INCLU #
+#                          DE\ -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HAL_B #
+#                          UI\INCLUDE\ -I C:\IARSystems-CD-730B\8051\INC\     #
+#    List file          =  E:\1500V_Test2\ED\iar\Build .hex for               #
+#                          CC2510\List\hal_wait.lst                           #
+#    Object file        =  E:\1500V_Test2\ED\iar\Build .hex for               #
+#                          CC2510\Obj\hal_wait.r51                            #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+E:\1500V_Test2\ED\code\Library\HAL\source\hal_wait.c
+      1          /*-----------------------------------------------------------------------------
+      2          |   File:      hal_wait.c
+      3          |   Target:    cc1110, cc2510
+      4          |   Author:    TFL
+      5          |   Revised:   2007-09-05
+      6          |   Revision:  1.0
+      7          +------------------------------------------------------------------------------
+      8          |  Copyright 2004-2007 Texas Instruments Incorporated. All rights reserved.
+      9          |
+     10          |  IMPORTANT: Your use of this Software is limited to those specific rights
+     11          |  granted under the terms of a software license agreement between the user who
+     12          |  downloaded the software, his/her employer (which must be your employer) and
+     13          |  Texas Instruments Incorporated (the "License"). You may not use this Software
+     14          |  unless you agree to abide by the terms of the License. The License limits
+     15          |  your use, and you acknowledge, that the Software may not be modified, copied
+     16          |  or distributed unless embedded on a Texas Instruments microcontroller or used
+     17          |  solely and exclusively in conjunction with a Texas Instruments radio
+     18          |  frequency transceiver, which is integrated into your product. Other than for
+     19          |  the foregoing purpose, you may not use, reproduce, copy, prepare derivative
+     20          |  works of, modify, distribute, perform, display or sell this Software and/or
+     21          |  its documentation for any purpose.
+     22          |
+     23          |  YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
+     24          |  PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+     25          |  INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
+     26          |  NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
+     27          |  TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
+     28          |  NEGLIGENCE, STRICT LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER
+     29          |  LEGAL EQUITABLE THEORY ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES INCLUDING
+     30          |  BUT NOT LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT, PUNITIVE OR
+     31          |  CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF PROCUREMENT OF
+     32          |  SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
+     33          |  (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF), OR OTHER SIMILAR COSTS.
+     34          |
+     35          |  Should you have any questions regarding your right to use this Software,
+     36          |  contact Texas Instruments Incorporated at www.TI.com.
+     37          |
+     38          +------------------------------------------------------------------------------
+     39          | Purpose:    Waiting function
+     40          +------------------------------------------------------------------------------
+     41          | Decription: This file contains the functionality to pause the execution.
+     42          +----------------------------------------------------------------------------*/
+     43          
+     44          /*==== DECLARATION CONTROL ==================================================*/
+     45          
+     46          /*==== INCLUDES ==============================================================*/
+     47          
+     48          #include "hal_main.h"
+     49          
+     50          /*==== MACROS ================================================================*/
+     51          /*==== CONSTS ================================================================*/
+     52          /*==== TYPES =================================================================*/
+     53          /*==== LOCALS ================================================================*/
+     54          /*==== PRIVATE FUNCTIONS =====================================================*/
+     55          /*==== PUBLIC FUNCTIONS ======================================================*/
+     56          
+     57          /******************************************************************************
+     58          * @fn  halWait
+     59          *
+     60          * @brief
+     61          *      This function waits approximately a given number of m-seconds
+     62          *      regardless of main clock speed.
+     63          *
+     64          * Parameters:
+     65          *
+     66          * @param  BYTE	 wait ( hence max value = 255 )
+     67          *         The number of m-seconds to wait.
+     68          *
+     69          * @return void
+     70          *
+     71          ******************************************************************************/
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     72          void halWait(BYTE wait){
+   \                     halWait:
+   \   000000                ; Saved register size: 0
+   \   000000                ; Auto size: 0
+     73          /*
+     74             largeWait = ((UINT16) (wait << 7));
+     75             largeWait += 45*wait;
+     76             largeWait = (largeWait >> CLKSPD);
+     77             while(largeWait--);
+     78          */
+     79          //   if(wait){
+     80            /*
+     81             UINT32 largeWait; 
+     82                 //largeWait = ((UINT16) (wait << 7));
+     83                 largeWait = wait*(128+45);
+     84                 largeWait >>= CLKSPD;
+     85                 while(largeWait--);
+     86          //   }  
+     87            */ 
+     88             // parameter wait in R1
+     89             asm( "__loop0:" );
+     90             asm( "MOV R2, #0x17" );
+   \                     __loop0:
+   \   000000   7A17         MOV R2, #0x17
+     91             asm( "__loop1:" );
+     92             asm( "MOV R3, #0xFF" );
+   \                     __loop1:
+   \   000002   7BFF         MOV R3, #0xFF
+     93             asm( "__loop2:" );
+     94             asm( "NOP" );
+   \                     __loop2:
+   \   000004   00           NOP
+     95             asm( "DJNZ R3, __loop2" );
+   \   000005   DBFD         DJNZ R3, __loop2
+     96             asm( "DJNZ R2, __loop1" );
+   \   000007   DAF9         DJNZ R2, __loop1
+     97             asm( "DJNZ R1, __loop0" );
+   \   000009   D9F5         DJNZ R1, __loop0
+     98          }
+   \   00000B   22           RET
+     99          
+    100          /*==== END OF FILE ==========================================================*/
+
+   Maximum stack usage in bytes:
+
+     Function ISTACK PSTACK XSTACK
+     -------- ------ ------ ------
+     halWait      0      0      0
+
+
+   Segment part sizes:
+
+     Function/Label Bytes
+     -------------- -----
+     __loop0          12
+
+ 
+ 12 bytes in segment NEAR_CODE
+ 
+ 12 bytes of CODE memory
+
+Errors: none
+Warnings: none

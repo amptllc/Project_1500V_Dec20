@@ -1,0 +1,116 @@
+*   Addr:  all  string  inidividual   MAC         
+*           *   |sNNNN | #NNNN      | mNNNNNNNNNN
+*
+*   Value: logical 0/1  byte hex  short hex  32bit hex    float
+*           lN         | bNN     | sNNNN    | LNNNNNNNN | fNNNNNNNN 
+*
+*   'A'                     compute and store the shift on the end devices
+*   'a 0/1'                 ADCs on /off
+*   'B'                     push the commands counter to the next 1k
+*   'C'                     silence
+*   'D'                     decrease network id by 1 - needed for slot reusing - problem pointed out by Sayan
+*   'E 0|1'                 echo on/off
+*   'e'                     start sending requests in One second, used for synchronization of several gateways
+*   'F Addr'                allow to write to flash for End Devices + store defaults - overV, overC, module, mpp
+*   'f Addr'                allow to write to flash for End Devices
+*   'G'                     write to flash
+*   'g NN'                  set shift to GW offset register
+*   'H NN'                  set channel - 8 bit command, BYTE for new channel number      
+*   'I'                     GW info
+*   'J (sNNNN | mNNNN | hNNNN | dNNNN)'     JOIN enabled for nnnn seconds/minutes/hours/days
+*   'k NN'                  make nDevs=NN
+*   'K N FF.F'              set Gateway coefficient 4 - tk0, 5 - tk1, 0 - dFk1, 1 - dFk2, 2 - dFk3, 3 - dFk4
+*   'm Addr'                restart measurement - clear buffer on specified ED. Needed for test purposes.
+*   'N', 'n'                dissolve network - all ED forget about their id's, GW network id goes to 0
+*   'O'                     get gateway coefficients
+*   'o Addr'                get coeeficients
+*   'p'                     advance command counter by 1000
+*   'P HH'                  set PA_TABLE0 to 
+*   'Q'                     reset the commands counter - suppose to be done every night (before active day) by middleware
+*   'r Addr'                reset processor on end device
+*   'R'                     reset gateway
+*   'S Addr Reg Value'      set register in specified end device
+*   'T UTC MS'              set up time in UTC + milliseconds
+*   'u'                     read from flash
+*   'v 0/1'                 fcc(0) (30 kbod, 2410 start, ~250 kHz interchannel space ) mode off/on
+*   'w Addr'                switch to CW mode for selected devices
+*   'W'                     switch this gateway to CW mode
+*   'X'                     clear the id distribution history
+*   'Y 0|1' 'y 0/1'         0 means Rx Only, 1 means Normal
+*   'Z Addr'                allow for flash rejuvenation on end devices
+
+
+// float registers
+#define SET_DFK0    1
+#define SET_DFK1    2
+#define SET_DFK2    3
+#define SET_DFK3    4
+
+#define SET_TK_CUR          5
+#define SET_TK_POW          6
+#define SET_VIN_TURN_ON     7
+#define SET_VIN_SHUT_OFF    8
+
+#define SET_LC00 10
+#define SET_LC01 11
+#define SET_LC10 12
+#define SET_LC11 13 
+#define SET_LC20 14
+#define SET_LC21 15
+#define SET_LC30 16
+#define SET_LC31 17
+#define SET_LC40 18
+#define SET_LC41 19
+#define SET_LC50 20
+#define SET_LC51 21
+
+#define SET_VIN_DISABLE_RADIO 22
+
+#define SET_VREF0 24
+#define SET_VREF1 25
+#define SET_VREF2 26
+
+// INT32 registers
+#define DEBUG_POWER         1
+#define SET_DF_TOLERANCE    2
+
+// INT16 registers
+#define SET_GROUP_ID        1
+#define JOIN                2
+
+// BYTE and BOOL registers
+// from 0 to 15 - P1 and P2 pins directly - will be used for OPEN, MPP, LED (?)
+
+// MAC bytes
+#define MAC0    (16+0)
+#define MAC1    (16+1)
+#define MAC2    (16+2)
+#define MAC3    (16+3)
+#define MAC4    (16+4)
+#define MAC5    (16+5)
+
+// Timer channels
+#define SET_T3CH0        22
+#define SET_T3CH1        23
+#define SET_T4CH0        24
+#define SET_T4CH1        25
+
+// Radio Channel
+#define SET_CHANNEL      26
+
+// FLASH control
+#define FLASH_REFRESH    27
+#define FLASH_AVAILABLE  28
+#define CW_MODE          29
+#define RESTART_MEASUREMENT         30                         
+#define DISSOLVE_NETWORK            31
+#define REPORT_SCALING              32
+#define COEFFICIENTS_AVAILABLE      33
+#define RADIO_DEBUG                 34
+#define RADIO_POWER                 35
+#define PRODUCTION                  36
+#define ENSURE_WD_RESET             37
+
+#define USE_10_kBod                 38
+
+

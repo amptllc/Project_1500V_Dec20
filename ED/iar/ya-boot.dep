@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project>
+  <fileVersion>2</fileVersion>
+  <fileChecksum>4145838253</fileChecksum>
+  <configuration>
+    <name>Build .hex for CC1110</name>
+    <outputs/>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+  </configuration>
+  <configuration>
+    <name>Build .hex for CC2510</name>
+    <outputs>
+      <file>$PROJ_DIR$\..\code\Library\clib\cstartup.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_switch.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\List\fc-boot.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\cstartup.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_defines.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_main.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_stack_parameter.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_power_clk_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_switch.h</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\fc-boot.c</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\ya-alt-call.r51</file>
+      <file>$TOOLKIT_DIR$\config\lnk_base.xcl</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\fc-boot.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_stack.s51</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\ya-alt-call.s51</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\ya-boot.c</file>
+      <file>$TOOLKIT_DIR$\inc\ioCC2510.h</file>
+      <file>$PROJ_DIR$\..\hex\fc-boot.hex</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\fc-boot.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_adc_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\cmain.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_stack_enter_leave.s51</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\alt_call.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\ya-boot.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_stack_enter_leave_dptr.r51</file>
+      <file>$PROJ_DIR$\..\hex\ya-boot.hex</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\ya-boot.pbd</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_io_mgmt.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\alt_call.r51</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\include\main.h</file>
+      <file>$PROJ_DIR$\lnk51ew_cc2510-boot.xcl</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_interrupt_mgmt.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\cmain.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\ya-boot.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_stack.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_stack_enter_leave.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\cstartup-ya-boot.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_check_symbols.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\cstartup-ya-boot.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_common.h</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_stack_enter_leave_dptr.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_stack_parameter.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_switch.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\List\ya-boot.s51</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\include\dma.h</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_cfi.h</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\cstartup.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 3</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 39 37 45 16</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\fc-boot.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 18 2</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 12</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 5 4 27 7 31 19 16 29 44</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 5 4 27 7 31 19 16 29 44</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_stack.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 34</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 39 37 45</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\ya-alt-call.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 10</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\ya-boot.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 23 43</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 33</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 5 4 27 7 31 19 16 29 44</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 5 4 27 7 31 19 16 29 44</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\hex\fc-boot.hex</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 30 11 28 32 3 18 34 35 24 6 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\cmain.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 32</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 39 37 45</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 25</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_stack_enter_leave.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 35</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 39 37 45</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\alt_call.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 28</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\hex\ya-boot.hex</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 30 11 32 38 34 35 24 6 1 10 23</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Build .hex for CC2510\Obj\ya-boot.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 33</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\cstartup-ya-boot.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 38</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 39 37 45 16</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_stack_enter_leave_dptr.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 24</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 39 37 45</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_stack_parameter.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 6</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 39 37 45</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_switch.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 1</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 39 37 45 8</file>
+        </tool>
+      </inputs>
+    </file>
+    <forcedrebuild>
+      <name>[REBUILD_ALL]</name>
+    </forcedrebuild>
+  </configuration>
+  <configuration>
+    <name>Debug on CC1110</name>
+    <outputs>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_defines.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_main.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_power_clk_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\fc-boot.c</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\fc-boot.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\ioCC2510.h</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\alt_call.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_adc_mgmt.h</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\fc-boot.r51</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\alt_call.s51</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\ya-boot.pbd</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Exe\and-stack-ed-4.hex</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_io_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\include\main.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_interrupt_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\include\dma.h</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\fc-boot.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 8</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 4</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 1 0 12 2 14 7 5 13 15</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 11</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\alt_call.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 6</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug on CC1110\Obj\ya-boot.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 4</file>
+        </tool>
+      </inputs>
+    </file>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+  </configuration>
+  <configuration>
+    <name>Debug on CC2510</name>
+    <outputs/>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+  </configuration>
+</project>
+
+

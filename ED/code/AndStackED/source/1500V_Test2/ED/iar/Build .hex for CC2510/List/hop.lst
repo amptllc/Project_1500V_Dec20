@@ -1,0 +1,326 @@
+###############################################################################
+#                                                                             #
+# IAR 8051 C/C++ Compiler V7.30B/W32                    06/Apr/2017  13:54:35 #
+# Copyright 2004-2007 IAR Systems. All rights reserved.                       #
+#                                                                             #
+#    Core               =  plain                                              #
+#    Code model         =  near                                               #
+#    Data model         =  large                                              #
+#    Calling convention =  xdata reentrant                                    #
+#    Constant location  =  data                                               #
+#    Dptr setup         =  1,16                                               #
+#    Source file        =  E:\1500V_Test2\ED\code\AndStackED\source\hop.c     #
+#    Command line       =  E:\1500V_Test2\ED\code\AndStackED\source\hop.c -D  #
+#                          NDEBUG -D chip=2510 -D LOWER_IMAGE -D MidString    #
+#                          -D MIDSTRING -lCN "E:\1500V_Test2\ED\iar\Build     #
+#                          .hex for CC2510\List\" -lA                         #
+#                          "E:\1500V_Test2\ED\iar\Build .hex for              #
+#                          CC2510\List\" -o "E:\1500V_Test2\ED\iar\Build      #
+#                          .hex for CC2510\Obj\" -e -z9 --core=plain          #
+#                          --dptr=16,1 --data_model=large --code_model=near   #
+#                          --calling_convention=xdata_reentrant               #
+#                          --place_constants=data --nr_virtual_regs 32 -I     #
+#                          E:\1500V_Test2\ED\iar\..\CODE\AndStackED\INCLUDE\  #
+#                          -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HAL\INCLU #
+#                          DE\ -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HAL_B #
+#                          UI\INCLUDE\ -I C:\IARSystems-CD-730B\8051\INC\     #
+#    List file          =  E:\1500V_Test2\ED\iar\Build .hex for               #
+#                          CC2510\List\hop.lst                                #
+#    Object file        =  E:\1500V_Test2\ED\iar\Build .hex for               #
+#                          CC2510\Obj\hop.r51                                 #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+E:\1500V_Test2\ED\code\AndStackED\source\hop.c
+      1          #include "hal_main.h"
+
+   \                                 In  segment SFR_AN, at 0xe1
+   \   unsigned char volatile __sfr RFST
+   \                     RFST:
+   \   000000                DS 1
+      2          //#include <stdlib.h>
+      3          
+      4          #define TX          0x13
+      5          #define TX_END      0x14
+      6          #define STARTCAL    0x8
+      7          #define ENDCAL      0xC
+      8          #define RX          0xD
+      9          #define RX_END      0xE
+     10          #define RX_RST      0xF
+     11          
+     12          #define FALSE       0
+     13          #define TRUE        1
+     14          
+     15          #define STROBE_TX                    0x03   // Strobe commands for the RFST
+     16          #define STROBE_RX                    0x02   // register
+     17          #define STROBE_CAL                   0x01  
+     18          #define STROBE_IDLE                  0x04   
+     19          
+     20          #define HOP_N_CHANNELS 25
+     21          #define HOP_K_CHANNELS 10
+     22          
+     23          //static UINT32 __next_rand;
+     24          #define RAND_MAX 0x7FFF
+     25          /*
+     26          inline void srand(unsigned int seed){
+     27            __next_rand = seed;
+     28          }
+     29          inline int rand(void){
+     30            __next_rand = __next_rand * 1103515245 + 12345;
+     31            return (unsigned int) (__next_rand >> 16) & RAND_MAX;
+     32          }
+     33          */
+     34          
+
+   \                                 In  segment XDATA_Z, align 1, keep-with-next
+     35          BYTE hopping_channels[ HOP_N_CHANNELS ];
+   \                     hopping_channels:
+   \   000000                DS 25
+   \   000019                REQUIRE __INIT_XDATA_Z
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     36          void setup_hopper( BYTE curch ){
+   \                     setup_hopper:
+   \   000000   74F1         MOV     A,#-0xf
+   \   000002   12....       LCALL   ?FUNC_ENTER_XDATA
+   \   000005                ; Saved register size: 15
+   \   000005                ; Auto size: 0
+     37          BYTE idx = 0, idx1 = 0, swp;
+     38          UINT32 __next_rand;
+     39              idx = HOP_N_CHANNELS; while( idx-- ) hopping_channels[ idx ] = ( curch + HOP_K_CHANNELS * idx ) & 0xFF;
+   \   000005   7C19         MOV     R4,#0x19
+   \   000007   800F         SJMP    ??setup_hopper_0
+   \                     ??setup_hopper_1:
+   \   000009   75F00A       MOV     B,#0xa
+   \   00000C   EC           MOV     A,R4
+   \   00000D   A4           MUL     AB
+   \   00000E   29           ADD     A,R1
+   \   00000F   C0E0         PUSH    A
+   \   000011   EC           MOV     A,R4
+   \   000012   12....       LCALL   ?Subroutine1
+   \                     ??CrossCallReturnLabel_2:
+   \   000015   D0E0         POP     A
+   \   000017   F0           MOVX    @DPTR,A
+   \                     ??setup_hopper_0:
+   \   000018   EC           MOV     A,R4
+   \   000019   1C           DEC     R4
+   \   00001A   70ED         JNZ     ??setup_hopper_1
+     40              //srand( curch );
+     41              __next_rand = curch;
+   \   00001C   E9           MOV     A,R1
+   \   00001D   F5..         MOV     ?V0 + 4,A
+   \   00001F   75..00       MOV     ?V0 + 5,#0x0
+   \   000022   75..00       MOV     ?V0 + 6,#0x0
+   \   000025   75..00       MOV     ?V0 + 7,#0x0
+     42              //RNDL = curch; RNDL = 0xFF - curch; 
+     43              for( idx = 0; idx < HOP_N_CHANNELS; idx++ ) {
+   \   000028   7C00         MOV     R4,#0x0
+     44                  //idx1 = rand() % HOP_N_CHANNELS; 
+     45          
+     46                  __next_rand = __next_rand * 1103515245 + 12345;
+   \                     ??setup_hopper_2:
+   \   00002A   90....       MOV     DPTR,#__Constant_41c64e6d
+   \   00002D   78..         MOV     R0,#?V0 + 0
+   \   00002F   12....       LCALL   ?L_MOV_X
+   \   000032   78..         MOV     R0,#?V0 + 4
+   \   000034   79..         MOV     R1,#?V0 + 0
+   \   000036   12....       LCALL   ?L_MUL
+   \   000039   90....       MOV     DPTR,#__Constant_3039
+   \   00003C   78..         MOV     R0,#?V0 + 4
+   \   00003E   12....       LCALL   ?L_ADD_X
+     47                  idx1 = ( (unsigned int) (__next_rand >> 16) & RAND_MAX ) % HOP_N_CHANNELS;
+   \   000041   85....       MOV     ?V0 + 0,?V0 + 4
+   \   000044   85....       MOV     ?V0 + 1,?V0 + 5
+   \   000047   85....       MOV     ?V0 + 2,?V0 + 6
+   \   00004A   85....       MOV     ?V0 + 3,?V0 + 7
+   \   00004D   7410         MOV     A,#0x10
+   \   00004F   78..         MOV     R0,#?V0 + 0
+   \   000051   12....       LCALL   ?UL_SHR
+   \   000054   74FF         MOV     A,#-0x1
+   \   000056   55..         ANL     A,?V0 + 0
+   \   000058   F8           MOV     R0,A
+   \   000059   747F         MOV     A,#0x7f
+   \   00005B   55..         ANL     A,?V0 + 1
+   \   00005D   F9           MOV     R1,A
+   \   00005E   7A19         MOV     R2,#0x19
+   \   000060   7B00         MOV     R3,#0x0
+   \   000062   12....       LCALL   ?US_DIV_MOD
+     48                
+     49                  //ADCCON1 &= 0xF3; ADCCON1 |= 4; idx1 = RNDL % HOP_N_CHANNELS;
+     50                  swp = hopping_channels[ idx ];  hopping_channels[ idx ] = hopping_channels[ idx1 ]; hopping_channels[ idx1 ] = swp;
+   \   000065   8C..         MOV     ?V0 + 2,R4
+   \   000067   E5..         MOV     A,?V0 + 2
+   \   000069   24..         ADD     A,#(hopping_channels & 0xff)
+   \   00006B   F8           MOV     R0,A
+   \   00006C   E4           CLR     A
+   \   00006D   34..         ADDC    A,#((hopping_channels >> 8) & 0xff)
+   \   00006F   F9           MOV     R1,A
+   \   000070   8882         MOV     DPL,R0
+   \   000072   8983         MOV     DPH,R1
+   \   000074   E0           MOVX    A,@DPTR
+   \   000075   FD           MOV     R5,A
+   \   000076   EA           MOV     A,R2
+   \   000077   24..         ADD     A,#(hopping_channels & 0xff)
+   \   000079   FA           MOV     R2,A
+   \   00007A   E4           CLR     A
+   \   00007B   34..         ADDC    A,#((hopping_channels >> 8) & 0xff)
+   \   00007D   FB           MOV     R3,A
+   \   00007E   8A82         MOV     DPL,R2
+   \   000080   8B83         MOV     DPH,R3
+   \   000082   E0           MOVX    A,@DPTR
+   \   000083   8882         MOV     DPL,R0
+   \   000085   8983         MOV     DPH,R1
+   \   000087   F0           MOVX    @DPTR,A
+   \   000088   ED           MOV     A,R5
+   \   000089   8A82         MOV     DPL,R2
+   \   00008B   8B83         MOV     DPH,R3
+   \   00008D   F0           MOVX    @DPTR,A
+     51              }
+   \   00008E   0C           INC     R4
+   \   00008F   EC           MOV     A,R4
+   \   000090   C3           CLR     C
+   \   000091   9419         SUBB    A,#0x19
+   \   000093   4095         JC      ??setup_hopper_2
+     52          }
+   \   000095   7F08         MOV     R7,#0x8
+   \   000097   02....       LJMP    ?FUNC_LEAVE_XDATA
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+   \                     ?Subroutine1:
+   \   000000   24..         ADD     A,#(hopping_channels & 0xff)
+   \   000002   F582         MOV     DPL,A
+   \   000004   E4           CLR     A
+   \   000005   34..         ADDC    A,#((hopping_channels >> 8) & 0xff)
+   \   000007   F583         MOV     DPH,A
+   \   000009   22           RET
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     53          void hop(void){
+   \                     hop:
+   \   000000   C082         PUSH    DPL
+   \   000002   C083         PUSH    DPH
+   \   000004                ; Saved register size: 2
+   \   000004                ; Auto size: 0
+     54              BYTE idx;//, state; //BOOL loopFlag;
+     55              idx = HOP_N_CHANNELS; while( idx-- ) if( CHANNR == hopping_channels[ idx ] )  break;
+   \   000004   7B19         MOV     R3,#0x19
+   \                     ??hop_0:
+   \   000006   EB           MOV     A,R3
+   \   000007   1B           DEC     R3
+   \   000008   8B82         MOV     DPL,R3
+   \   00000A   A882         MOV     R0,DPL
+   \   00000C   600C         JZ      ??hop_1
+   \   00000E   90DF06       MOV     DPTR,#-0x20fa
+   \   000011   E0           MOVX    A,@DPTR
+   \   000012   FA           MOV     R2,A
+   \   000013   E8           MOV     A,R0
+   \   000014   12....       LCALL   ?Subroutine0
+   \                     ??CrossCallReturnLabel_0:
+   \   000017   6A           XRL     A,R2
+   \   000018   70EC         JNZ     ??hop_0
+     56              idx = (idx + 1) % HOP_N_CHANNELS;
+     57              //state = MARCSTATE;
+     58              /* ???
+     59              do{
+     60                  loopFlag  = FALSE;
+     61                  switch( MARCSTATE ){
+     62                      case STARTCAL:  case ENDCAL:
+     63                      case TX: case TX_END: 
+     64                      case RX_END:
+     65                           halWait( 1 ); 
+     66                           loopFlag  = TRUE;
+     67                      break;
+     68                  }
+     69              }while( loopFlag );
+     70              */
+     71              RFST   = STROBE_IDLE;               
+   \                     ??hop_1:
+   \   00001A   75E104       MOV     0xe1,#0x4
+     72              CHANNR = hopping_channels[ idx ];
+   \   00001D   7401         MOV     A,#0x1
+   \   00001F   28           ADD     A,R0
+   \   000020   08           INC     R0
+   \   000021   E4           CLR     A
+   \   000022   3400         ADDC    A,#0x0
+   \   000024   F9           MOV     R1,A
+   \   000025   7A19         MOV     R2,#0x19
+   \   000027   7B00         MOV     R3,#0x0
+   \   000029   12....       LCALL   ?S_DIV_MOD
+   \   00002C   EA           MOV     A,R2
+   \   00002D   12....       LCALL   ?Subroutine0
+   \                     ??CrossCallReturnLabel_1:
+   \   000030   90DF06       MOV     DPTR,#-0x20fa
+   \   000033   F0           MOVX    @DPTR,A
+     73              //if( state == RX ) RFST = STROBE_RX; 
+     74          }
+   \   000034   D083         POP     DPH
+   \   000036   D082         POP     DPL
+   \   000038   22           RET
+   \   000039                REQUIRE RFST
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+   \                     ?Subroutine0:
+   \   000000   12....       LCALL   ?Subroutine1
+   \                     ??CrossCallReturnLabel_3:
+   \   000003   E0           MOVX    A,@DPTR
+   \   000004   22           RET
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+   \                     __Constant_41c64e6d:
+   \   000000                DS 4
+   \   000004                REQUIRE `?<Initializer for __Constant_41c64e6d>`
+   \   000004                REQUIRE __INIT_XDATA_I
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for __Constant_41c64e6d>`:
+   \   000000   6D4EC641     DD 1103515245
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+   \                     __Constant_3039:
+   \   000000                DS 4
+   \   000004                REQUIRE `?<Initializer for __Constant_3039>`
+   \   000004                REQUIRE __INIT_XDATA_I
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for __Constant_3039>`:
+   \   000000   39300000     DD 12345
+
+   Maximum stack usage in bytes:
+
+     Function     ISTACK PSTACK XSTACK
+     --------     ------ ------ ------
+     hop              2      0      0
+     setup_hopper     1      0     15
+
+
+   Segment part sizes:
+
+     Function/Label                 Bytes
+     --------------                 -----
+     RFST                              1
+     hopping_channels                 25
+     setup_hopper                    154
+     ?Subroutine1                     10
+     hop                              57
+     ?Subroutine0                      5
+     __Constant_41c64e6d               4
+     ?<Initializer for __Constant_41c64e6d>
+                                       4
+     __Constant_3039                   4
+     ?<Initializer for __Constant_3039>
+                                       4
+
+ 
+ 226 bytes in segment NEAR_CODE
+   1 byte  in segment SFR_AN
+   8 bytes in segment XDATA_I
+   8 bytes in segment XDATA_ID
+  25 bytes in segment XDATA_Z
+ 
+ 226 bytes of CODE  memory (+ 8 bytes shared)
+   0 bytes of DATA  memory (+ 1 byte  shared)
+  25 bytes of XDATA memory (+ 8 bytes shared)
+
+Errors: none
+Warnings: none

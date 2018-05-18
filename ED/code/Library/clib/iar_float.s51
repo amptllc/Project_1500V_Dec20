@@ -1,0 +1,4057 @@
+;	TITL	'8051 - Floating point arithmetics'
+;-----------------------------------------------------------------------------
+;
+;   Revision control system
+;       $Id: iar_float.s51 1.6 2007/06/07 09:21:48Z larssu Exp $
+;
+;
+;	File:		L02.S03
+;
+;	Version:	5.20
+;
+;	Created:	01/Jan/90 IANR [4.00 modifications of IDAS original
+;					from 1986]
+;	Revised:	02/Oct/90 IMAF [Rewritten.  Considerably faster
+;					version made after IANB's model]
+;			910621 IMAF [_R deleted]
+;			920829 IMAF [Version 5.00]
+;
+;	Description:	This file contain the floating point arithmetics
+;			and cast operations. 
+;
+;	Entries:	?F_MUL_L02
+;			?F_DIV_L02,?F_DIV_R_L02
+;			?F_ADD_L02
+;			?F_SUB_L02,?F_SUB_R_L02
+;			?SL_TO_FLT_L02,?SL_TO_FLT_R_L02
+;			?UL_TO_FLT_L02,?UL_TO_FLT_R_L02
+;			?FLT_TO_L_L02,?FLT_TO_L_R_L02
+;			(?F_UNPACK_L02)		; Internal entry
+;			(?F_PACK_L02)		; Internal entry
+;			(?F_UNDERFLOW_L02)	; Internal entry
+;			(?F_OVERFLOW_L02)	; Internal entry
+;
+;
+;-----------------------------------------------------------------------------
+
+#include "iar_common.h"
+
+lcall_mode	DEFINE		1
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function(s):	Floating point Multiplication.
+;
+;	Description:	Multiplies two floating point operands found in TOS
+;			and NOS. The product is left in TOS. The input 
+;			variables must be in IEEE format.
+;			Zero-flag will be set if and only if the result is 
+;			zero.
+;
+;	Algorithm:
+;			if ((NOSE==0) or (TOSE==0) RESE = 0
+;			else
+;			  RESE = (NOSE-127) + (TOSE-127) + 127 
+;			  if RESE < 0 underflow RESE = 0
+;			  else {
+;			    RESS = NOSS EOR TOSS
+;			    RESM = NOSM * TOSM
+;			    if RESM overlflow {
+;			      RESM = RESM >> 1
+;			      RESE = RESE + 1
+;			    }
+;			  }
+;			round(RES)			   
+;
+;
+;	Created:	21/Sep/90	IMAF	[Rewritten]
+;
+;
+;	Input:	R4:R7			operand
+;		[SP+0:1]		return address from float package
+;		R0:R3			operand
+;		
+;	Output:	R4:R7			operand * operand
+;		A			Cleared when result is zero, else set
+;	 
+;-----------------------------------------------------------------------------
+
+
+
+	MODULE	?F_MUL_CLR_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_MUL_CLR_L02
+	EXTERN	?F_MUL_L02
+?F_MUL_CLR_L02:
+	CLR	A
+	MOV	R0,A
+	MOV	R1,A
+	IF	lcall_mode
+	LJMP	?F_MUL_L02
+	ELSE
+	AJMP	?F_MUL_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_R_CLR_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_MUL_R_CLR_L02
+	EXTERN	?F_MUL_L02
+?F_MUL_R_CLR_L02:
+	CLR	A
+	MOV	R4,A
+	MOV	R5,A
+	IF	lcall_mode
+	LJMP	?F_MUL_L02
+	ELSE
+	AJMP	?F_MUL_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL2_R0123_L02	
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_MUL2_R0123_L02
+	EXTERN	?F_MUL_L02
+
+?F_MUL2_R0123_L02:
+	MOV	A,R0
+	MOV	R4,A
+	MOV	A,R1
+	MOV	R5,A
+	MOV	A,R2
+	MOV	R6,A
+	MOV	A,R3
+	MOV	R7,A
+	IF	lcall_mode
+	LJMP	?F_MUL_L02
+	ELSE
+	SJMP	?F_MUL_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_L02		; Can be replaced
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_MUL2_R4567_L02
+	PUBLIC	?F_MUL_L02
+	EXTERN	?F_UNPACK_L02
+	EXTERN	?F_PACK_L02
+	EXTERN	?F_ROUND_L02
+	EXTERN	?F_OVERFLOW_L02
+	EXTERN	?F_SHIFT_LEFT_L02
+
+?F_MUL2_R4567_L02:
+	MOV	A,R4
+	MOV	R0,A
+	MOV	A,R5
+	MOV	R1,A
+	MOV	A,R6
+	MOV	R2,A
+	MOV	A,R7
+	MOV	R3,A
+
+?F_MUL_L02:
+;
+;	First check if one of the operands is zero, then the result
+;	must be zero. 
+
+	MOV	A,R7
+	ORL	A,R6	
+	JNZ	TEST_ZERO	; If NOS is zero then return
+	RET
+
+TEST_ZERO:
+	MOV	A,R3
+	ORL	A,R2
+	JNZ	NO_ZERO		; If TOS is zero then zero TOS and return
+UNDERFLOW:
+	MOV	R7,A
+OVERFLOW_2:
+	MOV	R4,A
+	MOV	R5,A
+	MOV	R6,A
+	RET
+NO_ZERO:
+;
+;	OK no zero's this far, unpack the operands.
+;	
+
+	LCALL	?F_UNPACK_L02
+
+;
+;	Compute the result exp.
+;
+	SUBB	A,#127			; NOSE -= 127
+	JC	MAYBE_UNDERFLOW
+	ADD	A,R3			; NOSE += TOSE, where NOSE is 0 to 80
+	JNC	EXP_OK
+	MOV	R7,#127
+	MOV	A,#255
+	SJMP	OVERFLOW_2
+
+MAYBE_UNDERFLOW:			; NOSE is 81 to ff
+	ADD	A,R3			; NOSE += TOSE
+	JC	EXP_OK
+	CLR	A
+	SJMP	UNDERFLOW
+EXP_OK:
+	PUSH	ACC			; We push RESE
+;
+;	then compute new sign.
+;
+
+	PUSH	B			; We push RESS
+;
+;	We look if any mantissa is one, then the result will be the other
+;
+
+	MOV	A,R0			; Check TOSM
+	ORL	A,R1
+	JNZ	NOT_TOS
+	CJNE	R2,#128,TOS_NOT_1
+
+L55:	POP	ACC			; NOSM is the answer
+	MOV	R1,A
+	POP	ACC
+	MOV	R0,A
+	IF	lcall_mode
+	LJMP	?F_PACK_L02
+	ELSE
+	AJMP	?F_PACK_L02
+	ENDIF
+
+
+TOS_NOT_1:
+	MOV	A,R4			; Check if NOSML,NOSMM is zero
+	ORL	A,R5
+	JNZ	TOSMH_NOSM
+	CJNE	R6,#128,NOSMH_TOSMH
+L66:	MOV	A,R0    		; Return TOSM
+	MOV	R4,A
+	MOV	A,R1
+	MOV	R5,A
+	MOV	A,R2
+	MOV	R6,A
+	SJMP	L55
+NOSMH_TOSMH:
+	CLR	A		; We do NOSMH * TOSMH
+	MOV	R3,A
+	MOV	R7,A
+	MOV	A,R2
+	MOV	B,R6
+	MUL	AB
+	MOV	R0,A		; RESMM finished
+	MOV	A,B		; RESMH finished
+	IF	lcall_mode
+	LJMP	LOAD_RESM
+	ELSE
+	AJMP	LOAD_RESM
+	ENDIF
+TOSMH_NOSM:
+	MOV	A,R2		; We only need to do TOSMH * NOSM
+	MOV	B,R4
+	MUL	AB
+	MOV	R7,A		; RESM4 finished
+	MOV	R3,B		; Part of RESML in R3
+	MOV	A,R2
+	MOV	B,R5
+	MUL	AB
+	ADD	A,R3
+	MOV	R3,A		; RESML finished
+	CLR	A
+	ADDC	A,B
+	MOV	R0,A		; Part of RESMM in R0
+	MOV	A,R2
+	MOV	B,R6
+	MUL	AB
+	ADD	A,R0
+	MOV	R0,A		; RESMM finished
+	CLR	A
+	ADDC	A,B
+	IF	lcall_mode
+	LJMP	LOAD_RESM
+	ELSE
+	AJMP	LOAD_RESM
+	ENDIF
+NOS_NOT_1:
+	MOV	A,R2			; We have to do NOSMH * TOSM
+	XCH	A,R6
+	MOV	R2,A
+	MOV	A,R1
+	MOV	R5,A
+	MOV	A,R0
+	MOV	R4,A
+	SJMP	TOSMH_NOSM
+
+NOT_TOS:
+	MOV	A,R4			; Check NOSM
+	ORL	A,R5
+	JNZ	NOT_NOS
+	CJNE	R6,#128,NOS_NOT_1
+	SJMP	L66		; Return TOSM
+NOT_NOS:
+;
+;	Now it's time for multiplying the mantissas.
+;
+;	Look upon TOSM and NOSM as 3 bytes each. 
+;	The following notation is used:
+;	
+;	TOSMH:TOSMM:TOSML			TOSM
+;	NOSMH:NOSMM:NOSML			NOSM
+;	RESMH:RESMM:RESML:RESM2:RESM3:RESM4	RESM byte's
+;
+;	The multiplication could be seen this way:
+;
+;			TOSMH TOSMM TOSML
+;		      * NOSMH NOSMM NOSML
+;		      -------------------------
+;			            NOSML*TOSML
+;		              NOSML*TOSMM
+;		              NOSMM*TOSML
+;		        NOSML*TOSMH
+;		        NOSMM*TOSMM
+;		        NOSMH*TOSML
+;                 NOSMM*TOSMH
+;                 NOSMH*TOSMM
+;           NOSMH*TOSMH
+;	    -----------------------------------
+;	    RESMH RESMM RESML RESM2 RESM3 RESM4 
+;
+;
+;	The algorithm above is used to compute the multiplication:
+;
+;	If RESMH highest bit is set after computation then an implicit left
+;	shift has been made, so increment RESE. Else shift RESM left, and all
+;	is OK
+;
+;
+
+	MOV	A,R2		; Save TOSMH on stack
+	PUSH	ACC
+;
+;	NOSML * TOSML
+;
+
+	MOV	A,R4
+	MOV	B,R0
+	MUL	AB
+	MOV	R7,A		; RESM4 finished
+	MOV	R3,B		; Part of RESM3 in R3
+;
+;	NOSMM * TOSML
+;
+
+	MOV	A,R5
+	MOV	B,R0
+	MUL	AB
+	ADD	A,R3
+	MOV	R3,A		; Part of RESM3 in R3
+	CLR	A
+	ADDC	A,B
+	MOV	R2,A		; Part of RESM2 in R2
+;
+;	NOSML * TOSMM
+;
+
+	MOV	A,R4
+	MOV	B,R1
+	MUL	AB
+	ADD	A,R3
+	ORL	A,R7
+	MOV	R7,A		; R7 contains RESM3 | RESM4
+	MOV	A,B
+	ADDC	A,R2
+	MOV	R2,A		; Part of RESM2 in R2 
+	CLR	A
+	RLC	A		
+	MOV	R3,A		; and part of RESML in R3	
+;
+;	NOSMH * TOSML
+;
+
+	MOV	B,R0		; R0 free
+	MOV	A,R6
+	MUL	AB
+	ADD	A,R2
+	MOV	R2,A		; Part of RESM2 in R2
+	MOV	A,B
+	ADDC	A,R3
+	MOV	R3,A		; Part of RESML in R3
+;
+;	NOSMM * TOSMM
+;
+
+	MOV	A,R5
+	MOV	B,R1
+	MUL	AB
+	ADD	A,R2
+	MOV	R2,A		; Part of RESM2 in R2
+	MOV	A,B
+	ADDC	A,R3
+	MOV	R3,A		; Part of RESML in R3
+	CLR	A
+	RLC	A
+	MOV	R0,A		; Part of RESMM in R0
+;
+;	NOSML * TOSMH
+;
+
+	MOV	B,R4
+	POP	ACC		; Bring down TOSMH
+	MOV	R4,A
+	MUL	AB
+	ADD	A,R2	
+	XCH	A,B
+	ADDC	A,R3
+	MOV	R3,A		; Part of RESML in R3
+	CLR	A
+	ADDC	A,R0
+	MOV	R0,A		; Part of RESMM in R0
+	MOV	A,R7
+	JZ	LL3
+	SETB	B.0
+LL3:	MOV	R7,B		; R7 contains RESM2 and bit 0 is set if 
+				; (RESM3 | RESM4) != 0
+	
+;
+;	NOSMM * TOSMH
+;
+
+	MOV	A,R5
+	MOV	B,R4
+	MUL	AB
+	ADD	A,R3
+	MOV	R3,A		; Part of RESML in R3
+	MOV	A,B
+	ADDC	A,R0
+	MOV	R0,A		; Part of RESMM in R0
+	CLR	A
+	RLC	A
+	MOV	R2,A		; Part of RESMH in R2
+;
+;	NOSMH * TOSMM
+;
+
+	MOV	A,R6
+	MOV	B,R1
+	MUL	AB
+	ADD	A,R3
+	MOV	R3,A		; RESML finished
+	MOV	A,B
+	ADDC	A,R0
+	MOV	R0,A		; Part of RESMM in R0
+	CLR	A
+	ADDC	A,R2
+	MOV	R2,A		; Part of RESMH in R2
+;
+;	NOSMH * TOSMH
+;
+
+	MOV	A,R4
+	MOV	B,R6
+	MUL	AB
+	ADD	A,R0
+	MOV	R0,A		; RESMM finished
+	MOV	A,B
+	ADDC	A,R2		; RESMH finished
+;
+;	Load up RES into proper registers
+;
+
+LOAD_RESM:
+
+	MOV	B,A
+	MOV	R6,A
+	MOV	A,R0
+	MOV	R5,A
+	MOV	A,R3
+	MOV	R4,A		; RESM in R6:R5:R4:R7
+	POP	ACC		; RESS in R1
+	MOV	R1,A
+	POP	ACC		; RESE in R0
+	MOV	R0,A
+;
+;	If RESM highest bit is set, then we must increment
+;	RESE. If not then we must make a leftshift on RESM.
+;
+
+	JNB	B.7,NO_INC
+
+	INC	R0		; RESE = RESE + 1
+	CJNE	R0,#0,EXIT_MUL
+	SJMP	?F_OVERFLOW_L02		; Jump if overflow
+
+NO_INC:
+	LCALL	?F_SHIFT_LEFT_L02
+EXIT_MUL:
+	IF	lcall_mode
+	LJMP	?F_ROUND_L02
+	ELSE
+	SJMP	?F_ROUND_L02
+	ENDIF
+
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function(s):	Rounds a floating point in unpacked internal format
+;			and packs it.
+;
+;	Description:	Round a floating point (in unpacked internal format),
+;			according to IEEE. The calling procedure is 
+;			responsible that "sticky bit" (one of the least 
+;			significant bits) is set.
+;			The following algorithm is used:
+;			
+;			Round upwards if the following condition is 
+;			fullfilled:
+;			
+;			(G==1 & (L==1 | (mantissa & 0x07fffff) != 0) ) )
+;
+;			Where G is the 25'th bit and L is the 24'th bit
+;			in the mantissa.
+;
+;			If exponent is zero then mantissa and sign will be
+;			cleared.
+;
+;
+;	Created:	21/Sep/90	IMAF	[Rewritten]
+;
+;	Input :	R6:R5:R4:R7	RESM
+;		R0		RESE
+;		R1		RESS		
+;
+;	Output:	R4:R7		Result
+;		A		set after result
+;	 
+;-----------------------------------------------------------------------------
+
+	MODULE	?F_ROUND_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_ROUND_L02
+	PUBLIC	?F_ROUND_2_L02
+	PUBLIC	?F_R_TEST_L02
+	PUBLIC	?F_UP_ROUND_L02
+	PUBLIC	?F_PACK_L02
+	PUBLIC	?F_EXIT_L02
+	PUBLIC	?F_OVERFLOW_L02
+	PUBLIC	?F_UNDERFLOW_L02
+
+?F_ROUND_L02:
+;
+;	First check the G-bit (the 25th),
+;
+
+	MOV	A,R7
+	RLC	A
+	JNC	?F_PACK_L02	; No rounding if G-bit is cleared
+;
+;	then upround if the 24th bit is set or one of the bits after is set.
+;
+
+?F_ROUND_2_L02:
+	MOV	B,R4
+	JB	B.0,?F_UP_ROUND_L02		; Test if L-bit is set
+?F_R_TEST_L02:
+	JZ	?F_PACK_L02	; No rounding if rest is zero
+
+?F_UP_ROUND_L02:
+	INC	R4
+	CJNE	R4,#0,?F_PACK_L02
+	INC	R5
+	CJNE	R5,#0,?F_PACK_L02
+	INC	R6
+	CJNE	R6,#0,?F_PACK_L02
+	INC	R0		; We do not shift down mantissa due
+				; to that the mantissa is always
+				; 8000000, and we will set it so
+				; later on
+	MOV	A,R0
+	JZ	?F_OVERFLOW_L02
+	
+?F_PACK_L02:
+	MOV	A,R1
+	RLC	A
+	MOV	A,R0
+	RRC	A
+	MOV	R7,A
+	MOV	A,R6
+	RL	A
+	RRC	A
+	MOV	R6,A
+
+?F_EXIT_L02:
+	ORL	A,R7
+	ORL	A,R5
+	ORL	A,R4
+	RET
+
+?F_OVERFLOW_L02:
+	MOV	R7,#127
+	MOV	A,#255
+	SJMP	LL1	
+?F_UNDERFLOW_L02:
+	CLR	A
+	MOV	R7,A
+LL1:	MOV	R6,A
+	MOV	R5,A
+	MOV	R4,A
+	RET
+	ENDMOD
+
+
+	MODULE	?F_SHIFT_LEFT_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_SHIFT_LEFT_L02
+	PUBLIC	?F_SHIFT_LEFT_2_L02
+
+?F_SHIFT_LEFT_L02:
+	CLR	C
+	MOV	A,R7
+	RLC	A
+	MOV	R7,A
+?F_SHIFT_LEFT_2_L02:
+	MOV	A,R4
+	RLC	A
+	MOV	R4,A
+	MOV	A,R5
+	RLC	A
+	MOV	R5,A
+	MOV	A,R6
+	RLC	A
+	MOV	R6,A
+	RET
+	ENDMOD
+
+	MODULE	?F_SHIFT_RIGHT_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_SHIFT_RIGHT_L02
+	PUBLIC	?F_SHIFT_RIGHT_2_L02
+
+?F_SHIFT_RIGHT_2_L02:
+	CLR	C
+?F_SHIFT_RIGHT_L02:
+	MOV	A,R6
+	RRC	A
+	MOV	R6,A
+	MOV	A,R5
+	RRC	A
+	MOV	R5,A
+	MOV	A,R4
+	RRC	A
+	MOV	R4,A
+	MOV	A,R7
+	RRC	A
+	JNC	LL2
+	SETB	ACC.0
+LL2:	MOV	R7,A
+	RET
+	ENDMOD
+
+	MODULE	?F_0_SUB_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_0_SUB_L02
+
+?F_0_SUB_L02:
+	CLR	C		; Change sign of TOSM
+	CLR	A
+	SUBB	A,R4
+	MOV	R4,A
+	CLR	A
+	SUBB	A,R5
+	MOV	R5,A
+	CLR	A
+	SUBB	A,R6
+	MOV	R6,A
+	CLR	A
+	SUBB	A,R7
+	MOV	R7,A
+	RET
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function(s):	Floating point division.
+;
+;	Description:	Divides two floating point operands found in TOS
+;			and NOS. The Quotient is left in TOS. The input 
+;			variables must be in IEEE format.
+;			Zero-flag will be set if and only if the result is
+;			zero.
+;
+;			"RES = NOS/TOS"
+;
+;			RESS = NOSS EOR TOSS
+;			if (NOSE == 0) RESE = 0
+;			else if (TOSE == 0) RESE = FF; RESM = 0xFFFFFF;
+;			else
+;			  RESE = (NOSE-127) - (TOSE-127) + 127 
+;			  if (RESE <= 0) RESE = 0
+;			  else {
+;				divide mantissa 
+;				normalize(RES)
+;			    }
+;			  }
+;			round(RES)			   
+;
+;
+;
+;	Created:	21/Sep/90	IMAF	[Rewritten]
+;
+;			Normal
+;	Input:	R4:R7			NOS
+;		[SP + 0:1]		Return address from float package
+;		R0:R3			TOS
+;		
+;			Reversed
+;	Input:	R0:R3			NOS
+;		[SP + 0:1]		Return address from float package
+;		R4:R7			TOS
+;		
+;
+;	Output:	R4:R7			NOS / TOS
+;		A			Cleared when result is zero, else set
+;	 
+;-----------------------------------------------------------------------------
+
+	MODULE	?F_DIV_CLR_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_DIV_CLR_L02
+	EXTERN	?F_DIV_L02
+?F_DIV_CLR_L02:
+	CLR	A
+	MOV	R0,A
+	MOV	R1,A
+	IF	lcall_mode
+	LJMP	?F_DIV_L02
+	ELSE
+	SJMP	?F_DIV_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_L02		; Can be replaced
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_DIV_R_CLR_L02
+	PUBLIC	?F_DIV_R_L02
+	PUBLIC	?F_DIV_L02
+	EXTERN	?F_UNPACK_L02
+	EXTERN	?F_PACK_L02
+	EXTERN	?F_UNDERFLOW_L02
+	EXTERN	?F_OVERFLOW_L02
+	EXTERN	?F_UP_ROUND_L02
+	EXTERN	?F_R_TEST_L02
+	EXTERN	?F_SHIFT_LEFT_2_L02
+
+?F_DIV_R_CLR_L02:
+	CLR	A
+	MOV	R4,A
+	MOV	R5,A
+?F_DIV_R_L02:
+;	We simply exchange the registers
+
+	MOV	A,R7
+	XCH	A,R3
+	MOV	R7,A
+	MOV	A,R6
+	XCH	A,R2
+	MOV	R6,A
+	MOV	A,R5
+	XCH	A,R1
+	MOV	R5,A
+	MOV	A,R4
+	XCH	A,R0
+	MOV	R4,A
+
+?F_DIV_L02:
+
+;
+;	Check if one of the operands is zero.
+;
+;	if (NOS == 0) then RES = 0;
+;	if (TOS == 0) then RES = 0x7fffffff
+;
+
+	MOV	A,R7
+	ORL	A,R6
+	JZ	?F_UNDERFLOW_L02	; If NOS == 0 then return 0
+NOS_NOT_ZERO:
+	MOV	A,R3
+	ORL	A,R2
+	JZ	?F_OVERFLOW_L02		; If TOS == 0 then return 0x7FFFFFFF
+TOS_NOT_ZERO:
+; Save workregisters and unpack operands.
+;
+	
+	LCALL	?F_UNPACK_L02
+;
+;	Compute the result exp.
+;
+
+	MOV	A,R3
+	SUBB	A,#127			; TOSE -= 127
+	XCH	A,R7
+	JC	MAYBE_OVERFLOW
+	SUBB	A,R7			; NOSE -= TOSE, where TOSE is 0 to 80
+	JNC	EXP_OK
+	IF	lcall_mode
+	LJMP	?F_UNDERFLOW_L02
+	ELSE
+	SJMP	?F_UNDERFLOW_L02
+	ENDIF
+
+MAYBE_OVERFLOW:				; TOSE is 81 to ff
+	CLR	C
+	SUBB	A,R7			; NOSE -= TOSE
+	JNC	?F_OVERFLOW_L02
+EXP_OK:
+	MOV	R3,A			; Let RESE temporarily be in R0
+
+;
+;	We look if TOSM is one, then the result will be NOSM
+;
+	MOV	A,R0			; Check TOSM
+	ORL	A,R1
+	JNZ	NOT_TOS
+	MOV	A,R2
+	SUBB	A,#128
+	JNZ	NOT_TOS
+	MOV	A,R3			; NOSM is the answer
+	MOV	R0,A
+	MOV	R1,B
+	IF	lcall_mode
+	LJMP	?F_PACK_L02
+	ELSE
+	AJMP	?F_PACK_L02
+	ENDIF
+
+NOT_TOS:
+;
+;	then compute new sign.
+;
+
+	PUSH	B
+
+;
+;	Now it's time to compute the mantissa. The princip is the "ordinary" 
+;	one, based on the "manual" way of doing it. Only 24 significant 
+;	bits of RESM is computed. Therefor the '1' is shifted in from 
+;	bit 24 in RESM. 
+;	
+;	For the loop we use the registers for storing loop_counter,
+;	RESM and NOSM. This layout of the registers is used:
+;
+;	TOSMH,TOSMM,TOSML		   R1:R2:R3
+;	NOSMH,NOSMM,NOSML,NOSM2		R4:R5:R6:R7
+;	COUNT				R0
+;
+;	Start with loading the registers
+;
+
+	MOV	R7,#0
+;
+;	NOSM -= TOSM
+;
+
+	LCALL	NOSM_SUB_TOSM
+	JNC	NO_DEC_EXP
+;
+;	If carry then normalize start-value and adjust exponent
+;
+	MOV	A,R3
+	JZ	L99
+	DJNZ	R3,NO_UNDERFLOW	 ; Adjust exponent,and jump if not underflow
+L99:	POP	B
+	IF	lcall_mode
+	LJMP	?F_UNDERFLOW_L02
+	ELSE
+	AJMP	?F_UNDERFLOW_L02
+	ENDIF
+NO_UNDERFLOW:
+;
+;	CY <- NOSM <- 0
+;
+
+	CLR	C
+	LCALL	?F_SHIFT_LEFT_2_L02
+	MOV	A,R7
+	RLC	A
+	MOV	R7,A
+;
+;	NOSM += TOSM
+;
+
+	MOV	A,R4
+	ADD	A,R0
+	MOV	R4,A
+	MOV	A,R5
+	ADDC	A,R1
+	MOV	R5,A
+	MOV	A,R6
+	ADDC	A,R2
+	MOV	R6,A
+	CLR	A
+	ADDC	A,R7
+	MOV	R7,A
+	SETB	C
+
+NO_DEC_EXP:
+;
+;	Load loop-counter ( On on the stack counting bytes and the other in
+;	B counting bits )
+;
+	
+	MOV	A,R3
+	PUSH	ACC
+	MOV	B,#8
+	MOV	A,#3
+	PUSH	ACC
+	MOV	R3,#0
+	JNC	NO_ADJ
+;
+;	Then start division !
+;
+
+DIV_LOOP:
+;
+;	NOSM -= TOSM
+;
+
+	CLR	C
+	MOV	A,R4
+	SUBB	A,R0
+	MOV	R4,A
+	MOV	A,R5
+	SUBB	A,R1
+	MOV	R5,A
+	MOV	A,R6
+	SUBB	A,R2
+	MOV	R6,A
+	MOV	A,R7
+	SUBB	A,#0
+	MOV	R7,A
+
+;
+;	If no carry, we succeeded
+;
+
+	JNC	NO_ADJ		
+;
+;	NOSM += TOSM
+;
+
+	MOV	A,R4
+	ADD	A,R0
+	MOV	R4,A
+	MOV	A,R5
+	ADDC	A,R1
+	MOV	R5,A
+	MOV	A,R6
+	ADDC	A,R2
+	MOV	R6,A
+	CLR	A
+	ADDC	A,R7
+	MOV	R7,A
+
+NO_ADJ:	
+;
+;	CY <- RESM <- CY
+;
+	MOV	A,R3		; We cheat here
+	RLC	A
+	MOV	R3,A
+;
+;	CY <- NOSM <- 0
+;
+
+	MOV	A,R4
+	RLC	A
+	MOV	R4,A
+	MOV	A,R5
+	RLC	A
+	MOV	R5,A
+	MOV	A,R6
+	RLC	A
+	MOV	R6,A
+	MOV	A,R7
+	RLC	A
+	MOV	R7,A
+	
+	DJNZ	B,L111
+	POP	B
+	MOV	A,R3
+	PUSH	ACC
+	MOV	A,B
+	DEC	A
+	JZ	EXIT
+	PUSH	ACC
+	MOV	B,#8
+	MOV	R3,#0
+	MOV	A,R7
+L111:
+	JB	ACC.0,DIV_LOOP
+	MOV	A,R6
+	SETB	C
+	JNB	ACC.7,NO_ADJ
+	SJMP	DIV_LOOP
+EXIT:	
+;
+;	Calculate G-bit
+;
+
+;
+;	NOSM -= TOSM
+;
+
+	LCALL	NOSM_SUB_TOSM
+	ORL	A,R6
+	ORL	A,R5
+	ORL	A,R4
+
+;
+;	Adjust result +	 RESM = ~RESM
+;
+
+	MOV	R3,A
+	POP	ACC
+	CPL	A
+	MOV	R4,A
+	POP	ACC
+	CPL	A
+	MOV	R5,A
+	POP	ACC
+	CPL	A
+	MOV	R6,A
+	POP	ACC
+	MOV	R0,A
+	POP	ACC
+	MOV	R1,A
+	MOV	A,R3
+
+;
+;	Round RESM if G-bit is set.
+;
+
+	JNC	L24
+	IF	lcall_mode
+	LJMP	?F_PACK_L02
+	ELSE
+	AJMP	?F_PACK_L02
+	ENDIF
+L24:
+	JZ	L25
+	IF	lcall_mode
+	LJMP	?F_UP_ROUND_L02
+	ELSE
+	AJMP	?F_UP_ROUND_L02
+	ENDIF
+L25:
+	MOV	A,R4
+	ANL	A,#1
+	IF	lcall_mode
+	LJMP	?F_R_TEST_L02
+	ELSE
+	AJMP	?F_R_TEST_L02
+	ENDIF
+
+
+
+NOSM_SUB_TOSM:
+	CLR	C
+	MOV	A,R4
+	SUBB	A,R0
+	MOV	R4,A
+	MOV	A,R5
+	SUBB	A,R1
+	MOV	R5,A
+	MOV	A,R6
+	SUBB	A,R2
+	MOV	R6,A
+	MOV	A,R7
+	SUBB	A,#0
+	MOV	R7,A
+	RET
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function(s):	Unpacks floating points operands and creates space
+;			for the result.
+;
+;	Description:	Unpacks two floating point operands in IEEE standard,
+;			in sign, exponent and mantissa.
+;
+;	Created:	21/Sep/90	IMAF	[Rewritten]
+;
+;	Input:	R4:R7		NOS
+;		[SP+2:3]	return address from float package
+;		[SP+0:1]	return address from this routine
+;		RO:R3		TOS
+;
+;	Output:	R3		TOSE
+;		R2		TOSMH
+;		R1		TOSMM
+;		R0		TOSML
+;		R7		NOSE
+;		R6		NOSMH
+;		R5		NOSMM
+;		R4		NOSML
+;		A		NOSE
+;		B.7		RESS = NOSS xor TOSS
+;		B.6		NOSS
+;		B.5		TOSS
+;		C		0
+;		[SP + 0:1]	Return from float package
+;
+;-----------------------------------------------------------------------------
+
+	MODULE	?F_UNPACK_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_UNPACK_L02
+
+?F_UNPACK_L02:
+	MOV	A,R2
+	MOV	C,ACC.7		; TOSE LSBit
+	SETB	ACC.7
+	MOV	R2,A	
+	MOV	A,R3
+	RLC	A
+	MOV	R3,A		; TOSE in R3
+	RRC	A	
+	MOV	B,A		; TOSS in B.7
+	
+	MOV	A,R6
+	MOV	C,ACC.7		; NOSE LSBit
+	SETB	ACC.7
+	MOV	R6,A	
+	MOV	A,R7
+	RLC	A
+	MOV	R7,A		; NOSE in R7
+	XCH	A,B
+	RRC	A		; TOSS in A.6 and NOSS in A.7
+	MOV	C,ACC.7	
+	JNB	ACC.6,L0
+	CPL	C
+L0:	RRC	A		
+	XCH	A,B		; TOSS xor NOSS in B.7, NOSS in B.6,
+				; TOSS in B.5, NOSE in A
+	CLR	C
+	RET
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function(s):	Floating point addition/subtraction.
+;
+;	Description:	Adds/subtracts two floating point operands found in 
+;			TOS and NOS. The sum is left in TOS. The input 
+;			variables must be in IEEE format. Zero-flag will be 
+;			set if and only if the result is zero.
+;
+;			Algorithm:
+;
+;			if (NOSE == 0) return(TOS)
+;			if (TOSE == 0) return(NOS)
+;			if  (abs(NOS) > abs(TOS)) swap(TOS,NOS)
+;			RESE = TOSE
+;			RESS = TOSS
+;			no_of_shift = TOSE - NOSE
+;			if (no_of_shift >= 25) RES = TOS
+;			else {
+;			  RESM = NOSM >> no_of_shift
+;			  if ((TOSS EOR NOSS) == 0) do_add
+;			  else do_sub
+;			  Normalize(RES)
+;			  if (RESM == 0) RESE = 0
+;			}
+;			Round(RES)
+;
+;
+;	Created:	21/Sep/90	IMAF	[Rewritten]
+;
+;			Normal
+;	Input:	R4:R7			NOS
+;		[SP + 0:1]		return address
+;		R0:R3			TOS
+;			Reversed
+;	Input:	R0:R3			NOS
+;		[SP + 0:1]		return address
+;		R4:R7			TOS
+;		
+;	Output:	R4:R7			NOS +/- TOS
+;		A			Cleared when result is zero, else set
+;	 
+;------------------------------------------------------------------------------
+	MODULE	?F_ADD_POST_R_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_POST_R_L02
+	EXTERN	?F_ADD_L02
+
+?F_ADD_POST_R_L02:
+	MOV	A,R0
+	MOV	R3,A
+	MOV	R2,#080H
+	CLR	A
+	MOV	R1,A
+	MOV	R0,A
+	IF	lcall_mode
+	LJMP	?F_ADD_L02
+	ELSE
+	SJMP	?F_ADD_L02
+	ENDIF
+	ENDMOD
+
+
+	MODULE	?F_ADD_POST_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_POST_L02
+	EXTERN	?F_ADD_L02
+
+?F_ADD_POST_L02:
+	MOV	A,R4
+	MOV	R7,A
+	MOV	R6,#080H
+	CLR	A
+	MOV	R5,A
+	MOV	R4,A
+	IF	lcall_mode
+	LJMP	?F_ADD_L02
+	ELSE
+	SJMP	?F_ADD_L02
+	ENDIF
+	ENDMOD
+
+
+	MODULE	?F_ADD2_R0123_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_ADD2_R0123_L02
+	EXTERN	?F_ADD_L02
+
+?F_ADD2_R0123_L02:
+	MOV	A,R0
+	MOV	R4,A
+	MOV	A,R1
+	MOV	R5,A
+	MOV	A,R2
+	MOV	R6,A
+	MOV	A,R3
+	MOV	R7,A
+	IF	lcall_mode
+	LJMP	?F_ADD_L02
+	ELSE
+	SJMP	?F_ADD_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADD2_R4567_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_ADD2_R4567_L02
+	EXTERN	?F_ADD_L02
+
+?F_ADD2_R4567_L02:
+	MOV	A,R4
+	MOV	R0,A
+	MOV	A,R5
+	MOV	R1,A
+	MOV	A,R6
+	MOV	R2,A
+	MOV	A,R7
+	MOV	R3,A
+	IF	lcall_mode
+	LJMP	?F_ADD_L02
+	ELSE
+	SJMP	?F_ADD_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADD_CLR_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_ADD_CLR_L02
+	EXTERN	?F_ADD_L02
+?F_ADD_CLR_L02:
+	CLR	A
+	MOV	R0,A
+	MOV	R1,A
+	IF	lcall_mode
+	SJMP	?F_ADD_L02
+	ELSE
+	SJMP	?F_ADD_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADD_R_CLR_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_ADD_R_CLR_L02
+	EXTERN	?F_ADD_L02
+?F_ADD_R_CLR_L02:
+	CLR	A
+	MOV	R4,A
+	MOV	R5,A
+	IF	lcall_mode
+	LJMP	?F_ADD_L02
+	ELSE
+	SJMP	?F_ADD_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_CLR_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_SUB_CLR_L02
+	EXTERN	?F_SUB_L02
+?F_SUB_CLR_L02:
+	CLR	A
+	MOV	R0,A
+	MOV	R1,A
+	IF	lcall_mode
+	LJMP	?F_SUB_L02
+	ELSE
+	SJMP	?F_SUB_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADDSUB_L02		; Can be replaced
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_SUB_R_CLR_L02
+	PUBLIC	?F_SUB_R_L02
+	PUBLIC	?F_SUB_L02
+	PUBLIC	?F_ADD_L02
+	EXTERN	?F_UNPACK_L02
+	EXTERN	?F_PACK_L02
+	EXTERN	?F_ROUND_L02
+	EXTERN	?F_UNDERFLOW_L02
+	EXTERN	?F_OVERFLOW_L02
+	EXTERN	?F_SHIFT_LEFT_L02
+	EXTERN	?F_SHIFT_RIGHT_L02
+
+
+?F_SUB_R_CLR_L02:
+	CLR	A
+	MOV	R4,A
+	MOV	R5,A
+?F_SUB_R_L02:
+;	We simply exchange the registers
+
+	MOV	A,R7
+	XCH	A,R3
+	MOV	R7,A
+	MOV	A,R6
+	XCH	A,R2
+	MOV	R6,A
+	MOV	A,R5
+	XCH	A,R1
+	MOV	R5,A
+	MOV	A,R4
+	XCH	A,R0
+	MOV	R4,A
+?F_SUB_L02:		
+	MOV	A,R3			; If TOS is zero return NOS
+	ORL	A,R2
+	JNZ	TOS_NOT_ZERO2
+	MOV	A,R7
+	ORL	A,R6
+	RET				; Return NOS
+
+TOS_NOT_ZERO2:
+	MOV	A,R3
+	XRL	A,#128		; Change sign of TOS
+	MOV	R3,A
+	SJMP	TOS_NOT_ZERO
+
+
+?F_ADD_L02:  
+;
+;	First check for zeros
+;
+
+	MOV	A,R3			; If TOS is zero return NOS
+	ORL	A,R2
+	JNZ	TOS_NOT_ZERO
+	MOV	A,R7
+	ORL	A,R6
+	RET				; Return NOS
+
+TOS_NOT_ZERO:
+	MOV	A,R7			; If NOS is zero return TOS
+	ORL	A,R6
+	JNZ	NOS_NOT_ZERO
+	MOV	A,R3			; Return TOS
+	MOV	R7,A
+	MOV	A,R2
+	MOV	R6,A
+	MOV	A,R1
+	MOV	R5,A
+	MOV	A,R0
+	MOV	R4,A
+	MOV	A,#1
+	RET
+NOS_NOT_ZERO:
+
+;
+;	First swap NOS and TOS if the absolute value of TOS is 
+;	higher than NOS
+;
+
+	CLR	C
+	MOV	A,R4		; abs(NOS) - abs(TOS)
+	SUBB	A,R0
+	MOV	A,R5
+	SUBB	A,R1
+	MOV	A,R6
+	SUBB	A,R2
+	MOV	A,R3
+	CLR	ACC.7
+	MOV	B,A
+	MOV	A,R7
+	CLR	ACC.7
+	SUBB	A,B
+	JNC	NO_SWAP		; Jump if abs(NOS) >= abs(TOS)
+	JZ	NO_SWAP
+
+	MOV	A,R3		; Swap NOS with TOS
+	XCH	A,R7
+	MOV	R3,A
+	MOV	A,R2
+	XCH	A,R6
+	MOV	R2,A
+	MOV	A,R1
+	XCH	A,R5
+	MOV	R1,A
+	MOV	A,R0
+	XCH	A,R4
+	MOV	R0,A
+
+NO_SWAP:
+;
+;	Now we have the knowledge that abs(NOS) >= abs(TOS) !!!
+;
+
+	LCALL	?F_UNPACK_L02		; Unpack the incoming operands
+;
+;	Let RESE = NOSE, RESS = NOSS, RESM2 = NOSS ^ TOSS
+;
+	
+	PUSH	ACC
+	PUSH	B
+	MOV	R7,#0
+
+;	Compute the number of shifts to be done before internal add or sub.
+;
+;	Use register R3 for saving no_of_shift
+;
+	
+	CLR	C
+	SUBB	A,R3			; R0 = NOSE - TOSE
+	MOV	R3,A
+	JZ	CHOSE_ADD_OR_SUB	; Jump if no shifting
+;
+;	Under special circumstances we know that the result shall
+;	be equal to NOS, namely:
+;
+;	TOS == 0 (checked out already!)
+;	no_shift >= 25		
+;
+;	So if one of above conditions exist then let RESM = NOSM and exit
+;
+
+	SUBB	A,#24
+	JZ	L20
+	JC	L21
+
+	POP	ACC			; Load RESE,RESS
+	RL	A
+	MOV	R1,A
+	POP	ACC
+	MOV	R0,A
+	IF	lcall_mode
+	LJMP	?F_PACK_L02
+	ELSE
+	AJMP	?F_PACK_L02
+	ENDIF
+;
+;	Now we have to compute the mantissa result. To do this we have
+;	a knowledge of how many potenses it's differ between NOS and TOS,
+;	If we shifts TOS that number to the right (in RESM, 4-bytes) a 
+;	simple add or sub between NOSM and RESM can be done:
+;
+;	Use the following registers for RESM R1:R2:R3:R4
+;
+
+L20:
+;
+;	24 bit shift. Special case!!!
+;
+
+	MOV	B,R2
+	MOV	A,R1
+	ORL	A,R0
+	JZ	L200
+	SETB	B.0
+	CLR	A
+L200:	
+	MOV	R7,B
+	MOV	R2,A
+	MOV	R1,A
+	MOV	R0,A
+	SJMP	CHOSE_ADD_OR_SUB
+
+L21:
+	MOV	A,R3
+	JNB	ACC.4,L22
+;
+;	16 bit shift
+;
+
+	MOV	B,R1
+	MOV	A,R2
+	JZ	L210
+	SETB	B.0
+	CLR	A
+L210:
+	MOV	R7,B
+	MOV	R1,A
+	XCH	A,R2
+	MOV	R0,A
+
+L22:
+	MOV	A,R3
+	JNB	ACC.3,L23
+;
+;	8 bit shift
+;
+
+	MOV	B,R0
+	MOV	A,R7
+	JZ	L220
+	SETB	B.0
+L220:
+	MOV	R7,B
+	CLR	A
+	XCH	A,R2
+	XCH	A,R1
+	MOV	R0,A
+
+L23:
+	MOV	A,R3
+	ANL	A,#7
+	JZ	CHOSE_ADD_OR_SUB
+	MOV	R3,A
+;
+;	TOSM >> X
+;
+
+SHIFT_LOOP:
+	CLR	C
+	MOV	A,R2
+	RRC	A
+	MOV	R2,A
+	MOV	A,R1
+	RRC	A
+	MOV	R1,A
+	MOV	A,R0
+	RRC	A
+	MOV	R0,A
+	MOV	A,R7
+	RRC	A
+	JNC	L24
+	SETB	ACC.0
+L24:	MOV	R7,A
+	DJNZ	R3,SHIFT_LOOP
+;
+;	Now we have loaded RESM in registers with NOSM in right place.
+;	If TOSS == NOSS then an internal add is to be done, else sub !
+;
+
+CHOSE_ADD_OR_SUB:
+	POP	ACC			; Get NOSS xor TOSS
+	PUSH	ACC
+	JNB	ACC.7,DO_ADD		; If equal do an add
+;
+; Do the subtraction
+;
+
+	CLR	C
+	CLR	A
+	SUBB	A,R7
+	MOV	R7,A
+	MOV	B,A
+	MOV	A,R4
+	SUBB	A,R0
+	MOV	R4,A
+	ORL	B,A
+	MOV	A,R5
+	SUBB	A,R1
+	MOV	R5,A
+	ORL	B,A
+	MOV	A,R6
+	SUBB	A,R2
+	MOV	R6,A
+	ORL	B,A
+
+	POP	ACC			; Get RESS
+	MOV	R1,A
+	POP	ACC			; Get RESE
+	MOV	R0,A
+	MOV	A,B
+
+	JNZ	SUB_ADJ
+	RET				; Return zero
+SUB_ADJ:
+	MOV	A,R1			; Get correct sign in R1.7
+	RL	A
+	MOV	R1,A
+
+	MOV	A,R6
+LLL:
+	JNB	ACC.7,LL
+	IF	lcall_mode
+	LJMP	?F_ROUND_L02		; Jump if no change in RESE
+	ELSE
+	AJMP	?F_ROUND_L02		; Jump if no change in RESE
+	ENDIF
+LL:
+	DJNZ	R0,SUB_SHIFT		; RESE--
+	IF	lcall_mode
+	LJMP	?F_UNDERFLOW_L02
+	ELSE
+	AJMP	?F_UNDERFLOW_L02
+	ENDIF
+
+SUB_SHIFT:
+	LCALL	?F_SHIFT_LEFT_L02
+	SJMP	LLL
+;
+; Do the addition
+;
+
+DO_ADD:	
+	MOV	A,R4
+	ADD	A,R0
+	MOV	R4,A
+	MOV	A,R5
+	ADDC	A,R1
+	MOV	R5,A
+	MOV	A,R6
+	ADDC	A,R2
+	MOV	R6,A
+
+	POP	ACC			; Get RESS
+	RL	A
+	MOV	R1,A
+	POP	ACC			; Get RESE
+	MOV	R0,A
+	JC	ADD_SHIFT
+	IF	lcall_mode
+	LJMP	?F_ROUND_L02		; Jump if no change in RESE
+	ELSE
+	AJMP	?F_ROUND_L02		; Jump if no change in RESE
+	ENDIF
+
+ADD_SHIFT:
+	LCALL	?F_SHIFT_RIGHT_L02
+	INC	R0			; RESE++
+	CJNE	R0,#0,ADD_EXIT
+	IF	lcall_mode
+	LJMP	?F_OVERFLOW_L02		; Overflow !!!
+	ELSE
+	AJMP	?F_OVERFLOW_L02		; Overflow !!!
+	ENDIF
+;
+;	That's all. Round, pack and exit !!
+;
+
+ADD_EXIT:
+	IF	lcall_mode
+	LJMP	?F_ROUND_L02
+	ELSE
+	AJMP	?F_ROUND_L02
+	ENDIF
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function(s):	Cast a floating point operand to a signed or unsigned
+;			long integer.
+;
+;	Description:	Cast a floating point operand to a signed or unsigned
+;			long integer. The result is left in TOS. The input 
+;			variable must be in IEEE format.
+;			Zero-flag will be set if and only if the result is 
+;			zero.
+;
+;
+;	Algorithm:	if (TOSE < 0x7f) goto return(result mantissa = 0)
+;			exp = exp - 31      
+;			if (exp > 0x7f)  goto return(result mantissa=7FFFFFFF)
+;			Shift right(mantissa) (0x7f- exp) step
+;
+;		return:	if (sign == '-') two_complement(result mantissa)
+;
+;
+;	Created:	21/Sep/90 	IMAF	[Rewritten]
+;
+;	Input:	R4:R7			TOS 
+;
+;		
+;	Output:	R4:R7			Casted TOS
+;		A			Cleared when result is zero, else set
+;	 
+;---------------------------------------------------------------------------
+
+	MODULE	?FLT_TO_LONG_L02		; Can be replaced
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC  ?R4567_FLT_TO_LONG_L02
+	EXTERN	?F_UNDERFLOW_L02
+	EXTERN	?F_OVERFLOW_L02
+	EXTERN	?F_SHIFT_RIGHT_2_L02
+	EXTERN	?F_0_SUB_L02
+	EXTERN	?F_EXIT_L02
+
+?R4567_FLT_TO_LONG_L02:
+	MOV	A,R7		; Check if zero
+	ORL	A,R6
+	JNZ	NO_ZERO
+	MOV	R5,A
+	MOV	R4,A
+	RET
+NO_ZERO:
+	MOV	A,R6		;(C) = LSB BIT OF TOSE (= R6-MSB)
+	MOV	C,ACC.7	 
+
+	SETB	ACC.7		; MSB of TOSM = 1.
+	MOV	R6,A	
+
+	CLR	A
+	XCH	A,R7		; ACC = TOSE, (C) = TOSS.
+	RLC	A	
+	
+	MOV	F0,C		; F0 (PSW.5) = TOSS.
+
+	CLR	C		; If TOSE >= 127(= no underflow) then goto LL1
+	SUBB	A,#127		; A = TOSE - 127
+	JNC	LL1	
+	IF	lcall_mode
+	LJMP	?F_UNDERFLOW_L02
+	ELSE
+	AJMP	?F_UNDERFLOW_L02
+	ENDIF
+
+LL1:	MOV	B,A
+	SUBB	A,#31		; Compare exp with 31
+	JC	L3		; continue if exp < 31
+	JZ	SIGN
+	IF	lcall_mode
+	LJMP	?F_OVERFLOW_L02
+	ELSE
+	AJMP	?F_OVERFLOW_L02
+	ENDIF
+L3:
+	CPL	A		; B = 31 - EXP.
+	INC	A
+	MOV	B,A	
+	
+L1:	MOV	A,R7
+	ANL	A,#0FEH
+	MOV	R7,A
+	LCALL	?F_SHIFT_RIGHT_2_L02	; Shift TOSM DPH steps to the right
+	DJNZ	B,L1	
+
+SIGN:
+	MOV	A,R7		; First put it correctly
+	XCH	A,R4
+	XCH	A,R5
+	XCH	A,R6
+	XCH	A,R7
+
+	JNB	F0,EXIT		; Jump to exit if result is positive.
+	LCALL	?F_0_SUB_L02	; Else change sign of tosm
+
+EXIT:	MOV	A,R6
+	IF	lcall_mode
+	LJMP	?F_EXIT_L02
+	ELSE
+	AJMP	?F_EXIT_L02
+	ENDIF
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function(s):	Cast a floating point operand to a signed or unsigned
+;			long integer.
+;
+;	Description:	Cast a floating point operand to a signed or unsigned
+;			long integer. The result is left in TOS. The input 
+;			variable must be in IEEE format.
+;			Zero-flag will be set if and only if the result is 
+;			zero.
+;
+;
+;	Algorithm:	if (TOSE < 0x7f) goto return(result mantissa = 0)
+;			exp = exp - 31      
+;			if (exp > 0x7f)  goto return(result mantissa=7FFFFFFF)
+;			Shift right(mantissa) (0x7f- exp) step
+;
+;		return:	if (sign == '-') two_complement(result mantissa)
+;
+;
+;	Created:	21/Sep/90 	IMAF	[Rewritten]
+;
+;	Input:	R0:R3			TOS 
+;
+;		
+;	Output:	R0:R3			Casted TOS
+;		A			Cleared when result is zero, else set
+;	 
+;---------------------------------------------------------------------------
+
+	MODULE	?FLT_TO_LONG_R_L02		; Can be replaced
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC  ?R0123_FLT_TO_LONG_L02
+
+?R0123_FLT_TO_LONG_L02:
+	MOV	A,R3		; Check if zero
+	ORL	A,R2
+	JNZ	NO_ZERO
+	MOV	R1,A
+	MOV	R0,A
+	RET
+NO_ZERO:
+	MOV	A,R2		;(C) = LSB BIT OF TOSE (= R6-MSB)
+	MOV	C,ACC.7	 
+
+	SETB	ACC.7		; MSB of TOSM = 1.
+	MOV	R2,A	
+
+	CLR	A
+	XCH	A,R3		; ACC = TOSE, (C) = TOSS.
+	RLC	A	
+	
+	MOV	F0,C		; F0 (PSW.5) = TOSS.
+
+	CLR	C		; If TOSE >= 127(= no underflow) then goto LL1
+	SUBB	A,#127		; A = TOSE - 127
+	JNC	LL1
+	CLR	A
+	MOV	R3,A
+OUT:	MOV	R2,A
+	MOV	R1,A
+	MOV	R0,A
+	RET
+
+LL1:	MOV	B,A
+	SUBB	A,#31		; Compare exp with 31
+	JC	L3		; continue if exp < 31
+	JZ	SIGN
+	MOV	R3,#127
+	MOV	A,#255
+	SJMP	OUT
+L3:
+	CPL	A		; B = 31 - EXP.
+	INC	A
+	MOV	B,A	
+	
+L1:	CLR	C		; Shift TOSM DPH steps to the right
+	MOV	A,R2
+	RRC	A
+	MOV	R2,A
+	MOV	A,R1
+	RRC	A
+	MOV	R1,A
+	MOV	A,R0
+	RRC	A
+	MOV	R0,A
+	MOV	A,R3
+	RRC	A
+	MOV	R3,A
+	DJNZ	B,L1	
+
+SIGN:
+	MOV	A,R3		; First put it correctly
+	XCH	A,R0
+	XCH	A,R1
+	XCH	A,R2
+	XCH	A,R3
+
+	JNB	F0,EXIT		; Jump to exit if result is positive.
+	CLR	C	; Else change sign of tosm
+	CLR	A
+	SUBB	A,R0
+	MOV	R0,A
+	CLR	A
+	SUBB	A,R1
+	MOV	R1,A
+	CLR	A
+	SUBB	A,R2
+	MOV	R2,A
+	CLR	A
+	SUBB	A,R3
+	MOV	R3,A
+
+EXIT:	MOV	A,R2
+	ORL	A,R0
+	ORL	A,R1
+	ORL	A,R3
+	RET
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function(s):	Cast a signed or unsigned long integer operand to a 
+;			floating point number.
+;
+;	Description:	Cast a signed or unsigned long integer operand to a 
+;			floating point number in IEEE format. The result is 
+;			left in TOS.
+;			Zero-flag will be set if and only if the result is 
+;			zero.
+;
+;	Algoritm:	SL_TO_FLOAT:
+;				result mantissa = TOS mantissa
+;				RESS = TOSS
+;				if (TOSS == '-') two_complement(TOS)
+;				JMP CAST
+;
+;			UL_TO_FLOAT:
+;				result mantissa = TOS mantissa
+;				RESS = 0		; '+'
+;
+;			CAST:
+;				if (TOS == 0) return(+0)
+;				result exp = #$7F + 31
+;				while ((res man & #$80000000) == 0) {
+;					Shift left(result mantissa)
+;					decrement result exp
+;				}
+;
+;	Created:	21/Sep/90 	IMAF	[Rewritten]
+;
+;	Input :	R4:R7			Longword you want to cast (TOS).
+;		
+;	Output:	R4:R7			Casted TOS
+;		A			Ceared when result is zero, else set
+;	 
+;---------------------------------------------------------------------------
+
+	MODULE	?UCHAR_TO_FLT_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?R4567_UCHAR_TO_FLT_L02
+        EXTERN  ?R4567_ULONG_TO_FLT_L02
+?R4567_UCHAR_TO_FLT_L02:
+	MOV	R4,A
+	CLR	A
+	MOV	R5,A
+	MOV	R6,A
+	MOV	R7,A
+	IF	lcall_mode
+	LJMP	?R4567_ULONG_TO_FLT_L02
+	ELSE
+	SJMP	?R4567_ULONG_TO_FLT_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?UINT_TO_FLT_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?R4567_UINT_TO_FLT_L02
+        EXTERN  ?R4567_ULONG_TO_FLT_L02
+?R4567_UINT_TO_FLT_L02:
+	CLR	A
+	MOV	R6,A
+	MOV	R7,A
+	IF	lcall_mode
+	LJMP	?R4567_ULONG_TO_FLT_L02
+	ELSE
+	SJMP	?R4567_ULONG_TO_FLT_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?CHAR_TO_FLT_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?R4567_CHAR_TO_FLT_L02
+        EXTERN  ?R4567_LONG_TO_FLT_L02
+?R4567_CHAR_TO_FLT_L02:
+	MOV	R4,A
+	RLC	A
+	SUBB	A,ACC
+	MOV	R5,A
+	MOV	R6,A
+	MOV	R7,A
+	IF	lcall_mode
+	LJMP	?R4567_LONG_TO_FLT_L02
+	ELSE
+	SJMP	?R4567_LONG_TO_FLT_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?LONG_TO_FLT_L02		; Can be replaced
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?R4567_INT_TO_FLT_L02
+	PUBLIC	?R4567_LONG_TO_FLT_L02
+	PUBLIC	?R4567_ULONG_TO_FLT_L02
+	EXTERN	?F_SHIFT_LEFT_L02
+	EXTERN	?F_0_SUB_L02
+
+?R4567_INT_TO_FLT_L02:
+	MOV	A,R5
+	RLC	A
+	SUBB	A,ACC
+	MOV	R6,A
+	MOV	R7,A
+?R4567_LONG_TO_FLT_L02:
+	MOV	A,R7		; If not TOS is negative goto unsigned
+	JNB	ACC.7,?R4567_ULONG_TO_FLT_L02
+
+	SETB	F0		; else change sign of TOS. (signbit = 1)
+	LCALL	?F_0_SUB_L02
+	SJMP	CAST
+
+?R4567_ULONG_TO_FLT_L02:
+	CLR	F0		; B.0 (signbit) is assumed to be zero.
+;
+; Cast TOS to float
+;
+
+CAST:
+	MOV	A,R7		; If TOS is zero then return.
+	ORL	A,R6
+	ORL	A,R5
+	ORL	A,R4
+	JNZ	NOZERO
+	RET	
+
+NOZERO:
+	MOV	B,#(127 + 23)		; Startvalue for Exp ( 7FH + 17H )
+	MOV	A,R7
+	JNZ	SHIFT_RIGHT		; High byte is not zero, shift
+					; right it is
+	MOV	A,R6
+	JB	ACC.7,FIX_EXP		; Oh, it is already OK!
+;
+; Shift mantissa left until bit 23 = 1
+;
+
+SHIFT_LEFT:
+	DEC	B			; Decrement exponent
+	LCALL	?F_SHIFT_LEFT_L02
+	JNB	ACC.7,SHIFT_LEFT
+	SJMP	FIX_EXP
+;
+; Shift mantissa right until bit (24 - 31) = 0
+;
+
+SHIFT_RIGHT:
+	MOV	A,R7
+SHIFT_RIGHT2:
+	INC	B
+	CLR	C
+	RRC	A
+	MOV	R7,A
+	MOV	A,R6
+	RRC	A
+	MOV	R6,A
+	MOV	A,R5
+	RRC	A
+	MOV	R5,A
+	MOV	A,R4
+	RRC	A
+	MOV	R4,A
+	MOV	A,R7
+	JNZ	SHIFT_RIGHT2
+
+FIX_EXP:
+	MOV	C,F0			; Sign into C
+	MOV	A,B
+	RRC	A
+	MOV	R7,A
+	MOV	A,R6
+	MOV	ACC.7,C
+	MOV	R6,A
+	ORL	A,#1			; We know that it is not zero
+	RET
+
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function(s):	Cast a signed or unsigned long integer operand to a 
+;			floating point number.
+;
+;	Description:	Cast a signed or unsigned long integer operand to a 
+;			floating point number in IEEE format. The result is 
+;			left in TOS.
+;			Zero-flag will be set if and only if the result is 
+;			zero.
+;
+;	Algoritm:	SL_TO_FLOAT:
+;				result mantissa = TOS mantissa
+;				RESS = TOSS
+;				if (TOSS == '-') two_complement(TOS)
+;				JMP CAST
+;
+;			UL_TO_FLOAT:
+;				result mantissa = TOS mantissa
+;				RESS = 0		; '+'
+;
+;			CAST:
+;				if (TOS == 0) return(+0)
+;				result exp = #$7F + 31
+;				while ((res man & #$80000000) == 0) {
+;					Shift left(result mantissa)
+;					decrement result exp
+;				}
+;
+;	Created:	21/Sep/90 	IMAF	[Rewritten]
+;
+;	Input :	R0:R3			Longword you want to cast (TOS).
+;		
+;	Output:	R0:R3			Casted TOS
+;		A			Ceared when result is zero, else set
+;	 
+;---------------------------------------------------------------------------
+
+	MODULE	?UCHAR_TO_FLT_R_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?R0123_UCHAR_TO_FLT_L02
+        EXTERN  ?R0123_ULONG_TO_FLT_L02
+?R0123_UCHAR_TO_FLT_L02:
+	MOV	R0,A
+	CLR	A
+	MOV	R1,A
+	MOV	R2,A
+	MOV	R3,A
+	IF	lcall_mode
+	LJMP	?R0123_ULONG_TO_FLT_L02
+	ELSE
+	SJMP	?R0123_ULONG_TO_FLT_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?UINT_TO_FLT_R_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?R0123_UINT_TO_FLT_L02
+        EXTERN  ?R0123_ULONG_TO_FLT_L02
+?R0123_UINT_TO_FLT_L02:
+	CLR	A
+	MOV	R2,A
+	MOV	R3,A
+	IF	lcall_mode
+	LJMP	?R0123_ULONG_TO_FLT_L02
+	ELSE
+	SJMP	?R0123_ULONG_TO_FLT_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?CHAR_TO_FLT_R_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?R0123_CHAR_TO_FLT_L02
+        EXTERN  ?R0123_LONG_TO_FLT_L02
+?R0123_CHAR_TO_FLT_L02:
+	MOV	R0,A
+	RLC	A
+	SUBB	A,ACC
+	MOV	R1,A
+	MOV	R2,A
+	MOV	R3,A
+	IF	lcall_mode
+	LJMP	?R0123_LONG_TO_FLT_L02
+	ELSE
+	SJMP	?R0123_LONG_TO_FLT_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?LONG_TO_FLT_R_L02		; Can be replaced
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?R0123_INT_TO_FLT_L02
+	PUBLIC	?R0123_LONG_TO_FLT_L02
+	PUBLIC	?R0123_ULONG_TO_FLT_L02
+
+?R0123_INT_TO_FLT_L02:
+	MOV	A,R1
+	RLC	A
+	SUBB	A,ACC
+	MOV	R2,A
+	MOV	R3,A
+?R0123_LONG_TO_FLT_L02:
+	MOV	A,R3		; If not TOS is negative goto unsigned
+	JNB	ACC.7,?R0123_ULONG_TO_FLT_L02
+
+	SETB	F0		; else change sign of TOS. (signbit = 1)
+	CLR	C
+	CLR	A
+	SUBB	A,R0
+	MOV	R0,A
+	CLR	A
+	SUBB	A,R1
+	MOV	R1,A
+	CLR	A
+	SUBB	A,R2
+	MOV	R2,A
+	CLR	A
+	SUBB	A,R3
+	MOV	R3,A
+	SJMP	CAST
+
+?R0123_ULONG_TO_FLT_L02:
+	CLR	F0		; B.0 (signbit) is assumed to be zero.
+;
+; Cast TOS to float
+;
+
+CAST:
+	MOV	A,R3		; If TOS is zero then return.
+	ORL	A,R2
+	ORL	A,R1
+	ORL	A,R0
+	JNZ	NOZERO
+	RET	
+
+NOZERO:
+	MOV	B,#(127 + 23)		; Startvalue for Exp ( 7FH + 17H )
+	MOV	A,R3
+	JNZ	SHIFT_RIGHT		; High byte is not zero, shift
+					; right it is
+	MOV	A,R2
+	JB	ACC.7,FIX_EXP		; Oh, it is already OK!
+;
+; Shift mantissa left until bit 23 = 1
+;
+
+SHIFT_LEFT:
+	DEC	B			; Decrement exponent
+	CLR	C
+	MOV	A,R3
+	RLC	A
+	MOV	R3,A
+	MOV	A,R0
+	RLC	A
+	MOV	R0,A
+	MOV	A,R1
+	RLC	A
+	MOV	R1,A
+	MOV	A,R2
+	RLC	A
+	MOV	R2,A
+	JNB	ACC.7,SHIFT_LEFT
+	SJMP	FIX_EXP
+;
+; Shift mantissa right until bit (24 - 31) = 0
+;
+
+SHIFT_RIGHT:
+	MOV	A,R3
+SHIFT_RIGHT2:
+	INC	B
+	CLR	C
+	RRC	A
+	MOV	R3,A
+	MOV	A,R2
+	RRC	A
+	MOV	R2,A
+	MOV	A,R1
+	RRC	A
+	MOV	R1,A
+	MOV	A,R0
+	RRC	A
+	MOV	R0,A
+	MOV	A,R3
+	JNZ	SHIFT_RIGHT2
+
+FIX_EXP:
+	MOV	C,F0			; Sign into C
+	MOV	A,B
+	RRC	A
+	MOV	R3,A
+	MOV	A,R2
+	MOV	ACC.7,C
+	MOV	R2,A
+	ORL	A,#1			; We know that it is not zero
+	RET
+
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function:	Float compare
+;
+;	Created:	07/Jun/90 IANR
+;	Revised:	02/Oct/90 IANR [Bug fix in != and ==]
+;
+;
+;	Input:	R4:R7		32 bit IEEE NOS
+;		R0:R3		32 bit IEEE TOS
+;		ACC		Operation code:
+;
+;				ACC.1 = Look on carry
+;				ACC.2 = Look on zero
+;				ACC.3 = Reverse condition
+;
+;				>   1110
+;				>=  1010
+;				==  0100
+;				!=  1100
+;				<   0010
+;				<=  0110
+;		
+;		ACC		1 if NOS op TOS, otherwise 0
+;
+;	Description:	This routine performs 'float' relational tests.
+;
+;-----------------------------------------------------------------------------
+
+	MODULE	?F_CMP_CLR_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?F_CMP_CLR_L02
+	EXTERN	?F_CMP_L02
+?F_CMP_CLR_L02:
+	MOV	R0,#0
+	MOV	R1,#0
+	IF	lcall_mode
+	LJMP	?F_CMP_L02
+	ELSE
+	SJMP	?F_CMP_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_CMP_L02
+	PUBLIC	?F_CMP_R_CLR_L02
+	PUBLIC	?F_CMP_L02
+	RSEG	RCODE:CODE:NOROOT
+
+?F_CMP_R_CLR_L02:
+	MOV	R4,#0
+	MOV	R5,#0
+POS_TOS:
+
+NEG_TOS:
+
+?F_CMP_L02:
+	MOV	B,A
+	CLR	C
+	MOV	A,R7
+	JB	ACC.7,NOT_POS_TOS
+	MOV	A,R3
+	JNB	ACC.7,POS_TOS_NOS
+	SJMP	SET_DIRECT
+NOT_POS_TOS:
+	MOV	A,R3
+	JB	ACC.7,NOT_NEG_TOS
+	CPL	A
+	SETB	C
+	SJMP	SET_DIRECT
+NOT_NEG_TOS:
+	JNB	B.1,NOT_MAGNITUDE
+	XRL	B,#1100B	; Both negative - Clear MSB's and reverse op
+NOT_MAGNITUDE:
+	MOV	A,R3
+	ANL	A,#7FH
+	MOV	R3,A
+POS_TOS_NOS:
+				; Here is a fix for 4.21
+	MOV	A,R7		; Check if first float is zero
+	ORL	A,R6
+	JNZ	L1
+	MOV	R4,A
+	MOV	R5,A
+L1:	MOV	A,R3		; Check if second float is zero
+	ORL	A,R2
+	JNZ	L2
+	MOV	R0,A
+	MOV	R1,A
+L2:	MOV	A,R4
+	SUBB	A,R0
+	MOV	R0,B
+	MOV	B,A
+	MOV	A,R5
+	SUBB	A,R1
+	ORL	B,A
+	MOV	A,R6
+	SUBB	A,R2
+	ORL	B,A
+	MOV	A,R7
+	ANL	A,#7FH
+	SUBB	A,R3
+	ORL	A,B
+	MOV	B,R0
+SET_DIRECT:
+	ANL	C,B.1		; If carry is important PRESERVE else CLEAR
+	JNB	B.2,NO_ZERO_CHECK
+	JNZ	NO_ZERO_CHECK
+	SETB	C
+NO_ZERO_CHECK:
+	JNB	B.3,NO_REVERSE
+	CPL	C
+NO_REVERSE:
+	CLR	A
+	RLC	A
+
+	RET
+
+	ENDMOD
+
+
+	MODULE	?F_ADD_ASG_R123_R4567_L02       ; Input: R123, R4567
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_ADD_ASG_R123_R4567_L02
+	EXTERN 	?F_OPERATION_R123_L02
+
+?F_ADD_ASG_R123_R4567_L02:
+	MOV	B,#00H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R123_L02
+	ELSE
+	SJMP	?F_OPERATION_R123_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_R123_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_SUB_ASG_R123_R4567_L02
+	EXTERN 	?F_OPERATION_R123_L02
+
+?F_SUB_ASG_R123_R4567_L02:
+	MOV	B,#010H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R123_L02
+	ELSE
+	SJMP	?F_OPERATION_R123_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_R123_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_MUL_ASG_R123_R4567_L02
+	EXTERN 	?F_OPERATION_R123_L02
+
+?F_MUL_ASG_R123_R4567_L02:
+	MOV	B,#020H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R123_L02
+	ELSE
+	SJMP	?F_OPERATION_R123_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_R123_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_DIV_ASG_R123_R4567_L02
+	EXTERN 	?F_OPERATION_R123_L02
+
+?F_DIV_ASG_R123_R4567_L02:
+	MOV	B,#030H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R123_L02
+	ELSE
+	SJMP	?F_OPERATION_R123_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADD_POST_R123_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_ADD_POST_R123_R4567_L02
+	EXTERN 	?F_OPERATION_R123_L02
+
+?F_ADD_POST_R123_R4567_L02:
+	MOV	B,#048H
+	MOV	R4,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R123_L02
+	ELSE
+	SJMP	?F_OPERATION_R123_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_R123_L02           ; Input: R123, R4567, B
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_NEG_ASG_R123_R4567_L02
+	PUBLIC	?F_OPERATION_R123_L02
+	EXTERN	?F_OPERATION_L02
+	EXTERN	?F_OPERATION_R1_L02
+	EXTERN	?F_OPERATION_DPTR1_L02
+	EXTERN	?F_OPERATION_PR1_L02
+
+?F_NEG_ASG_R123_R4567_L02:
+	MOV	B,#050H
+?F_OPERATION_R123_L02:
+	CJNE	R3,#0,NOT_IDATA
+	ORL	B,#1
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R1_L02
+	ELSE
+	AJMP	?F_OPERATION_R1_L02
+	ENDIF
+NOT_IDATA:
+	CJNE	R3,#1,NOT_XDATA
+	ORL	B,#4
+	MOV	DPL,R1
+	MOV	DPH,R2
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR1_L02
+	ELSE
+	AJMP	?F_OPERATION_DPTR1_L02
+	ENDIF
+NOT_XDATA:
+	ORL	B,#2		; We assume PDATA
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR1_L02
+	ELSE
+	AJMP	?F_OPERATION_PR1_L02
+	ENDIF
+	ENDMOD
+
+
+	MODULE	?F_ADD_ASG_R123_R4567_DISP_L02  ; Input: R123+DPTR,R4567
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_ADD_ASG_R123_R4567_DISP_L02
+	EXTERN 	?F_OPERATION_R123_DISP_L02
+
+?F_ADD_ASG_R123_R4567_DISP_L02:
+	MOV	B,#00H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R123_DISP_L02
+	ELSE
+	SJMP	?F_OPERATION_R123_DISP_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_R123_R4567_DISP_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_SUB_ASG_R123_R4567_DISP_L02
+	EXTERN 	?F_OPERATION_R123_DISP_L02
+
+?F_SUB_ASG_R123_R4567_DISP_L02:
+	MOV	B,#010H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R123_DISP_L02
+	ELSE
+	SJMP	?F_OPERATION_R123_DISP_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_R123_R4567_DISP_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_MUL_ASG_R123_R4567_DISP_L02
+	EXTERN 	?F_OPERATION_R123_DISP_L02
+
+?F_MUL_ASG_R123_R4567_DISP_L02:
+	MOV	B,#020H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R123_DISP_L02
+	ELSE
+	SJMP	?F_OPERATION_R123_DISP_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_R123_R4567_DISP_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_DIV_ASG_R123_R4567_DISP_L02
+	EXTERN 	?F_OPERATION_R123_DISP_L02
+
+?F_DIV_ASG_R123_R4567_DISP_L02:
+	MOV	B,#030H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R123_DISP_L02
+	ELSE
+	SJMP	?F_OPERATION_R123_DISP_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADD_POST_R123_R4567_DISP_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_ADD_POST_R123_R4567_DISP_L02
+	EXTERN 	?F_OPERATION_R123_DISP_L02
+
+?F_ADD_POST_R123_R4567_DISP_L02:
+	MOV	B,#048H
+	MOV	R4,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R123_DISP_L02
+	ELSE
+	SJMP	?F_OPERATION_R123_DISP_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_R123_DISP_L02      ; Input: R123+DPTR, R4567,B
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_NEG_ASG_R123_R4567_DISP_L02
+	PUBLIC	?F_OPERATION_R123_DISP_L02
+	EXTERN	?F_OPERATION_L02
+	EXTERN	?F_OPERATION_R0_L02
+	EXTERN	?F_OPERATION_DPTR1_L02
+	EXTERN	?F_OPERATION_PR0_L02
+
+?F_NEG_ASG_R123_R4567_DISP_L02:
+	MOV	B,#050H
+?F_OPERATION_R123_DISP_L02:
+	CJNE	R3,#0,NOT_IDATA
+	MOV	A,R1
+	ADD	A,DPL
+	MOV	R0,A
+	ORL	B,#1
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R0_L02
+	ELSE
+	AJMP	?F_OPERATION_R0_L02
+	ENDIF
+NOT_IDATA:
+	CJNE	R3,#1,NOT_XDATA
+	ORL	B,#4
+	MOV	A,R1
+	ADD	A,DPL
+	MOV	DPL,A
+	MOV	A,R2
+	ADDC	A,DPH
+	MOV	DPH,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR1_L02
+	ELSE
+	AJMP	?F_OPERATION_DPTR1_L02
+	ENDIF
+NOT_XDATA:
+	ORL	B,#2		; We assume PDATA
+	MOV	A,R1
+	ADD	A,DPL
+	MOV	R0,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR0_L02
+	ELSE
+	AJMP	?F_OPERATION_PR0_L02
+	ENDIF
+	ENDMOD
+
+
+	MODULE	?F_ADD_ASG_R567_R0123_L02       ; Input: R567, R0123
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_ADD_ASG_R567_R0123_L02
+	EXTERN 	?F_OPERATION_R567_L02
+
+?F_ADD_ASG_R567_R0123_L02:
+	MOV	B,#04H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R567_L02
+	ELSE
+	SJMP	?F_OPERATION_R567_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_R567_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_SUB_ASG_R567_R0123_L02
+	EXTERN 	?F_OPERATION_R567_L02
+
+?F_SUB_ASG_R567_R0123_L02:
+	MOV	B,#010H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R567_L02
+	ELSE
+	SJMP	?F_OPERATION_R567_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_R567_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_MUL_ASG_R567_R0123_L02
+	EXTERN 	?F_OPERATION_R567_L02
+
+?F_MUL_ASG_R567_R0123_L02:
+	MOV	B,#020H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R567_L02
+	ELSE
+	SJMP	?F_OPERATION_R567_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_R567_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_DIV_ASG_R567_R0123_L02
+	EXTERN 	?F_OPERATION_R567_L02
+
+?F_DIV_ASG_R567_R0123_L02:
+	MOV	B,#030H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R567_L02
+	ELSE
+	SJMP	?F_OPERATION_R567_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADD_POST_R567_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_ADD_POST_R567_R0123_L02
+	EXTERN 	?F_OPERATION_R567_L02
+
+?F_ADD_POST_R567_R0123_L02:
+	MOV	B,#048H
+	MOV	R0,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R567_L02
+	ELSE
+	SJMP	?F_OPERATION_R567_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_R567_L02           ; Input R567, R0123, B
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_NEG_ASG_R567_R0123_L02
+	PUBLIC	?F_OPERATION_R567_L02
+	EXTERN	?F_OPERATION_R123_L02
+	EXTERN	?F_OPERATION_L02
+	EXTERN	?EXCHANGE_L01
+
+?F_NEG_ASG_R567_R0123_L02:
+	MOV	B,#050H
+?F_OPERATION_R567_L02:
+	LCALL	?EXCHANGE_L01
+	LCALL	?F_OPERATION_R123_L02
+	MOV	B,A
+	LCALL	?EXCHANGE_L01
+	MOV	A,B
+	RET
+	ENDMOD
+
+
+
+	MODULE	?F_ADD_ASG_R567_R0123_DISP_L02  ; Input: R567+DPTR, R0123
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_ADD_ASG_R567_R0123_DISP_L02
+	EXTERN 	?F_OPERATION_R567_DISP_L02
+
+?F_ADD_ASG_R567_R0123_DISP_L02:
+	MOV	B,#04H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R567_DISP_L02
+	ELSE
+	SJMP	?F_OPERATION_R567_DISP_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_R567_R0123_DISP_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_SUB_ASG_R567_R0123_DISP_L02
+	EXTERN 	?F_OPERATION_R567_DISP_L02
+
+?F_SUB_ASG_R567_R0123_DISP_L02:
+	MOV	B,#010H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R567_DISP_L02
+	ELSE
+	SJMP	?F_OPERATION_R567_DISP_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_R567_R0123_DISP_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_MUL_ASG_R567_R0123_DISP_L02
+	EXTERN 	?F_OPERATION_R567_DISP_L02
+
+?F_MUL_ASG_R567_R0123_DISP_L02:
+	MOV	B,#020H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R567_DISP_L02
+	ELSE
+	SJMP	?F_OPERATION_R567_DISP_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_R567_R0123_DISP_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_DIV_ASG_R567_R0123_DISP_L02
+	EXTERN 	?F_OPERATION_R567_DISP_L02
+
+?F_DIV_ASG_R567_R0123_DISP_L02:
+	MOV	B,#030H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R567_DISP_L02
+	ELSE
+	SJMP	?F_OPERATION_R567_DISP_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADD_POST_R567_R0123_DISP_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_ADD_POST_R567_R0123_DISP_L02
+	EXTERN 	?F_OPERATION_R567_DISP_L02
+
+?F_ADD_POST_R567_R0123_DISP_L02:
+	MOV	B,#048H
+	MOV	R0,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R567_DISP_L02
+	ELSE
+	SJMP	?F_OPERATION_R567_DISP_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_R567_DISP_L02      ; Input: R567+DPTR, R0123
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC 	?F_NEG_ASG_R567_R0123_DISP_L02
+	PUBLIC	?F_OPERATION_R567_DISP_L02
+	EXTERN	?F_OPERATION_R123_DISP_L02
+	EXTERN	?EXCHANGE_L01
+
+?F_NEG_ASG_R567_R0123_DISP_L02:
+	MOV	B,#050H
+?F_OPERATION_R567_DISP_L02:
+	LCALL	?EXCHANGE_L01
+	LCALL	?F_OPERATION_R123_DISP_L02
+	MOV	B,A
+	LCALL	?EXCHANGE_L01
+	MOV	A,B
+	RET
+	ENDMOD
+
+
+	MODULE	?F_ADD_ASG_PR1_R4567_L02        ; Input: R1, R4567
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_ASG_PR1_R4567_L02
+	EXTERN	?F_OPERATION_PR1_L02
+
+?F_ADD_ASG_PR1_R4567_L02:
+	MOV	B,#002H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR1_L02
+	ELSE
+	SJMP	?F_OPERATION_PR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_PR1_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_SUB_ASG_PR1_R4567_L02
+	EXTERN	?F_OPERATION_PR1_L02
+
+?F_SUB_ASG_PR1_R4567_L02:
+	MOV	B,#012H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR1_L02
+	ELSE
+	SJMP	?F_OPERATION_PR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_PR1_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_MUL_ASG_PR1_R4567_L02
+	EXTERN	?F_OPERATION_PR1_L02
+
+?F_MUL_ASG_PR1_R4567_L02:
+	MOV	B,#022H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR1_L02
+	ELSE
+	SJMP	?F_OPERATION_PR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_PR1_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_DIV_ASG_PR1_R4567_L02
+	EXTERN	?F_OPERATION_PR1_L02
+
+?F_DIV_ASG_PR1_R4567_L02:
+	MOV	B,#032H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR1_L02
+	ELSE
+	SJMP	?F_OPERATION_PR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_NEG_ASG_PR1_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_NEG_ASG_PR1_R4567_L02
+	EXTERN	?F_OPERATION_PR1_L02
+
+?F_NEG_ASG_PR1_R4567_L02:
+	MOV	B,#052H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR1_L02
+	ELSE
+	SJMP	?F_OPERATION_PR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_PR1_L02            ; Input: B,R1,R4567
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_POST_PR1_R4567_L02
+	PUBLIC	?F_OPERATION_PR1_L02
+	EXTERN	?F_OPERATION_PR_L02
+
+?F_ADD_POST_PR1_R4567_L02:
+	MOV	B,#04AH
+	MOV	R4,A
+?F_OPERATION_PR1_L02:
+	MOV	A,R3
+	PUSH	ACC
+	MOV	A,R2
+	PUSH	ACC
+	MOV	A,R1
+	PUSH	ACC
+	MOV	A,R0
+	PUSH	ACC
+	MOV	A,R1
+	MOV	R0,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR_L02
+	ELSE
+	SJMP	?F_OPERATION_PR_L02
+	ENDIF
+	ENDMOD
+
+
+	MODULE	?F_ADD_ASG_PR0_R4567_L02        ; Input: R0, A/R4567
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_ASG_PR0_R4567_L02
+	EXTERN	?F_OPERATION_PR0_L02
+
+?F_ADD_ASG_PR0_R4567_L02:
+	MOV	B,#002H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR0_L02
+	ELSE
+	SJMP	?F_OPERATION_PR0_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_PR0_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_SUB_ASG_PR0_R4567_L02
+	EXTERN	?F_OPERATION_PR0_L02
+
+?F_SUB_ASG_PR0_R4567_L02:
+	MOV	B,#012H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR0_L02
+	ELSE
+	SJMP	?F_OPERATION_PR0_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_PR0_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_MUL_ASG_PR0_R4567_L02
+	EXTERN	?F_OPERATION_PR0_L02
+
+?F_MUL_ASG_PR0_R4567_L02:
+	MOV	B,#022H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR0_L02
+	ELSE
+	SJMP	?F_OPERATION_PR0_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_PR0_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_DIV_ASG_PR0_R4567_L02
+	EXTERN	?F_OPERATION_PR0_L02
+
+?F_DIV_ASG_PR0_R4567_L02:
+	MOV	B,#032H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR0_L02
+	ELSE
+	SJMP	?F_OPERATION_PR0_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_NEG_ASG_PR0_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_NEG_ASG_PR0_R4567_L02
+	EXTERN	?F_OPERATION_PR0_L02
+
+?F_NEG_ASG_PR0_R4567_L02:
+	MOV	B,#052H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_PR0_L02
+	ELSE
+	SJMP	?F_OPERATION_PR0_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_PR_L02             ; Input: B,R0,R4567
+	RSEG	RCODE:CODE:NOROOT	                        ; Load R0123 through R0,
+	PUBLIC	?F_ADD_POST_PR0_R4567_L02
+	PUBLIC	?F_OPERATION_PR0_L02
+	PUBLIC	?F_OPERATION_PR_L02             ; optionally save R0123,
+	EXTERN	?F_OPERATION_L02                ; Save R0, do it
+
+?F_ADD_POST_PR0_R4567_L02:
+	MOV	B,#04AH
+	MOV	R4,A
+?F_OPERATION_PR0_L02:
+	MOV	A,R3
+	PUSH	ACC
+	MOV	A,R2
+	PUSH	ACC
+	MOV	A,R1
+	PUSH	ACC
+	MOV	A,R0
+	PUSH	ACC
+?F_OPERATION_PR_L02:
+	MOVX	A,@R0
+	MOV	R3,A
+	INC	R0
+	MOVX	A,@R0
+	MOV	R2,A
+	INC	R0
+	MOVX	A,@R0
+	MOV	R1,A
+	INC 	R0
+	MOVX	A,@R0
+	XCH	A,R0
+	JNB	B.3,OUT
+	XCH	A,R0
+	PUSH	ACC
+	XCH	A,R0
+	XCH	A,R1
+	PUSH	ACC
+	XCH	A,R1
+	XCH	A,R2
+	PUSH	ACC
+	XCH	A,R2
+	XCH	A,R3
+	PUSH	ACC
+	XCH	A,R3
+OUT:	PUSH	ACC
+	IF	lcall_mode
+	LJMP	?F_OPERATION_L02
+	ELSE
+	AJMP	?F_OPERATION_L02
+	ENDIF
+	ENDMOD
+
+
+
+	MODULE	?F_ADD_ASG_ST_DPTR_R0123_L02    ; Input: DPTR-offset, R0123
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_ASG_ST_DPTR_R0123_L02
+	EXTERN	?F_OPERATION_ST_DPTR2_L02
+
+?F_ADD_ASG_ST_DPTR_R0123_L02:
+	MOV	B,#064H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_ST_DPTR2_L02
+	ELSE
+	SJMP	?F_OPERATION_ST_DPTR2_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_ST_DPTR_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_SUB_ASG_ST_DPTR_R0123_L02
+	EXTERN	?F_OPERATION_ST_DPTR2_L02
+
+?F_SUB_ASG_ST_DPTR_R0123_L02:
+	MOV	B,#074H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_ST_DPTR2_L02
+	ELSE
+	SJMP	?F_OPERATION_ST_DPTR2_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_ST_DPTR_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_MUL_ASG_ST_DPTR_R0123_L02
+	EXTERN	?F_OPERATION_ST_DPTR2_L02
+
+?F_MUL_ASG_ST_DPTR_R0123_L02:
+	MOV	B,#084H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_ST_DPTR2_L02
+	ELSE
+	SJMP	?F_OPERATION_ST_DPTR2_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_ST_DPTR_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_DIV_ASG_ST_DPTR_R0123_L02
+	EXTERN	?F_OPERATION_ST_DPTR2_L02
+
+?F_DIV_ASG_ST_DPTR_R0123_L02:
+	MOV	B,#094H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_ST_DPTR2_L02
+	ELSE
+	SJMP	?F_OPERATION_ST_DPTR2_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADD_POST_ST_DPTR_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_POST_ST_DPTR_R0123_L02
+	EXTERN	?F_OPERATION_ST_DPTR2_L02
+
+?F_ADD_POST_ST_DPTR_R0123_L02:
+	MOV	B,#0ACH
+	MOV	R0,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_ST_DPTR2_L02
+	ELSE
+	SJMP	?F_OPERATION_ST_DPTR2_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_ST_DPTR2_L02       ; Input: B, DPTR-offset,R0123
+	RSEG	RCODE:CODE:NOROOT	                        ; Save R4567, Load stack-
+	PUBLIC	?F_NEG_ASG_ST_DPTR_R0123_L02
+	PUBLIC	?F_OPERATION_ST_DPTR2_L02       ; address into DPTR
+	EXTERN	?F_OPERATION_DPTR2_R_L02
+	EXTERN	?SETUP_STACK_DPTR_L17
+	EXTERN	?EXCHANGE_L01                 
+
+?F_NEG_ASG_ST_DPTR_R0123_L02:
+	MOV	B,#0B4H
+?F_OPERATION_ST_DPTR2_L02:
+        MOV     A,#LOW(?EXCHANGE_L01)
+        PUSH    ACC
+        MOV     A,#HIGH(?EXCHANGE_L01)
+        PUSH    ACC
+	MOV	A,R7
+	PUSH	ACC
+	MOV	A,R6
+	PUSH	ACC
+	MOV	A,R5
+	PUSH	ACC
+	MOV	A,R4
+	PUSH	ACC
+	LCALL	?SETUP_STACK_DPTR_L17
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR2_R_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR2_R_L02
+	ENDIF
+	ENDMOD
+
+
+	MODULE	?F_ADD_ASG_DPTR_R0123_L02       ; Input: DPTR,A/R0123
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_ASG_DPTR_R0123_L02
+	EXTERN	?F_OPERATION_DPTR2_L02
+
+?F_ADD_ASG_DPTR_R0123_L02:
+	MOV	B,#064H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR2_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR2_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_DPTR_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_SUB_ASG_DPTR_R0123_L02
+	EXTERN	?F_OPERATION_DPTR2_L02
+
+?F_SUB_ASG_DPTR_R0123_L02:
+	MOV	B,#074H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR2_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR2_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_DPTR_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_MUL_ASG_DPTR_R0123_L02
+	EXTERN	?F_OPERATION_DPTR2_L02
+
+?F_MUL_ASG_DPTR_R0123_L02:
+	MOV	B,#084H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR2_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR2_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_DPTR_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_DIV_ASG_DPTR_R0123_L02
+	EXTERN	?F_OPERATION_DPTR2_L02
+
+?F_DIV_ASG_DPTR_R0123_L02:
+	MOV	B,#094H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR2_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR2_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADD_POST_DPTR_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_POST_DPTR_R0123_L02
+	EXTERN	?F_OPERATION_DPTR2_L02
+
+?F_ADD_POST_DPTR_R0123_L02:
+	MOV	B,#0ACH
+	MOV	R0,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR2_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR2_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_DPTR2_R_L02        ; Input: B, DPTR, R0123
+	RSEG	RCODE:CODE:NOROOT	                        ; Load R4567 through DPTR,
+	PUBLIC	?F_NEG_ASG_DPTR_R0123_L02
+	PUBLIC	?F_OPERATION_DPTR2_L02
+	PUBLIC	?F_OPERATION_DPTR2_R_L02        ; optionally save R4567,
+	EXTERN	?F_OPERATION_L02                ; Restore DPTR and push it,
+	EXTERN	?EXCHANGE_L01                 
+	                                        ; Do the operation
+
+?F_NEG_ASG_DPTR_R0123_L02:
+	MOV	B,#0B4H
+?F_OPERATION_DPTR2_L02:
+        MOV     A,#LOW(?EXCHANGE_L01)
+        PUSH    ACC
+        MOV     A,#HIGH(?EXCHANGE_L01)
+        PUSH    ACC
+	MOV	A,R7
+	PUSH	ACC
+	MOV	A,R6
+	PUSH	ACC
+	MOV	A,R5
+	PUSH	ACC
+	MOV	A,R4
+	PUSH	ACC
+?F_OPERATION_DPTR2_R_L02:
+	MOVX	A,@DPTR
+	MOV	R7,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	R6,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	R5,A
+	INC 	DPTR
+	MOVX	A,@DPTR
+	MOV	R4,A
+	JNB	B.3,OUT
+	MOV	A,R4
+	PUSH	ACC
+	MOV	A,R5
+	PUSH	ACC
+	MOV	A,R6
+	PUSH	ACC
+	MOV	A,R7
+	PUSH	ACC
+OUT:	MOV	A,DPL
+	ADD	A,#0FDH
+	PUSH	ACC
+	MOV	A,DPH
+	ADDC	A,#0FFH
+	PUSH	ACC
+	IF	lcall_mode
+	LJMP	?F_OPERATION_L02
+	ELSE
+	AJMP	?F_OPERATION_L02
+	ENDIF
+	ENDMOD
+
+
+
+	MODULE	?F_ADD_ASG_ST_DPTR_R4567_L02    ; Input: DPTR-offset, A/R4567
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_ASG_ST_DPTR_R4567_L02
+	EXTERN	?F_OPERATION_ST_DPTR1_L02
+
+?F_ADD_ASG_ST_DPTR_R4567_L02:
+	MOV	B,#04H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_ST_DPTR1_L02
+	ELSE
+	SJMP	?F_OPERATION_ST_DPTR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_ST_DPTR_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_SUB_ASG_ST_DPTR_R4567_L02
+	EXTERN	?F_OPERATION_ST_DPTR1_L02
+
+?F_SUB_ASG_ST_DPTR_R4567_L02:
+	MOV	B,#014H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_ST_DPTR1_L02
+	ELSE
+	SJMP	?F_OPERATION_ST_DPTR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_ST_DPTR_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_MUL_ASG_ST_DPTR_R4567_L02
+	EXTERN	?F_OPERATION_ST_DPTR1_L02
+
+?F_MUL_ASG_ST_DPTR_R4567_L02:
+	MOV	B,#024H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_ST_DPTR1_L02
+	ELSE
+	SJMP	?F_OPERATION_ST_DPTR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_ST_DPTR_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_DIV_ASG_ST_DPTR_R4567_L02
+	EXTERN	?F_OPERATION_ST_DPTR1_L02
+
+?F_DIV_ASG_ST_DPTR_R4567_L02:
+	MOV	B,#034H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_ST_DPTR1_L02
+	ELSE
+	SJMP	?F_OPERATION_ST_DPTR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADD_POST_ST_DPTR_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_POST_ST_DPTR_R4567_L02
+	EXTERN	?F_OPERATION_ST_DPTR1_L02
+
+?F_ADD_POST_ST_DPTR_R4567_L02:
+	MOV	B,#04CH
+	MOV	R4,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_ST_DPTR1_L02
+	ELSE
+	SJMP	?F_OPERATION_ST_DPTR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_ST_DPTR_L02        ; Input: B, DPTR-offset,
+	RSEG	RCODE:CODE:NOROOT	                        ;        R4567
+	PUBLIC	?F_NEG_ASG_ST_DPTR_R4567_L02
+	PUBLIC	?F_OPERATION_ST_DPTR1_L02       ; Save R0123, Load stack-
+	EXTERN	?F_OPERATION_DPTR_L02           ; address into DPTR
+	EXTERN	?SETUP_STACK_DPTR_L17
+
+?F_NEG_ASG_ST_DPTR_R4567_L02:
+	MOV	B,#054H
+?F_OPERATION_ST_DPTR1_L02:
+	MOV	A,R3
+	PUSH	ACC
+	MOV	A,R2
+	PUSH	ACC
+	MOV	A,R1
+	PUSH	ACC
+	MOV	A,R0
+	PUSH	ACC
+	LCALL	?SETUP_STACK_DPTR_L17
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR_L02
+	ENDIF
+	ENDMOD
+
+
+	MODULE	?F_ADD_ASG_DPTR_R4567_L02       ; Input DPTR, R4567
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_ASG_DPTR_R4567_L02
+	EXTERN	?F_OPERATION_DPTR1_L02
+
+?F_ADD_ASG_DPTR_R4567_L02:
+	MOV	B,#04H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR1_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_DPTR_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_SUB_ASG_DPTR_R4567_L02
+	EXTERN	?F_OPERATION_DPTR1_L02
+
+?F_SUB_ASG_DPTR_R4567_L02:
+	MOV	B,#014H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR1_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_DPTR_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_MUL_ASG_DPTR_R4567_L02
+	EXTERN	?F_OPERATION_DPTR1_L02
+
+?F_MUL_ASG_DPTR_R4567_L02:
+	MOV	B,#024H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR1_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_DPTR_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_DIV_ASG_DPTR_R4567_L02
+	EXTERN	?F_OPERATION_DPTR1_L02
+
+?F_DIV_ASG_DPTR_R4567_L02:
+	MOV	B,#034H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR1_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_ADD_POST_DPTR_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_POST_DPTR_R4567_L02
+	EXTERN	?F_OPERATION_DPTR1_L02
+
+?F_ADD_POST_DPTR_R4567_L02:
+	MOV	B,#04CH
+	MOV	R4,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_DPTR1_L02
+	ELSE
+	SJMP	?F_OPERATION_DPTR1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_DPTR_R_L02         ; Input: B, DPTR, R4567
+	RSEG	RCODE:CODE:NOROOT	                        ; Load R0123 through DPTR
+	PUBLIC	?F_NEG_ASG_DPTR_R4567_L02
+	PUBLIC	?F_OPERATION_DPTR1_L02
+	PUBLIC	?F_OPERATION_DPTR_L02           ; optionally push R0123,
+	EXTERN	?F_OPERATION_L02                ; restore DPTR and push
+                                                ; do it.
+?F_NEG_ASG_DPTR_R4567_L02:
+	MOV	B,#054H
+?F_OPERATION_DPTR1_L02:
+	MOV	A,R3
+	PUSH	ACC
+	MOV	A,R2
+	PUSH	ACC
+	MOV	A,R1
+	PUSH	ACC
+	MOV	A,R0
+	PUSH	ACC
+?F_OPERATION_DPTR_L02:
+	MOVX	A,@DPTR
+	MOV	R3,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	R2,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	R1,A
+	INC 	DPTR
+	MOVX	A,@DPTR
+	MOV	R0,A
+	JNB	B.3,OUT
+	MOV	A,R0
+	PUSH	ACC
+	MOV	A,R1
+	PUSH	ACC
+	MOV	A,R2
+	PUSH	ACC
+	MOV	A,R3
+	PUSH	ACC
+OUT:	MOV	A,DPL
+	ADD	A,#0FDH
+	PUSH	ACC
+	MOV	A,DPH
+	ADDC	A,#0FFH
+	PUSH	ACC
+	IF	lcall_mode
+	LJMP	?F_OPERATION_L02
+	ELSE
+	SJMP	?F_OPERATION_L02
+	ENDIF
+	ENDMOD
+
+
+	MODULE	?F_ADD_ASG_R1_R4567_L02         ; Input: R1, A/R4567
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_ASG_R1_R4567_L02
+	EXTERN	?F_OPERATION_R1_L02
+
+?F_ADD_ASG_R1_R4567_L02:
+	MOV	B,#001H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R1_L02
+	ELSE
+	SJMP	?F_OPERATION_R1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_R1_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_SUB_ASG_R1_R4567_L02
+	EXTERN	?F_OPERATION_R1_L02
+
+?F_SUB_ASG_R1_R4567_L02:
+	MOV	B,#011H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R1_L02
+	ELSE
+	SJMP	?F_OPERATION_R1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_R1_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_MUL_ASG_R1_R4567_L02
+	EXTERN	?F_OPERATION_R1_L02
+
+?F_MUL_ASG_R1_R4567_L02:
+	MOV	B,#021H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R1_L02
+	ELSE
+	SJMP	?F_OPERATION_R1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_R1_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_DIV_ASG_R1_R4567_L02
+	EXTERN	?F_OPERATION_R1_L02
+
+?F_DIV_ASG_R1_R4567_L02:
+	MOV	B,#031H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R1_L02
+	ELSE
+	SJMP	?F_OPERATION_R1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_NEG_ASG_R1_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_NEG_ASG_R1_R4567_L02
+	EXTERN	?F_OPERATION_R1_L02
+
+?F_NEG_ASG_R1_R4567_L02:
+	MOV	B,#051H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R1_L02
+	ELSE
+	SJMP	?F_OPERATION_R1_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_R1_L02             ; Input: R1, A/R4567
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_ADD_POST_R1_R4567_L02
+	PUBLIC	?F_OPERATION_R1_L02
+	EXTERN	?F_OPERATION_R_L02
+
+?F_ADD_POST_R1_R4567_L02:
+	MOV	B,#049H
+	MOV	R4,A
+?F_OPERATION_R1_L02:
+	MOV	A,R3
+	PUSH	ACC
+	MOV	A,R2
+	PUSH	ACC
+	MOV	A,R1
+	PUSH	ACC
+	MOV	A,R0
+	PUSH	ACC
+	MOV	A,R1
+	MOV	R0,A
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R_L02
+	ELSE
+	SJMP	?F_OPERATION_R_L02
+	ENDIF
+	ENDMOD
+
+
+
+	MODULE	?F_ADD_ASG_R0_R4567_L02         ; Input: R0, A/R4567
+	RSEG	RCODE:CODE:NOROOT	                   
+	PUBLIC	?F_ADD_ASG_R0_R4567_L02
+	EXTERN	?F_OPERATION_R0_L02
+
+?F_ADD_ASG_R0_R4567_L02:
+	MOV	B,#001H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R0_L02
+	ELSE
+	SJMP	?F_OPERATION_R0_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_SUB_ASG_R0_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_SUB_ASG_R0_R4567_L02
+	EXTERN	?F_OPERATION_R0_L02
+
+?F_SUB_ASG_R0_R4567_L02:
+	MOV	B,#011H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R0_L02
+	ELSE
+	SJMP	?F_OPERATION_R0_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_MUL_ASG_R0_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_MUL_ASG_R0_R4567_L02
+	EXTERN	?F_OPERATION_R0_L02
+
+?F_MUL_ASG_R0_R4567_L02:
+	MOV	B,#021H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R0_L02
+	ELSE
+	SJMP	?F_OPERATION_R0_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_DIV_ASG_R0_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_DIV_ASG_R0_R4567_L02
+	EXTERN	?F_OPERATION_R0_L02
+
+?F_DIV_ASG_R0_R4567_L02:
+	MOV	B,#031H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R0_L02
+	ELSE
+	SJMP	?F_OPERATION_R0_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_NEG_ASG_R0_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?F_NEG_ASG_R0_R4567_L02
+	EXTERN	?F_OPERATION_R0_L02
+
+?F_NEG_ASG_R0_R4567_L02:
+	MOV	B,#051H
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R0_L02
+	ELSE
+	SJMP	?F_OPERATION_R0_L02
+	ENDIF
+	ENDMOD
+
+	MODULE	?F_OPERATION_R0_L02     ; Input R0,B,R4567
+	RSEG	RCODE:CODE:NOROOT	                ; Save R0123
+	PUBLIC	?F_ADD_POST_R0_R4567_L02
+	PUBLIC	?F_OPERATION_R0_L02
+	EXTERN	?F_OPERATION_R_L02
+
+?F_ADD_POST_R0_R4567_L02:
+	MOV	B,#049H
+	MOV	R4,A
+?F_OPERATION_R0_L02:
+	MOV	A,R3
+	PUSH	ACC
+	MOV	A,R2
+	PUSH	ACC
+	MOV	A,R1
+	PUSH	ACC
+	MOV	A,R0
+	PUSH	ACC
+	IF	lcall_mode
+	LJMP	?F_OPERATION_R_L02
+	ELSE
+	SJMP	?F_OPERATION_R_L02
+	ENDIF
+	ENDMOD
+
+
+	MODULE	?F_OPERATION_L02  ; Input: R0123 and R4567 are operands
+	RSEG	RCODE:CODE:NOROOT	          ;        B contains flags
+	PUBLIC	?F_OPERATION_R_L02      ;        R4567 is operand
+	PUBLIC	?F_OPERATION_L02  ;          high nibble is operation to do
+	EXTERN	?F_ADD_L02        ;           0 ADD, 1 SUB_R, 2 MUL, 3 DIV_R,
+	EXTERN	?F_SUB_L02        ;           4 ADD_POST, 5 NEG, 6 ADD, 7 SUB,
+	EXTERN	?F_SUB_R_L02      ;           8 MUL, 9 DIV, A ADD_POST_R,
+	EXTERN	?F_MUL_L02        ;           B NEG_R
+	EXTERN	?F_DIV_R_L02      ;          B.0 if idata-pointer (on TOS)
+	EXTERN	?F_DIV_L02        ;          B.2 if xdata-pointer (on TOS)
+	EXTERN	?F_ADD_POST_L02   ;          B.3 if to restore R4567 from 
+	EXTERN	?F_ADD_POST_R_L02 ;              stack (post-operation)
+	EXTERN	?NEG_L02          ;          B.1 if pdata-pointer (on TOS)
+                                  ; Make operation, save result through
+                                  ; pointer, optionally pop old value. 
+?F_OPERATION_R_L02:
+	MOV	A,@R0
+	MOV	R3,A
+	INC	R0
+	MOV	A,@R0
+	MOV	R2,A
+	INC	R0
+	MOV	A,@R0
+	MOV	R1,A
+	INC 	R0
+	MOV	A,@R0
+	XCH	A,R0
+	JNB	B.3,OUT0
+	XCH	A,R0
+	PUSH	ACC
+	XCH	A,R0
+	XCH	A,R1
+	PUSH	ACC
+	XCH	A,R1
+	XCH	A,R2
+	PUSH	ACC
+	XCH	A,R2
+	XCH	A,R3
+	PUSH	ACC
+	XCH	A,R3
+OUT0:	PUSH	ACC
+?F_OPERATION_L02:
+	PUSH	B
+	MOV	A,B
+	SWAP	A
+	ANL	A,#0FH
+	MOV	B,#5
+	MUL	AB
+	MOV	DPL,#LOW TABLE
+	MOV	DPH,#HIGH TABLE
+	JMP	@A+DPTR
+TABLE:	LCALL	?F_ADD_L02
+	SJMP	END_PART
+	LCALL	?F_SUB_R_L02
+	SJMP	END_PART
+	LCALL	?F_MUL_L02
+	SJMP	END_PART
+	LCALL	?F_DIV_R_L02
+	SJMP	END_PART
+	LCALL	?F_ADD_POST_L02
+	SJMP	END_PART
+	LCALL	?NEG_L02
+	SJMP	END_PART
+
+	LCALL	?F_ADD_L02	;Reversed variants
+	SJMP	END_PART
+	LCALL	?F_SUB_L02
+	SJMP	END_PART
+	LCALL	?F_MUL_L02
+	SJMP	END_PART
+	LCALL	?F_DIV_L02
+	SJMP	END_PART
+	LCALL	?F_ADD_POST_R_L02
+	SJMP	END_PART
+	MOV	A,R7		; NEG
+	ORL	A,R6
+	JZ	END_PART
+	MOV	A,R7
+	CPL	ACC.7
+	MOV	R7,A
+END_PART:
+	POP	B
+	MOV	R3,A
+	JNB	B.0,NOT_IDATA
+	POP	ACC
+	MOV	R0,A
+	MOV	A,R4
+	MOV	@R0,A
+	DEC 	R0
+	MOV	A,R5
+	MOV	@R0,A
+	DEC 	R0
+	MOV	A,R6
+	MOV	@R0,A
+	DEC 	R0
+	MOV	A,R7
+	MOV	@R0,A
+	SJMP	ENDIT
+NOT_IDATA:
+	JNB	B.2,NOT_XDATA
+	POP	DPH
+	POP	DPL
+	MOV	A,R7
+	MOVX	@DPTR,A
+	INC 	DPTR
+	MOV	A,R6
+	MOVX	@DPTR,A
+	INC 	DPTR
+	MOV	A,R5
+	MOVX	@DPTR,A
+	INC 	DPTR
+	MOV	A,R4
+	MOVX	@DPTR,A
+	MOV	A,DPL
+	ADD	A,#0FDH
+	MOV	DPL,A
+	MOV	A,DPH
+	ADDC	A,#0FFH
+	MOV	DPH,A
+	SJMP	ENDIT
+NOT_XDATA:
+	POP	ACC
+	MOV	R0,A
+	MOV	A,R4
+	MOVX	@R0,A
+	DEC 	R0
+	MOV	A,R5
+	MOVX	@R0,A
+	DEC 	R0
+	MOV	A,R6
+	MOVX	@R0,A
+	DEC 	R0
+	MOV	A,R7
+	MOVX	@R0,A
+ENDIT:	JNB	B.3,OUT
+	POP	ACC
+	MOV	R7,A
+	POP	ACC
+	MOV	R6,A
+	POP	ACC
+	MOV	R5,A
+	POP	ACC
+	MOV	R4,A
+OUT:	POP	ACC
+	MOV	R0,A
+	POP	ACC
+	MOV	R1,A
+	POP	ACC
+	MOV	R2,A
+	POP	ACC
+	XCH	A,R3
+	RET
+	ENDMOD
+
+	
+	MODULE	?NEG_L02
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?NEG_L02
+	
+?NEG_L02:
+	MOV	A,R0		; NEG
+	MOV	R4,A
+	MOV	A,R1
+	MOV	R5,A
+	MOV	A,R2
+	MOV	R6,A
+	MOV	A,R3
+	MOV	R7,A
+	ORL	A,R6
+	JZ	END_PART
+	MOV	A,R7
+	CPL	ACC.7
+	MOV	R7,A
+END_PART:
+	RET
+	ENDMOD
+
+;@@@@@@@@@@@@@@@@@@@@@@
+
+	MODULE	?F_ADD_POST_R0_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC ?F_ADD_POST_R0_R0123_L02
+	EXTERN	?F_OPERATION_R0_L02
+?F_ADD_POST_R0_R0123_L02:
+	MOV	B,#041H
+	XCH	A,R4
+	PUSH	ACC
+	MOV	A,R5
+	PUSH	ACC
+	MOV	A,R6
+	PUSH	ACC
+	MOV	A,R7
+	PUSH	ACC
+	LCALL	?F_OPERATION_R0_L02
+	XCH	A,R4
+	MOV	R0,A
+	MOV	A,R5
+	MOV	R1,A
+	MOV	A,R6
+	MOV	R2,A
+	MOV	A,R7
+	MOV	R3,A
+	POP	ACC
+	MOV	R7,A
+	POP	ACC
+	MOV	R6,A
+	POP	ACC
+	MOV	R5,A
+	POP	ACC
+	XCH	A,R4
+	RET
+	ENDMOD
+
+	MODULE	?F_ADD_POST_R1_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC ?F_ADD_POST_R1_R0123_L02
+	EXTERN	?F_OPERATION_R1_L02
+?F_ADD_POST_R1_R0123_L02:
+	MOV	B,#041H
+	XCH	A,R4
+	PUSH	ACC
+	MOV	A,R5
+	PUSH	ACC
+	MOV	A,R6
+	PUSH	ACC
+	MOV	A,R7
+	PUSH	ACC
+	LCALL	?F_OPERATION_R1_L02
+	XCH	A,R4
+	MOV	R0,A
+	MOV	A,R5
+	MOV	R1,A
+	MOV	A,R6
+	MOV	R2,A
+	MOV	A,R7
+	MOV	R3,A
+	POP	ACC
+	MOV	R7,A
+	POP	ACC
+	MOV	R6,A
+	POP	ACC
+	MOV	R5,A
+	POP	ACC
+	XCH	A,R4
+	RET
+	ENDMOD
+
+	MODULE	?F_ADD_POST_PR0_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC ?F_ADD_POST_PR0_R0123_L02
+	EXTERN	?F_OPERATION_PR0_L02
+?F_ADD_POST_PR0_R0123_L02:
+	MOV	B,#041H
+	XCH	A,R4
+	PUSH	ACC
+	MOV	A,R5
+	PUSH	ACC
+	MOV	A,R6
+	PUSH	ACC
+	MOV	A,R7
+	PUSH	ACC
+	LCALL	?F_OPERATION_PR0_L02
+	XCH	A,R4
+	MOV	R0,A
+	MOV	A,R5
+	MOV	R1,A
+	MOV	A,R6
+	MOV	R2,A
+	MOV	A,R7
+	MOV	R3,A
+	POP	ACC
+	MOV	R7,A
+	POP	ACC
+	MOV	R6,A
+	POP	ACC
+	MOV	R5,A
+	POP	ACC
+	XCH	A,R4
+	RET
+	ENDMOD
+
+	MODULE	?F_ADD_POST_PR1_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC ?F_ADD_POST_PR1_R0123_L02
+	EXTERN	?F_OPERATION_PR1_L02
+?F_ADD_POST_PR1_R0123_L02:
+	MOV	B,#041H
+	XCH	A,R4
+	PUSH	ACC
+	MOV	A,R5
+	PUSH	ACC
+	MOV	A,R6
+	PUSH	ACC
+	MOV	A,R7
+	PUSH	ACC
+	LCALL	?F_OPERATION_PR1_L02
+	XCH	A,R4
+	MOV	R0,A
+	MOV	A,R5
+	MOV	R1,A
+	MOV	A,R6
+	MOV	R2,A
+	MOV	A,R7
+	MOV	R3,A
+	POP	ACC
+	MOV	R7,A
+	POP	ACC
+	MOV	R6,A
+	POP	ACC
+	MOV	R5,A
+	POP	ACC
+	XCH	A,R4
+	RET
+	ENDMOD
+
+	MODULE	?F_ADD_POST_R123_R0123_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC ?F_ADD_POST_R123_R0123_L02
+	EXTERN	?F_OPERATION_R123_L02
+?F_ADD_POST_R123_R0123_L02:
+	MOV	B,#048H
+	XCH	A,R4
+	PUSH	ACC
+	MOV	A,R5
+	PUSH	ACC
+	MOV	A,R6
+	PUSH	ACC
+	MOV	A,R7
+	PUSH	ACC
+	LCALL	?F_OPERATION_R123_L02
+	XCH	A,R4
+	MOV	R0,A
+	MOV	A,R5
+	MOV	R1,A
+	MOV	A,R6
+	MOV	R2,A
+	MOV	A,R7
+	MOV	R3,A
+	POP	ACC
+	MOV	R7,A
+	POP	ACC
+	MOV	R6,A
+	POP	ACC
+	MOV	R5,A
+	POP	ACC
+	XCH	A,R4
+	RET
+	ENDMOD
+
+	MODULE	?F_ADD_POST_R567_R4567_L02
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC ?F_ADD_POST_R567_R4567_L02
+	EXTERN	?F_OPERATION_R123_L02
+?F_ADD_POST_R567_R4567_L02:
+	MOV	B,#048H
+	MOV	R4,A
+	MOV	A,R0
+	PUSH	ACC
+	MOV	A,R1
+	PUSH	ACC
+	MOV	A,R2
+	PUSH	ACC
+	MOV	A,R3
+	PUSH	ACC
+	MOV	A,R5
+	MOV	R1,A
+	MOV	A,R6
+	MOV	R2,A
+	MOV	A,R7
+	MOV	R3,A
+	LCALL	?F_OPERATION_R123_L02
+	MOV	R0,A
+	POP	ACC
+	MOV	R3,A
+	POP	ACC
+	MOV	R2,A
+	POP	ACC
+	MOV	R1,A
+	POP	ACC
+	XCH	A,R0
+	RET
+	END
+
+

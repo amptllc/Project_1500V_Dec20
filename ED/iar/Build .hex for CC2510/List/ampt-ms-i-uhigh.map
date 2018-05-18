@@ -1,0 +1,3592 @@
+################################################################################
+#                                                                              #
+#      IAR Universal Linker V4.60K/386                                         #
+#                                                                              #
+#           Link time     =  02/Apr/2018  11:06:31                             #
+#           Target CPU    =  x51                                               #
+#           List file     =  "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\List\ampt-ms-i-uhigh.map"                     #
+#           Output file 1 =  E:\Project_1500V_dec20\ED\hex\ampt-ms-i-uhigh.hex #
+#                            Format: intel-extended, variant: -y(CODE)         #
+#           Command line  =  -y(CODE) -IC:\IARSystems-CD-730B\8051\CONFIG\     #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\aes-assymetric-high.r51"                  #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\cmain.r51"                                #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\cstartup.r51"                             #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\dma.r51"                                  #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\flash-assymetric-high.r51"                #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\hal_power_clk_mgmt.r51"                   #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\hal_wait.r51"                             #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\hop.r51"                                  #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_char.r51"                             #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_compare.r51"                          #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_float.r51"                            #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_ieee_float.r51"                       #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_long.r51"                             #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_move_long.r51"                        #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_short.r51"                            #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_stack.r51"                            #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_stack_enter_leave.r51"                #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_stack_enter_leave_dptr.r51"           #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_stack_parameter.r51"                  #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\iar_switch.r51"                           #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\main-assymetric-high.r51"                 #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\radio.r51"                                #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\Obj\utils.r51"                                #
+#                            -o                                                #
+#                            E:\Project_1500V_dec20\ED\hex\ampt-ms-i-uhigh.hex #
+#                            -Fintel-extended -l                               #
+#                            "E:\Project_1500V_dec20\ED\iar\Build .hex for CC2 #
+#                            510\List\ampt-ms-i-uhigh.map"                     #
+#                            -xmsio -IC:\IARSystems-CD-730B\8051\LIB\ -f       #
+#                            E:\Project_1500V_dec20\ED\iar\lnk51ew_cc2510-assy #
+#                            metric-high.xcl                                   #
+#                            (-D_IDATA_START=0x20 -D_IDATA_END=0xAF            #
+#                            -D_PDATA_START=0xF000 -D_PDATA_END=0xF0AF         #
+#                            -D_IXDATA_START=0xF600 -D_IXDATA_END=0xFDA1       #
+#                            -D_XDATA_START=_IXDATA_START                      #
+#                            -D_XDATA_END=_IXDATA_END -D_CODE_START=0x6000     #
+#                            -D_CODE_END=0x7FFF -D_NEAR_CODE_END=_CODE_END     #
+#                            -D_TINY_CODE_END=0x7FFF                           #
+#                            -D_FIRST_BANK_ADDR=0x10000 -D_NR_OF_BANKS=0x00    #
+#                            -D?REGISTER_BANK=0 -D_REGISTER_BANK_START=0       #
+#                            -D?PBANK_NUMBER=F0 -D?PBANK=93                    #
+#                            -D_BREG_START=0x00 -D?VB=0x20                     #
+#                            -D_FAR_DATA_NR_OF_BANKS=0x0E                      #
+#                            -D_FAR_DATA_START=0x010001                        #
+#                            -D_FAR_DATA_END=0xFFFFFF                          #
+#                            -D_FAR_CODE_START=_CODE_START                     #
+#                            -D_FAR_CODE_END=_CODE_END -f lnk_base.xcl)        #
+#                            (-Z(BIT)BREG=_BREG_START -Z(BIT)BIT_N=0-7F        #
+#                            -Z(DATA)REGISTERS+8=_REGISTER_BANK_START          #
+#                            -Z(DATA)BDATA_Z,BDATA_N,BDATA_I=20-2F             #
+#                            -Z(DATA)VREG+_NR_OF_VIRTUAL_REGISTERS=08-7F       #
+#                            -Z(DATA)PSP,XSP=08-7F -Z(DATA)DOVERLAY=08-7F      #
+#                            -Z(DATA)DATA_I,DATA_Z,DATA_N=08-7F                #
+#                            -U(IDATA)0-7F=(DATA)0-7F                          #
+#                            -Z(IDATA)IDATA_I,IDATA_Z,IDATA_N=08-_IDATA_END    #
+#                            -Z(IDATA)ISTACK+_IDATA_STACK_SIZE#08-_IDATA_END   #
+#                            -Z(IDATA)IOVERLAY=08-FF -Z(CODE)INTVEC=0          #
+#                            -Z(CODE)CSTART=_CODE_START-_CODE_END              #
+#                            -Z(CODE)BANK_RELAYS=_CODE_START                   #
+#                            -Z(CODE)RCODE=_CODE_START-_CODE_END               #
+#                            -Z(CODE)TINY_CODE=_CODE_START-_TINY_CODE_END      #
+#                            -Z(CODE)NEAR_CODE=_CODE_START-_NEAR_CODE_END      #
+#                            -Z(CODE)DIFUNCT=_CODE_START-_CODE_END             #
+#                            -P(CODE)BANKED_CODE=[(_CODEBANK_START+_FIRST_BANK #
+#                            _ADDR)-(_CODEBANK_END+_FIRST_BANK_ADDR)]*_NR_OF_B #
+#                            ANKS+10000                                        #
+#                            -P(CODE)FAR_CODE=[_FAR_CODE_START-_FAR_CODE_END]/ #
+#                            10000                                             #
+#                            -Z(CODE)BIT_ID,BDATA_ID,DATA_ID,IDATA_ID,IXDATA_I #
+#                            D,PDATA_ID,XDATA_ID=_CODE_START-_CODE_END         #
+#                            -Z(CODE)HUGE_ID=_FAR_CODE_START-_FAR_CODE_END     #
+#                            -Z(XDATA)EXT_STACK+_EXTENDED_STACK_SIZE=_EXTENDED #
+#                            _STACK_START-_EXTENDED_STACK_END                  #
+#                            -Z(XDATA)PSTACK+_PDATA_STACK_SIZE=_PDATA_START-_P #
+#                            DATA_END                                          #
+#                            -Z(XDATA)XSTACK+_XDATA_STACK_SIZE=_XDATA_START-_X #
+#                            DATA_END                                          #
+#                            -Z(XDATA)PDATA_N,PDATA_Z,PDATA_I=_PDATA_START-_PD #
+#                            ATA_END                                           #
+#                            -Z(XDATA)IXDATA_N,IXDATA_Z,IXDATA_I=_IXDATA_START #
+#                            -_IXDATA_END                                      #
+#                            -Z(XDATA)XDATA_N,XDATA_Z,XDATA_I=_XDATA_START-_XD #
+#                            ATA_END                                           #
+#                            -Z(XDATA)XDATA_HEAP+_XDATA_HEAP_SIZE=_XDATA_START #
+#                            -_XDATA_END                                       #
+#                            -Z(CODE)XDATA_ROM_C=_CODE_START-_CODE_END         #
+#                            -Z(SPLIT-XDATA)FAR_Z=[_FAR_DATA_START-_FAR_DATA_E #
+#                            ND]/10000                                         #
+#                            -Z(SPLIT-XDATA)FAR_I=[_FAR_DATA_START-_FAR_DATA_E #
+#                            ND]/10000                                         #
+#                            -Z(SPLIT-CODE)FAR_ID=[_FAR_CODE_START-_FAR_CODE_E #
+#                            ND]/10000                                         #
+#                            -Z(SPLIT-XDATA)FAR_HEAP+_FAR_HEAP_SIZE=[_FAR_DATA #
+#                            _START-_FAR_DATA_END]/10000                       #
+#                            -P(XDATA)FAR_N=[_FAR_DATA_START-_FAR_DATA_END]*_F #
+#                            AR_DATA_NR_OF_BANKS+10000                         #
+#                            -P(CONST)FAR_ROM_C=[_FAR_DATA_START-_FAR_DATA_END #
+#                            ]*E+10000                                         #
+#                            -Z(XDATA)HUGE_N,HUGE_Z,HUGE_I=_FAR_DATA_START-_FA #
+#                            R_DATA_END                                        #
+#                            -Z(XDATA)HUGE_HEAP+_HUGE_HEAP_SIZE=_FAR_DATA_STAR #
+#                            T-_FAR_DATA_END                                   #
+#                            -Z(CONST)HUGE_ROM_C=_FAR_DATA_START-_FAR_DATA_END #
+#                            -Z(CODE)CODE_C=_CODE_START-_CODE_END              #
+#                            -P(CODE)FAR_CODE_C=[_FAR_CODE_START-_FAR_CODE_END #
+#                            ]/10000                                           #
+#                            -Z(CODE)HUGE_CODE_C=_FAR_CODE_START-_FAR_CODE_END #
+#                            -Z(CODE)CODE_N=_CODE_START-_CODE_END              #
+#                            -P(CODE)FAR_CODE_N=[_FAR_CODE_START-_FAR_CODE_END #
+#                            ]/10000                                           #
+#                            -Z(CODE)CHECKSUM#_CODE_END -cx51)                 #
+#                            -D_CODEBANK_START=0 -D_CODEBANK_END=0             #
+#                            -D_NR_OF_VIRTUAL_REGISTERS=20 -s                  #
+#                            __program_start -D_IDATA_STACK_SIZE=0x6A          #
+#                            -D_EXTENDED_STACK_START=0x00                      #
+#                            -D_EXTENDED_STACK_END=0x00                        #
+#                            -D_EXTENDED_STACK_SIZE=0x00                       #
+#                            -D_PDATA_STACK_SIZE=0xA0                          #
+#                            -D_XDATA_STACK_SIZE=0x200                         #
+#                            -D_XDATA_HEAP_SIZE=0x00 -D_FAR_HEAP_SIZE=0x00     #
+#                            -D_HUGE_HEAP_SIZE=0x00                            #
+#                                                                              #
+#                        Copyright 1987-2007 IAR Systems. All rights reserved. #
+################################################################################
+
+
+
+
+
+                ****************************************
+                *                                      *
+                *           CROSS REFERENCE            *
+                *                                      *
+                ****************************************
+
+       Program entry at : CODE      0000603F  Relocatable, from module : CSTARTUP
+
+
+
+
+                ****************************************
+                *                                      *
+                *            RUNTIME MODEL             *
+                *                                      *
+                ****************************************
+
+  __calling_convention     = xdata_reentrant
+  __code_model             = near
+  __core                   = plain
+  __data_model             = large
+  __dptr_size              = 16
+  __extended_stack         = disabled
+  __location_for_constants = data
+  __number_of_dptrs        = 1
+  __rt_version             = 1
+
+
+
+                ****************************************
+                *                                      *
+                *              MODULE MAP              *
+                *                                      *
+                ****************************************
+
+
+  DEFINED ABSOLUTE ENTRIES
+    *************************************************************************
+
+  DEFINED ABSOLUTE ENTRIES
+  PROGRAM MODULE, NAME : ?ABS_ENTRY_MOD
+
+Absolute parts
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           _HUGE_HEAP_SIZE         00000000 
+           _FAR_HEAP_SIZE          00000000 
+           _XDATA_HEAP_SIZE        00000000 
+           _XDATA_STACK_SIZE       00000200 
+           _PDATA_STACK_SIZE       000000A0 
+           _EXTENDED_STACK_SIZE    00000000 
+           _EXTENDED_STACK_END     00000000 
+           _EXTENDED_STACK_START   00000000 
+           _IDATA_STACK_SIZE       0000006A 
+           _NR_OF_VIRTUAL_REGISTERS
+                                   00000020 
+           _CODEBANK_END           00000000 
+           _CODEBANK_START         00000000 
+           _FAR_CODE_END           00007FFF 
+           _FAR_CODE_START         00006000 
+           _FAR_DATA_END           00FFFFFF 
+           _FAR_DATA_START         00010001 
+           _FAR_DATA_NR_OF_BANKS   0000000E 
+           ?VB                     00000020        ?FUNC_ENTER_XDATA (?FUNC_ENTER_XDATA)
+                                                   ?FUNC_LEAVE_XDATA (?FUNC_LEAVE_XDATA)
+           _BREG_START             00000000 
+           ?PBANK                  00000093 
+           ?PBANK_NUMBER           000000F0 
+           _REGISTER_BANK_START    00000000 
+           ?REGISTER_BANK          00000000        Segment part 6 (CSTARTUP)
+           _NR_OF_BANKS            00000000 
+           _FIRST_BANK_ADDR        00010000 
+           _TINY_CODE_END          00007FFF 
+           _NEAR_CODE_END          00007FFF 
+           _CODE_END               00007FFF 
+           _CODE_START             00006000 
+           _XDATA_END              0000FDA1 
+           _XDATA_START            0000F600 
+           _IXDATA_END             0000FDA1 
+           _IXDATA_START           0000F600 
+           _PDATA_END              0000F0AF 
+           _PDATA_START            0000F000 
+           _IDATA_END              000000AF 
+           _IDATA_START            00000020 
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\aes-assymetric-high.r51
+  PROGRAM MODULE, NAME : aes-assymetric-high
+
+  SEGMENTS IN THE MODULE
+  ======================
+SFR_AN
+  Relative segment, address: DATA 000000B1 - 000000B1 (0x1 bytes), align: 0
+  Segment part 1.             Intra module refs:   load
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ENCDI                   000000B1 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000B2 - 000000B2 (0x1 bytes), align: 0
+  Segment part 2.             Intra module refs:   code
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ENCDO                   000000B2 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000B3 - 000000B3 (0x1 bytes), align: 0
+  Segment part 3.             Intra module refs:   load
+                                                   wait_aes
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ENCCS                   000000B3 
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006399 - 000063B5 (0x1d bytes), align: 0
+  Segment part 9.             Intra module refs:   code
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           load                    00006399        Segment part 126 (main-assymetric-high)
+               stack 1 = 00000000 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000063B6 - 000063BA (0x5 bytes), align: 0
+  Segment part 10.            Intra module refs:   code
+                                                   load
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000063BB - 000063C4 (0xa bytes), align: 0
+  Segment part 11.            Intra module refs:   code
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           wait_aes                000063BB        Segment part 126 (main-assymetric-high)
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000063C5 - 000063E9 (0x25 bytes), align: 0
+  Segment part 12.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           code                    000063C5        parseGWPackage (main-assymetric-high)
+                                                   prepareTxBuffer (main-assymetric-high)
+               calls direct
+               stack 1 = 00000000 ( 00000000 )
+               stack 2 = 00000000 ( 00000003 )
+    -------------------------------------------------------------------------
+ISTACK
+  Segment part 4. NOT NEEDED.
+    -------------------------------------------------------------------------
+PSTACK
+  Segment part 5. NOT NEEDED.
+    -------------------------------------------------------------------------
+XSTACK
+  Segment part 6. NOT NEEDED.
+    -------------------------------------------------------------------------
+IOVERLAY
+  Segment part 7. NOT NEEDED.
+    -------------------------------------------------------------------------
+DOVERLAY
+  Segment part 8. NOT NEEDED.
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\cmain.r51
+  LIBRARY MODULE, NAME : ?cmain
+
+  SEGMENTS IN THE MODULE
+  ======================
+CSTART
+  Relative segment, address: CODE 00006000, align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?cmain                  00006000        Segment part 11 (CSTARTUP)
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 1. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __low_level_init_call   
+    -------------------------------------------------------------------------
+BDATA_Z
+  Segment part 2. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 3. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_BDATA_Z          
+    -------------------------------------------------------------------------
+DATA_Z
+  Segment part 4. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 5. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_DATA_Z           
+    -------------------------------------------------------------------------
+IDATA_Z
+  Segment part 6. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 7. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_IDATA_Z          
+    -------------------------------------------------------------------------
+PDATA_Z
+  Segment part 8. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 9. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_PDATA_Z          
+    -------------------------------------------------------------------------
+XDATA_Z
+  Segment part 10. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Relative segment, address: CODE 00006000 - 0000600F (0x10 bytes), align: 0
+  Segment part 11.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_XDATA_Z          00006000        Segment part 96 (main-assymetric-high)
+                                                   Segment part 97 (main-assymetric-high)
+                                                   adcCount (main-assymetric-high)
+                                                   adcsTemp (main-assymetric-high)
+                                                   base_ptr (main-assymetric-high)
+                                                   bufferCount (main-assymetric-high)
+                                                   bunchCount (main-assymetric-high)
+                                                   cmdCount (main-assymetric-high)
+                                                   curBunch (main-assymetric-high)
+                                                   curChannel (main-assymetric-high)
+                                                   cyclesFromStart (main-assymetric-high)
+                                                   cyclesToHop (main-assymetric-high)
+                                                   delta (utils)
+                                                   dmaConfig (dma)
+                                                   enable2SendData (main-assymetric-high)
+                                                   got_gw (main-assymetric-high)
+                                                   hopping_channels (hop)
+                                                   isCalibrationPackage (main-assymetric-high)
+                                                   isOnTestStand (main-assymetric-high)
+                                                   joinRequestWasSend (main-assymetric-high)
+                                                   lastOff (main-assymetric-high)
+                                                   lastRssi (main-assymetric-high)
+                                                   lastVals (main-assymetric-high)
+                                                   main_pb (main-assymetric-high)
+                                                   ms (main-assymetric-high)
+                                                   msLast (main-assymetric-high)
+                                                   packagePrepared (main-assymetric-high)
+                                                   page (main-assymetric-high)
+                                                   perRssiOffset (radio)
+                                                   radioPktBuffer (dma)
+                                                   radioPktBufferRx (dma)
+                                                   radioPktBufferTx (dma)
+                                                   reportFlashCheck (main-assymetric-high)
+                                                   reportScaling (main-assymetric-high)
+                                                   resetReason (main-assymetric-high)
+                                                   setOC (main-assymetric-high)
+                                                   tempAdcsCount (main-assymetric-high)
+                                                   theRealOffset (main-assymetric-high)
+                                                   turnOnFlag (main-assymetric-high)
+                                                   txDisabled (main-assymetric-high)
+                                                   utc (main-assymetric-high)
+                                                   utcLast (main-assymetric-high)
+                                                   was_listening (main-assymetric-high)
+    -------------------------------------------------------------------------
+IXDATA_Z
+  Segment part 12. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 13. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_IXDATA_Z         
+    -------------------------------------------------------------------------
+BDATA_I
+  Segment part 14. NOT NEEDED.
+    -------------------------------------------------------------------------
+BDATA_ID
+  Segment part 15. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 16. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_BDATA_I          
+    -------------------------------------------------------------------------
+DATA_I
+  Segment part 17. NOT NEEDED.
+    -------------------------------------------------------------------------
+DATA_ID
+  Segment part 18. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 19. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_DATA_I           
+    -------------------------------------------------------------------------
+IDATA_I
+  Segment part 20. NOT NEEDED.
+    -------------------------------------------------------------------------
+IDATA_ID
+  Segment part 21. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 22. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_IDATA_I          
+    -------------------------------------------------------------------------
+PDATA_I
+  Segment part 23. NOT NEEDED.
+    -------------------------------------------------------------------------
+PDATA_ID
+  Segment part 24. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 25. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_PDATA_I          
+    -------------------------------------------------------------------------
+XDATA_I
+  Segment part 26. NOT NEEDED.
+    -------------------------------------------------------------------------
+XDATA_ID
+  Segment part 27. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Relative segment, address: CODE 00006010 - 00006038 (0x29 bytes), align: 0
+  Segment part 28.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_XDATA_I          00006010        Segment part 11 (radio)
+                                                   Segment part 13 (radio)
+                                                   Segment part 15 (radio)
+                                                   Segment part 17 (radio)
+                                                   Segment part 9 (radio)
+                                                   Segment part 92 (main-assymetric-high)
+                                                   Segment part 94 (main-assymetric-high)
+                                                   Segment part 98 (main-assymetric-high)
+                                                   __Constant_3039 (hop)
+                                                   __Constant_41c64e6d (hop)
+                                                   calibrationRepeat (main-assymetric-high)
+                                                   cycles2HardKick (main-assymetric-high)
+                                                   cycles2SoftKick (main-assymetric-high)
+                                                   cycles2Step10Channel (main-assymetric-high)
+                                                   cyclesTo10 (main-assymetric-high)
+                                                   cyclesTo500 (main-assymetric-high)
+                                                   cyclesToStep500Channel (main-assymetric-high)
+                                                   lastCycle (main-assymetric-high)
+                                                   mdm_rate1 (radio)
+                                                   search_stat (main-assymetric-high)
+                                                   the_frequency (main-assymetric-high)
+    -------------------------------------------------------------------------
+IXDATA_I
+  Segment part 29. NOT NEEDED.
+    -------------------------------------------------------------------------
+IXDATA_ID
+  Segment part 30. NOT NEEDED.
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 31. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __INIT_IXDATA_I         
+    -------------------------------------------------------------------------
+CSTART
+  Relative segment, address: CODE 00006039 - 0000603E (0x6 bytes), align: 0
+  Segment part 32.            Intra module refs:   ?cmain
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?call_main              00006039 
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\cstartup.r51
+  LIBRARY MODULE, NAME : CSTARTUP
+
+  SEGMENTS IN THE MODULE
+  ======================
+REGISTERS
+  Relative segment, address: DATA 00000000, align: 0
+  Segment part 0.             Intra module refs:   Segment part 6
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?REGISTERS              00000000 
+    -------------------------------------------------------------------------
+ISTACK
+  Relative segment, address: IDATA 00000046, align: 0
+  Segment part 1.             Intra module refs:   Segment part 6
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?ISTACK_START           00000046 
+    -------------------------------------------------------------------------
+PSTACK
+  Segment part 2. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?PSTACK_START           
+    -------------------------------------------------------------------------
+XSTACK
+  Relative segment, address: XDATA 0000F600, align: 0
+  Segment part 3.             Intra module refs:   ?RESET_XSP
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?XSTACK_START           0000F600 
+    -------------------------------------------------------------------------
+EXT_STACK
+  Segment part 4. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?EXT_STACK_START        
+    -------------------------------------------------------------------------
+INTVEC
+  Common segment, address: CODE 00000000 - 00000002 (0x3 bytes), align: 0
+  Segment part 5. ROOT.       Intra module refs:   Segment part 6
+    -------------------------------------------------------------------------
+CSTART
+  Relative segment, address: CODE 0000603F - 00006044 (0x6 bytes), align: 0
+  Segment part 6. ROOT.       Intra module refs:   Segment part 5
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __program_start         0000603F        Absolute parts (?ABS_ENTRY_MOD)
+           ?RESET_SP               00006042 
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 7. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?RESET_PSP              
+    -------------------------------------------------------------------------
+CSTART
+  Relative segment, address: CODE 00006045 - 0000604A (0x6 bytes), align: 0
+  Segment part 8.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?RESET_XSP              00006045        ?XSP (VIRTUAL_REGISTERS)
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 9. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?RESET_CODE_BANK        
+    -------------------------------------------------------------------------
+CSTART
+  Segment part 10. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?RESET_PDATA_BANK       
+    -------------------------------------------------------------------------
+CSTART
+  Relative segment, address: CODE 0000604B - 0000604D (0x3 bytes), align: 0
+  Segment part 11.            Intra module refs:   Absolute parts
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : VIRTUAL_REGISTERS
+
+  SEGMENTS IN THE MODULE
+  ======================
+BREG
+  Relative segment, address: BIT 00000020.0 - 00000020.7 (0x8 bits), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?B0                     00000020.0      Absolute parts (CSTARTUP)
+    -------------------------------------------------------------------------
+VREG
+  Relative segment, address: DATA 00000021, align: 0
+  Segment part 1.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?V0                     00000021        ?FUNC_ENTER_XDATA (?FUNC_ENTER_XDATA)
+                                                   ?FUNC_LEAVE_XDATA (?FUNC_LEAVE_XDATA)
+                                                   Segment part 117 (main-assymetric-high)
+                                                   Segment part 139 (main-assymetric-high)
+                                                   Segment part 148 (main-assymetric-high)
+                                                   Segment part 151 (main-assymetric-high)
+                                                   Segment part 154 (main-assymetric-high)
+                                                   addDF (utils)
+                                                   computeADCs (main-assymetric-high)
+                                                   initiateTransfer (flash-assymetric-high)
+                                                   main_loop (main-assymetric-high)
+                                                   mymemcmp (utils)
+                                                   parseCommands (main-assymetric-high)
+                                                   parseGWPackage (main-assymetric-high)
+                                                   prepareFlashCheck (main-assymetric-high)
+                                                   prepareSpecial (main-assymetric-high)
+                                                   readNextValue (main-assymetric-high)
+                                                   setInt (main-assymetric-high)
+                                                   setup_hopper (hop)
+    -------------------------------------------------------------------------
+PSP
+  Segment part 2. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?PSP                    
+    -------------------------------------------------------------------------
+XSP
+  Relative segment, address: DATA 00000041 - 00000042 (0x2 bytes), align: 0
+  Segment part 3.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?XSP                    00000041        ?ALLOC_XSTACK8 (?ALLOC_XSTACK8)
+                                                   ?DEALLOC_XSTACK8 (?DEALLOC_XSTACK8)
+                                                   ?FUNC_ENTER_XDATA (?FUNC_ENTER_XDATA)
+                                                   ?FUNC_LEAVE_XDATA (?FUNC_LEAVE_XDATA)
+                                                   ?RESET_XSP (CSTARTUP)
+                                                   ?XSTACK_DISP0_8 (?XSTACK_DISP8)
+                                                   addDF (utils)
+                                                   parseGWPackage (main-assymetric-high)
+                                                   prepareFlashCheck (main-assymetric-high)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : flashDmaTrigger
+
+  SEGMENTS IN THE MODULE
+  ======================
+CSTART
+  Relative segment, address: CODE 0000604E - 00006051 (0x4 bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           halFlashDmaTrigger      0000604E        initiateTransfer (flash-assymetric-high)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : waitForClearThePage
+
+  SEGMENTS IN THE MODULE
+  ======================
+CSTART
+  Relative segment, address: CODE 00006052 - 00006057 (0x6 bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           waitForClearThePage     00006052        initiateTransfer (flash-assymetric-high)
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\dma.r51
+  PROGRAM MODULE, NAME : dma
+
+  SEGMENTS IN THE MODULE
+  ======================
+SFR_AN
+  Relative segment, address: DATA 000000D2 - 000000D2 (0x1 bytes), align: 0
+  Segment part 1.             Intra module refs:   dmaRadioSetup
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           DMA1CFGL                000000D2 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000D3 - 000000D3 (0x1 bytes), align: 0
+  Segment part 2.             Intra module refs:   dmaRadioSetup
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           DMA1CFGH                000000D3 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000D4 - 000000D4 (0x1 bytes), align: 0
+  Segment part 3.             Intra module refs:   dmaRadioSetup
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           DMA0CFGL                000000D4 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000D5 - 000000D5 (0x1 bytes), align: 0
+  Segment part 4.             Intra module refs:   dmaRadioSetup
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           DMA0CFGH                000000D5 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F800 - 0000F824 (0x25 bytes), align: 0
+  Segment part 10.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           radioPktBuffer          0000F800        Segment part 132 (main-assymetric-high)
+                                                   parseCommands (main-assymetric-high)
+                                                   parseGWPackage (main-assymetric-high)
+                                                   prepareData (main-assymetric-high)
+                                                   prepareJoinRequest (main-assymetric-high)
+                                                   prepareSpecial (main-assymetric-high)
+                                                   prepareTxBuffer (main-assymetric-high)
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F825 - 0000F849 (0x25 bytes), align: 0
+  Segment part 11.            Intra module refs:   dmaRadioSetup
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           radioPktBufferRx        0000F825        parseGWPackage (main-assymetric-high)
+                                                   receive (main-assymetric-high)
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F84A - 0000F86E (0x25 bytes), align: 0
+  Segment part 12.            Intra module refs:   dmaRadioSetup
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           radioPktBufferTx        0000F84A        main_loop (main-assymetric-high)
+                                                   prepareJoinRequest (main-assymetric-high)
+                                                   prepareTxBuffer (main-assymetric-high)
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F86F - 0000F886 (0x18 bytes), align: 0
+  Segment part 13.            Intra module refs:   dmaRadioSetup
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           dmaConfig               0000F86F        initiateTransfer (flash-assymetric-high)
+                                                   sendData (main-assymetric-high)
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000063EA - 000064A5 (0xbc bytes), align: 0
+  Segment part 14.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           dmaRadioSetup           000063EA        init (main-assymetric-high)
+               stack 1 = 00000000 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+ISTACK
+  Segment part 5. NOT NEEDED.
+    -------------------------------------------------------------------------
+PSTACK
+  Segment part 6. NOT NEEDED.
+    -------------------------------------------------------------------------
+XSTACK
+  Segment part 7. NOT NEEDED.
+    -------------------------------------------------------------------------
+IOVERLAY
+  Segment part 8. NOT NEEDED.
+    -------------------------------------------------------------------------
+DOVERLAY
+  Segment part 9. NOT NEEDED.
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\flash-assymetric-high.r51
+  PROGRAM MODULE, NAME : flash-assymetric-high
+
+  SEGMENTS IN THE MODULE
+  ======================
+SFR_AN
+  Relative segment, address: DATA 000000AB - 000000AB (0x1 bytes), align: 0
+  Segment part 1.             Intra module refs:   clearThePage (main-assymetric-high)
+                                                   initiateTransfer
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           FWT                     000000AB 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000AC - 000000AC (0x1 bytes), align: 0
+  Segment part 2.             Intra module refs:   initiateTransfer
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           FADDRL                  000000AC 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000AD - 000000AD (0x1 bytes), align: 0
+  Segment part 3.             Intra module refs:   clearThePage (main-assymetric-high)
+                                                   initiateTransfer
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           FADDRH                  000000AD 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000D1 - 000000D1 (0x1 bytes), align: 0
+  Segment part 4.             Intra module refs:   initiateTransfer
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           DMAIRQ                  000000D1 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000D6 - 000000D6 (0x1 bytes), align: 0
+  Segment part 5.             Intra module refs:   initiateTransfer
+                                                   receive (main-assymetric-high)
+                                                   sendData (main-assymetric-high)
+                                                   softKick (main-assymetric-high)
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           DMAARM                  000000D6 
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000064A6 - 000064F7 (0x52 bytes), align: 0
+  Segment part 11.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           initiateTransfer        000064A6        parseCommands (main-assymetric-high)
+                                                   savePB (main-assymetric-high)
+               calls direct
+               stack 1 = 00000000 ( 0000000A )
+    -------------------------------------------------------------------------
+ISTACK
+  Segment part 6. NOT NEEDED.
+    -------------------------------------------------------------------------
+PSTACK
+  Segment part 7. NOT NEEDED.
+    -------------------------------------------------------------------------
+XSTACK
+  Segment part 8. NOT NEEDED.
+    -------------------------------------------------------------------------
+IOVERLAY
+  Segment part 9. NOT NEEDED.
+    -------------------------------------------------------------------------
+DOVERLAY
+  Segment part 10. NOT NEEDED.
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\hal_power_clk_mgmt.r51
+  PROGRAM MODULE, NAME : hal_power_clk_mgmt
+
+  SEGMENTS IN THE MODULE
+  ======================
+SFR_AN
+  Relative segment, address: DATA 000000BE - 000000BE (0x1 bytes), align: 0
+  Segment part 1.             Intra module refs:   init (main-assymetric-high)
+                                                   main (main-assymetric-high)
+                                                   quartz (main-assymetric-high)
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           SLEEP                   000000BE 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000C6 - 000000C6 (0x1 bytes), align: 0
+  Segment part 2.             Intra module refs:   init (main-assymetric-high)
+                                                   parseCommands (main-assymetric-high)
+                                                   quartz (main-assymetric-high)
+                                                   savePB (main-assymetric-high)
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           CLKCON                  000000C6 
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Segment part 8. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           halPowerClkMgmtSetMainClkSrc
+                                   
+               calls direct, is not allocated
+    -------------------------------------------------------------------------
+ISTACK
+  Segment part 3. NOT NEEDED.
+    -------------------------------------------------------------------------
+PSTACK
+  Segment part 4. NOT NEEDED.
+    -------------------------------------------------------------------------
+XSTACK
+  Segment part 5. NOT NEEDED.
+    -------------------------------------------------------------------------
+IOVERLAY
+  Segment part 6. NOT NEEDED.
+    -------------------------------------------------------------------------
+DOVERLAY
+  Segment part 7. NOT NEEDED.
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\hal_wait.r51
+  PROGRAM MODULE, NAME : hal_wait
+
+  SEGMENTS IN THE MODULE
+  ======================
+NEAR_CODE
+  Relative segment, address: CODE 000064F8 - 00006503 (0xc bytes), align: 0
+  Segment part 6.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           halWait                 000064F8        init (main-assymetric-high)
+                                                   quartz (main-assymetric-high)
+    -------------------------------------------------------------------------
+ISTACK
+  Segment part 1. NOT NEEDED.
+    -------------------------------------------------------------------------
+PSTACK
+  Segment part 2. NOT NEEDED.
+    -------------------------------------------------------------------------
+XSTACK
+  Segment part 3. NOT NEEDED.
+    -------------------------------------------------------------------------
+IOVERLAY
+  Segment part 4. NOT NEEDED.
+    -------------------------------------------------------------------------
+DOVERLAY
+  Segment part 5. NOT NEEDED.
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\hop.r51
+  PROGRAM MODULE, NAME : hop
+
+  SEGMENTS IN THE MODULE
+  ======================
+SFR_AN
+  Relative segment, address: DATA 000000E1 - 000000E1 (0x1 bytes), align: 0
+  Segment part 1.             Intra module refs:   computeADCs (main-assymetric-high)
+                                                   hop
+                                                   receive (main-assymetric-high)
+                                                   sendData (main-assymetric-high)
+                                                   setupRadioDR (main-assymetric-high)
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           RFST                    000000E1 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F887 - 0000F89F (0x19 bytes), align: 0
+  Segment part 7.             Intra module refs:   Segment part 15
+                                                   setup_hopper
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           hopping_channels        0000F887 
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006504 - 0000659D (0x9a bytes), align: 0
+  Segment part 12.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           setup_hopper            00006504        init (main-assymetric-high)
+                                                   setByte (main-assymetric-high)
+               stack 1 = 00000000 ( 0000000F )
+               stack 2 = 00000000 ( 00000001 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000659E - 000065D6 (0x39 bytes), align: 0
+  Segment part 13.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           hop                     0000659E        Segment part 116 (main-assymetric-high)
+               stack 1 = 00000000 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000065D7 - 000065DB (0x5 bytes), align: 0
+  Segment part 14.            Intra module refs:   hop
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000065DC - 000065E5 (0xa bytes), align: 0
+  Segment part 15.            Intra module refs:   Segment part 14
+                                                   setup_hopper
+    -------------------------------------------------------------------------
+ISTACK
+  Segment part 2. NOT NEEDED.
+    -------------------------------------------------------------------------
+PSTACK
+  Segment part 3. NOT NEEDED.
+    -------------------------------------------------------------------------
+XSTACK
+  Segment part 4. NOT NEEDED.
+    -------------------------------------------------------------------------
+IOVERLAY
+  Segment part 5. NOT NEEDED.
+    -------------------------------------------------------------------------
+DOVERLAY
+  Segment part 6. NOT NEEDED.
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9EC - 0000F9EF (0x4 bytes), align: 0
+  Segment part 8.             Intra module refs:   setup_hopper
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __Constant_41c64e6d     0000F9EC 
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F57 - 00007F5A (0x4 bytes), align: 0
+  Segment part 9.             Intra module refs:   __Constant_41c64e6d
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9F0 - 0000F9F3 (0x4 bytes), align: 0
+  Segment part 10.            Intra module refs:   setup_hopper
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __Constant_3039         0000F9F0 
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F5B - 00007F5E (0x4 bytes), align: 0
+  Segment part 11.            Intra module refs:   __Constant_3039
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\iar_char.r51
+  LIBRARY MODULE, NAME : ?SC_DIV_MOD
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 00006058 - 00006079 (0x22 bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?SC_DIV_MOD             00006058        parseGWPackage (main-assymetric-high)
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\iar_compare.r51
+  LIBRARY MODULE, NAME : ?SL_GT
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Segment part 0. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?SL_GT_REW              
+    -------------------------------------------------------------------------
+RCODE
+  Segment part 1. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?SL_GT                  
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?UL_GT_X
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Segment part 0. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?UL_GT_X_REW            
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000607A - 00006089 (0x10 bytes), align: 0
+  Segment part 1.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?UL_GT_X                0000607A        parseGWPackage (main-assymetric-high)
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\iar_ieee_float.r51
+  LIBRARY MODULE, NAME : ?FLT_TO_L
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Segment part 0. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?FLT_TO_UL_REW          
+    -------------------------------------------------------------------------
+RCODE
+  Segment part 1. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?FLT_TO_UL              
+    -------------------------------------------------------------------------
+RCODE
+  Segment part 2. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?FLT_TO_L_REW           
+    -------------------------------------------------------------------------
+RCODE
+  Segment part 3. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?FLT_TO_L               
+    -------------------------------------------------------------------------
+RCODE
+  Segment part 4. NOT NEEDED.
+    -------------------------------------------------------------------------
+RCODE
+  Segment part 5. NOT NEEDED.
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\iar_long.r51
+  LIBRARY MODULE, NAME : ?L_MUL
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 0000608A - 0000608C (0x3 bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?L_MUL                  0000608A        setup_hopper (hop)
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000608D - 00006109 (0x7d bytes), align: 0
+  Segment part 1.             Intra module refs:   ?L_MUL
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?L_MUL_REW              0000608D 
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?UL_SHR
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Segment part 0. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?UL_SHR_REW             
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000610A - 0000610E (0x5 bytes), align: 0
+  Segment part 1.             Intra module refs:   Segment part 2
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?UL_SHR                 0000610A        setup_hopper (hop)
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000610F - 00006122 (0x14 bytes), align: 0
+  Segment part 2.             Intra module refs:   ?UL_SHR
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?L_ADD_X
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Segment part 0. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?L_ADD_X_REW            
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 00006123 - 00006135 (0x13 bytes), align: 0
+  Segment part 1.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?L_ADD_X                00006123        setup_hopper (hop)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?L_ADD_TO_X
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Segment part 0. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?L_ADD_TO_X_REW         
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 00006136 - 00006148 (0x13 bytes), align: 0
+  Segment part 1.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?L_ADD_TO_X             00006136        addDF (utils)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?L_SUB_X
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Segment part 0. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?L_SUB_X_REW            
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 00006149 - 00006160 (0x18 bytes), align: 0
+  Segment part 1.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?L_SUB_X                00006149        computeADCs (main-assymetric-high)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?L_SUB_FROM_X
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Segment part 0. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?L_SUB_FROM_X_REW       
+    -------------------------------------------------------------------------
+RCODE
+  Segment part 1. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?L_SUB_FROM_X           
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?L_MOV_X
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 00006161 - 0000616F (0xf bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?L_MOV_X                00006161        computeADCs (main-assymetric-high)
+                                                   parseGWPackage (main-assymetric-high)
+                                                   setup_hopper (hop)
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\iar_short.r51
+  LIBRARY MODULE, NAME : ?S_DIV_MOD
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 00006170 - 000061B0 (0x41 bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?S_DIV_MOD              000061A9        hop (hop)
+                                                   main_loop (main-assymetric-high)
+                                                   prepareFlashCheck (main-assymetric-high)
+                                                   prepareScaling (main-assymetric-high)
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 000061B1 - 00006209 (0x59 bytes), align: 0
+  Segment part 1.             Intra module refs:   ?S_DIV_MOD
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?US_DIV_MOD             000061B1        setup_hopper (hop)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?SS_SHR
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Segment part 0. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?SS_SHR_REW             
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000620A - 0000620C (0x3 bytes), align: 0
+  Segment part 1.             Intra module refs:   Segment part 2
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?SS_SHR                 0000620A        computeADCs (main-assymetric-high)
+                                                   readNextValue (main-assymetric-high)
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000620D - 00006219 (0xd bytes), align: 0
+  Segment part 2.             Intra module refs:   ?SS_SHR
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?US_SHR
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Segment part 0. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?US_SHR_REW             
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000621A - 0000621C (0x3 bytes), align: 0
+  Segment part 1.             Intra module refs:   Segment part 2
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?US_SHR                 0000621A        initiateTransfer (flash-assymetric-high)
+                                                   setInt (main-assymetric-high)
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000621D - 00006228 (0xc bytes), align: 0
+  Segment part 2.             Intra module refs:   ?US_SHR
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?S_SHL
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 00006229 - 0000622B (0x3 bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?S_SHL                  00006229        computeADCs (main-assymetric-high)
+                                                   parseGWPackage (main-assymetric-high)
+                                                   prepareFlashCheck (main-assymetric-high)
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000622C - 0000622E (0x3 bytes), align: 0
+  Segment part 1.             Intra module refs:   Segment part 2
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?S_SHL_REW              0000622C 
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000622F - 0000623B (0xd bytes), align: 0
+  Segment part 2.             Intra module refs:   ?S_SHL
+                                                   ?S_SHL_REW
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\iar_stack.r51
+  LIBRARY MODULE, NAME : ?ALLOC_XSTACK8
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 0000623C - 0000624A (0xf bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?ALLOC_XSTACK8          0000623C        addDF (utils)
+                                                   parseGWPackage (main-assymetric-high)
+                                                   prepareFlashCheck (main-assymetric-high)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?DEALLOC_XSTACK8
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 0000624B - 0000625D (0x13 bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?DEALLOC_XSTACK8        0000624B        addDF (utils)
+                                                   parseGWPackage (main-assymetric-high)
+                                                   prepareFlashCheck (main-assymetric-high)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?XSTACK_DISP8
+
+  SEGMENTS IN THE MODULE
+  ======================
+XSTACK
+  Segment part 0. NOT NEEDED.
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000625E - 00006267 (0xa bytes), align: 0
+  Segment part 1.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?XSTACK_DISP0_8         0000625E        addDF (utils)
+                                                   parseGWPackage (main-assymetric-high)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?CALL_IND
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 00006268 - 00006269 (0x2 bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?CALL_IND               00006268        setInt (main-assymetric-high)
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\iar_stack_enter_leave.r51
+  LIBRARY MODULE, NAME : ?FUNC_ENTER_XDATA
+
+  SEGMENTS IN THE MODULE
+  ======================
+XSTACK
+  Segment part 0. NOT NEEDED.
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 0000626A - 000062C8 (0x5f bytes), align: 0
+  Segment part 1.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?FUNC_ENTER_XDATA       0000626A        addDF (utils)
+                                                   clearThePage (main-assymetric-high)
+                                                   computeADCs (main-assymetric-high)
+                                                   init (main-assymetric-high)
+                                                   initiateTransfer (flash-assymetric-high)
+                                                   main_loop (main-assymetric-high)
+                                                   mymemcmp (utils)
+                                                   mymemcpy (utils)
+                                                   parseCommands (main-assymetric-high)
+                                                   parseGWPackage (main-assymetric-high)
+                                                   prepareData (main-assymetric-high)
+                                                   prepareFlashCheck (main-assymetric-high)
+                                                   prepareScaling (main-assymetric-high)
+                                                   prepareSpecial (main-assymetric-high)
+                                                   radioConfigure (radio)
+                                                   readNextValue (main-assymetric-high)
+                                                   setByte (main-assymetric-high)
+                                                   setInt (main-assymetric-high)
+                                                   setupRadioDR (main-assymetric-high)
+                                                   setup_hopper (hop)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?FUNC_LEAVE_XDATA
+
+  SEGMENTS IN THE MODULE
+  ======================
+XSTACK
+  Segment part 0. NOT NEEDED.
+    -------------------------------------------------------------------------
+RCODE
+  Relative segment, address: CODE 000062C9 - 00006303 (0x3b bytes), align: 0
+  Segment part 1.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?FUNC_LEAVE_XDATA       000062C9        Segment part 131 (main-assymetric-high)
+                                                   Segment part 156 (main-assymetric-high)
+                                                   addDF (utils)
+                                                   computeADCs (main-assymetric-high)
+                                                   initiateTransfer (flash-assymetric-high)
+                                                   mymemcmp (utils)
+                                                   mymemcpy (utils)
+                                                   parseCommands (main-assymetric-high)
+                                                   parseGWPackage (main-assymetric-high)
+                                                   prepareFlashCheck (main-assymetric-high)
+                                                   radioConfigure (radio)
+                                                   setInt (main-assymetric-high)
+                                                   setup_hopper (hop)
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\iar_stack_enter_leave_dptr.r51
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\iar_switch.r51
+  LIBRARY MODULE, NAME : ?UC_SWITCH_DENSE
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 00006304 - 00006339 (0x36 bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?UC_SWITCH_DENSE        00006304        parseCommands (main-assymetric-high)
+                                                   setInt (main-assymetric-high)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?UC_SWITCH_SPARSE
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 0000633A - 00006363 (0x2a bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?UC_SWITCH_SPARSE       0000633A        main_loop (main-assymetric-high)
+                                                   parseCommands (main-assymetric-high)
+                                                   setByte (main-assymetric-high)
+                                                   setInt (main-assymetric-high)
+           ?UC_SWITCH_SPARSE_LEAVE
+                                   00006357        ?UC_JMP_IF_IN_RANGE (?UC_JMP_IF_IN_RANGE)
+                                                   ?UC_JMP_IF_VALUE (?UC_JMP_IF_VALUE)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?UC_JMP_IF_IN_RANGE
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 00006364 - 00006382 (0x1f bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?UC_JMP_IF_IN_RANGE     00006364        Segment part 0 (?UC_SWITCH_SPARSE)
+
+    -------------------------------------------------------------------------
+  LIBRARY MODULE, NAME : ?UC_JMP_IF_VALUE
+
+  SEGMENTS IN THE MODULE
+  ======================
+RCODE
+  Relative segment, address: CODE 00006383 - 00006398 (0x16 bytes), align: 0
+  Segment part 0.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ?UC_JMP_IF_VALUE        00006383        Segment part 0 (?UC_SWITCH_SPARSE)
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\main-assymetric-high.r51
+  PROGRAM MODULE, NAME : main-assymetric-high
+
+  SEGMENTS IN THE MODULE
+  ======================
+SFR_AN
+  Relative segment, address: DATA 0000008F - 0000008F (0x1 bytes), align: 0
+  Segment part 1.             Intra module refs:   init
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           P0INP                   0000008F 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 00000090 - 00000090 (0x1 bytes), align: 0
+  Segment part 2.             Intra module refs:   main
+                                                   ov_startup
+                                                   parseGWPackage
+                                                   prepareData
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           _A_P1                   00000090 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 00000091 - 00000091 (0x1 bytes), align: 0
+  Segment part 3.             Intra module refs:   setupRadioDR
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           RFIM                    00000091 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 0000009A - 0000009A (0x1 bytes), align: 0
+  Segment part 4.             Intra module refs:   init
+                                                   setupRadioDR
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           IEN2                    0000009A 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 0000009B - 0000009B (0x1 bytes), align: 0
+  Segment part 5.             Intra module refs:   setupRadioDR
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           S1CON                   0000009B 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000A8 - 000000A8 (0x1 bytes), align: 0
+  Segment part 6.             Intra module refs:   addDF (utils)
+                                                   init
+                                                   setupRadioDR
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           _A_IEN0                 000000A8 
+    -------------------------------------------------------------------------
+SFR_AN
+  Segment part 7. TENTATIVE. Used definition from flash-assymetric-high
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           FWT                     
+    -------------------------------------------------------------------------
+SFR_AN
+  Segment part 8. TENTATIVE. Used definition from flash-assymetric-high
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           FADDRH                  
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000AE - 000000AE (0x1 bytes), align: 0
+  Segment part 9.             Intra module refs:   clearThePage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           FCTL                    000000AE 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000B4 - 000000B4 (0x1 bytes), align: 0
+  Segment part 10.            Intra module refs:   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ADCCON1                 000000B4 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000B6 - 000000B6 (0x1 bytes), align: 0
+  Segment part 11.            Intra module refs:   armAdcs
+                                                   readNextValue
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ADCCON3                 000000B6 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000B8 - 000000B8 (0x1 bytes), align: 0
+  Segment part 12.            Intra module refs:   init
+                                                   setupRadioDR
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           _A_IEN1                 000000B8 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000BA - 000000BA (0x1 bytes), align: 0
+  Segment part 13.            Intra module refs:   readNextValue
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ADCL                    000000BA 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000BB - 000000BB (0x1 bytes), align: 0
+  Segment part 14.            Intra module refs:   readNextValue
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ADCH                    000000BB 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000BC - 000000BC (0x1 bytes), align: 0
+  Segment part 15.            Intra module refs:   main
+                                                   parseGWPackage
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           RNDL                    000000BC 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000BD - 000000BD (0x1 bytes), align: 0
+  Segment part 16.            Intra module refs:   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           RNDH                    000000BD 
+    -------------------------------------------------------------------------
+SFR_AN
+  Segment part 17. TENTATIVE. Used definition from hal_power_clk_mgmt
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           SLEEP                   
+    -------------------------------------------------------------------------
+SFR_AN
+  Segment part 18. TENTATIVE. Used definition from hal_power_clk_mgmt
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           CLKCON                  
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000C9 - 000000C9 (0x1 bytes), align: 0
+  Segment part 19.            Intra module refs:   main_loop
+                                                   reset (utils)
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           WDCTL                   000000C9 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000CB - 000000CB (0x1 bytes), align: 0
+  Segment part 20.            Intra module refs:   init
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           T3CTL                   000000CB 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000CD - 000000CD (0x1 bytes), align: 0
+  Segment part 21.            Intra module refs:   init
+                                                   main
+                                                   main_loop
+                                                   ov_startup
+                                                   prepareData
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           T3CC0                   000000CD 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000CF - 000000CF (0x1 bytes), align: 0
+  Segment part 22.            Intra module refs:   init
+                                                   main
+                                                   main_loop
+                                                   prepareData
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           T3CC1                   000000CF 
+    -------------------------------------------------------------------------
+SFR_AN
+  Segment part 23. TENTATIVE. Used definition from flash-assymetric-high
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           DMAARM                  
+    -------------------------------------------------------------------------
+SFR_AN
+  Segment part 24. TENTATIVE. Used definition from hop
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           RFST                    
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000E9 - 000000E9 (0x1 bytes), align: 0
+  Segment part 25.            Intra module refs:   setupRadioDR
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           RFIF                    000000E9 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000F2 - 000000F2 (0x1 bytes), align: 0
+  Segment part 26.            Intra module refs:   init
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ADCCFG                  000000F2 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000F3 - 000000F3 (0x1 bytes), align: 0
+  Segment part 27.            Intra module refs:   init
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           P0SEL                   000000F3 
+    -------------------------------------------------------------------------
+SFR_AN
+  Relative segment, address: DATA 000000FD - 000000FD (0x1 bytes), align: 0
+  Segment part 28.            Intra module refs:   init
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           P0DIR                   000000FD 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F8A0 - 0000F991 (0xf2 bytes), align: 0
+  Segment part 34.            Intra module refs:   Segment part 126
+                                                   Segment part 144
+                                                   Segment part 148
+                                                   Segment part 158
+                                                   Segment part 159
+                                                   Segment part 160
+                                                   Segment part 162
+                                                   Segment part 168
+                                                   computeADCs
+                                                   copyMac
+                                                   init
+                                                   main
+                                                   main_loop
+                                                   ov_startup
+                                                   parseCommands
+                                                   parseGWPackage
+                                                   prepareData
+                                                   prepareScaling
+                                                   prepareSpecial
+                                                   prepareTxBuffer
+                                                   read_page
+                                                   reset_kicks
+                                                   savePB
+                                                   setByte
+                                                   setInt
+                                                   setupRadio
+                                                   setupRadioDR
+                                                   setupRepeater
+                                                   softKick
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           page                    0000F8A0 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F992 - 0000F993 (0x2 bytes), align: 0
+  Segment part 35.            Intra module refs:   Segment part 157
+                                                   main_loop
+                                                   prepareScaling
+                                                   setByte
+                                                   setInt
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           base_ptr                0000F992 
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9F4 - 0000F9F4 (0x1 bytes), align: 0
+  Segment part 36.            Intra module refs:   Segment part 168
+                                                   parseCommands
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           search_stat             0000F9F4 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F994 - 0000F994 (0x1 bytes), align: 0
+  Segment part 38.            Intra module refs:   computeADCs
+                                                   prepareData
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           theRealOffset           0000F994 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F995 - 0000F9A6 (0x12 bytes), align: 0
+  Segment part 39.            Intra module refs:   init
+                                                   readNextValue
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           adcsTemp                0000F995 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9A7 - 0000F9A7 (0x1 bytes), align: 0
+  Segment part 40.            Intra module refs:   readNextValue
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           tempAdcsCount           0000F9A7 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9A8 - 0000F9A9 (0x2 bytes), align: 0
+  Segment part 41.            Intra module refs:   Segment part 165
+                                                   clearThePage
+                                                   parseCommands
+                                                   softKick
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           cmdCount                0000F9A8 
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9F5 - 0000F9F6 (0x2 bytes), align: 0
+  Segment part 42.            Intra module refs:   Segment part 117
+                                                   Segment part 121
+                                                   main
+                                                   main_loop
+                                                   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           lastCycle               0000F9F5 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9AA - 0000F9AA (0x1 bytes), align: 0
+  Segment part 44.            Intra module refs:   main_loop
+                                                   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           cyclesFromStart         0000F9AA 
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9F7 - 0000F9F7 (0x1 bytes), align: 0
+  Segment part 45.            Intra module refs:   Segment part 162
+                                                   main_loop
+                                                   parseGWPackage
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           cyclesTo500             0000F9F7 
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9F8 - 0000F9F8 (0x1 bytes), align: 0
+  Segment part 47.            Intra module refs:   main_loop
+                                                   parseGWPackage
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           cyclesTo10              0000F9F8 
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9F9 - 0000F9F9 (0x1 bytes), align: 0
+  Segment part 49.            Intra module refs:   Segment part 159
+                                                   main_loop
+                                                   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           cyclesToStep500Channel
+                                   0000F9F9 
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9FA - 0000F9FA (0x1 bytes), align: 0
+  Segment part 51.            Intra module refs:   Segment part 162
+                                                   main_loop
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           cycles2Step10Channel    0000F9FA 
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9FB - 0000F9FB (0x1 bytes), align: 0
+  Segment part 53.            Intra module refs:   main_loop
+                                                   reset_kicks
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           cycles2SoftKick         0000F9FB 
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9FC - 0000F9FC (0x1 bytes), align: 0
+  Segment part 55.            Intra module refs:   main_loop
+                                                   reset_kicks
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           cycles2HardKick         0000F9FC 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9AB - 0000F9AB (0x1 bytes), align: 0
+  Segment part 57.            Intra module refs:   Segment part 108
+                                                   Segment part 116
+                                                   main
+                                                   main_loop
+                                                   parseGWPackage
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           curChannel              0000F9AB 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9AC - 0000F9AC (0x1 bytes), align: 0
+  Segment part 58.            Intra module refs:   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           curBunch                0000F9AC 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9AD - 0000F9AD (0x1 bytes), align: 0
+  Segment part 59.            Intra module refs:   readNextValue
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           bufferCount             0000F9AD 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9AE - 0000F9AE (0x1 bytes), align: 0
+  Segment part 60.            Intra module refs:   armAdcs
+                                                   readNextValue
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           adcCount                0000F9AE 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9AF - 0000F9AF (0x1 bytes), align: 0
+  Segment part 61.            Intra module refs:   main_loop
+                                                   prepareData
+                                                   prepareScaling
+                                                   setByte
+                                                   setInt
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           reportScaling           0000F9AF 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9B0 - 0000F9B0 (0x1 bytes), align: 0
+  Segment part 62.            Intra module refs:   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           joinRequestWasSend      0000F9B0 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9B1 - 0000F9B1 (0x1 bytes), align: 0
+  Segment part 63.            Intra module refs:   main
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           resetReason             0000F9B1 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9B2 - 0000F9B2 (0x1 bytes), align: 0
+  Segment part 64.            Intra module refs:   main_loop
+                                                   prepareData
+                                                   prepareFlashCheck
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           reportFlashCheck        0000F9B2 
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9FD - 0000F9FD (0x1 bytes), align: 0
+  Segment part 65.            Intra module refs:   Segment part 135
+                                                   setByte
+                                                   setInt
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           calibrationRepeat       0000F9FD 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9B3 - 0000F9B3 (0x1 bytes), align: 0
+  Segment part 67.            Intra module refs:   main_loop
+                                                   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           cyclesToHop             0000F9B3 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9B4 - 0000F9B4 (0x1 bytes), align: 0
+  Segment part 68.            Intra module refs:   main
+                                                   main_loop
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           setOC                   0000F9B4 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9B5 - 0000F9B5 (0x1 bytes), align: 0
+  Segment part 69.            Intra module refs:   main_loop
+                                                   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           bunchCount              0000F9B5 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9B6 - 0000F9B6 (0x1 bytes), align: 0
+  Segment part 70.            Intra module refs:   main_loop
+                                                   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           got_gw                  0000F9B6 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9B7 - 0000F9B7 (0x1 bytes), align: 0
+  Segment part 71.            Intra module refs:   prepareData
+                                                   readNextValue
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           enable2SendData         0000F9B7 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9B8 - 0000F9B8 (0x1 bytes), align: 0
+  Segment part 72.            Intra module refs:   sendData
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           txDisabled              0000F9B8 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9B9 - 0000F9B9 (0x1 bytes), align: 0
+  Segment part 73.            Intra module refs:   main_loop
+                                                   parseGWPackage
+                                                   prepareTxBuffer
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           packagePrepared         0000F9B9 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9BA - 0000F9BA (0x1 bytes), align: 0
+  Segment part 74.            Intra module refs:   main_loop
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           was_listening           0000F9BA 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9BB - 0000F9BB (0x1 bytes), align: 0
+  Segment part 75.            Intra module refs:   clearThePage
+                                                   parseCommands
+                                                   savePB
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           isOnTestStand           0000F9BB 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9BC - 0000F9BC (0x1 bytes), align: 0
+  Segment part 76.            Intra module refs:   main_loop
+                                                   prepareData
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           isCalibrationPackage    0000F9BC 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9BD - 0000F9BD (0x1 bytes), align: 0
+  Segment part 77.            Intra module refs:   savePB
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           main_pb                 0000F9BD 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9BE - 0000F9BE (0x1 bytes), align: 0
+  Segment part 78.            Intra module refs:   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           turnOnFlag              0000F9BE 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9BF - 0000F9C2 (0x4 bytes), align: 0
+  Segment part 79.            Intra module refs:   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           utc                     0000F9BF 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9C3 - 0000F9C4 (0x2 bytes), align: 0
+  Segment part 80.            Intra module refs:   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ms                      0000F9C3 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9C5 - 0000F9C8 (0x4 bytes), align: 0
+  Segment part 81.            Intra module refs:   parseGWPackage
+                                                   softKick
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           utcLast                 0000F9C5 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9C9 - 0000F9CA (0x2 bytes), align: 0
+  Segment part 82.            Intra module refs:   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           msLast                  0000F9C9 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9CB - 0000F9DC (0x12 bytes), align: 0
+  Segment part 83.            Intra module refs:   computeADCs
+                                                   main_loop
+                                                   prepareData
+                                                   readNextValue
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           lastVals                0000F9CB 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9DD - 0000F9DE (0x2 bytes), align: 0
+  Segment part 84.            Intra module refs:   computeADCs
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           lastOff                 0000F9DD 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9DF - 0000F9DF (0x1 bytes), align: 0
+  Segment part 85.            Intra module refs:   parseGWPackage
+                                                   prepareData
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           lastRssi                0000F9DF 
+    -------------------------------------------------------------------------
+XDATA_ROM_C
+  Relative segment, address: CODE 00007F9B - 00007FA3 (0x9 bytes), align: 0
+  Segment part 86.            Intra module refs:   Segment part 124
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           adcChannels             00007F9B 
+    -------------------------------------------------------------------------
+XDATA_ROM_C
+  Relative segment, address: CODE 00007FA4 - 00007FC3 (0x20 bytes), align: 0
+  Segment part 87.            Intra module refs:   read_page
+    -------------------------------------------------------------------------
+XDATA_Z
+  Segment part 88. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           nextKey                 
+    -------------------------------------------------------------------------
+XDATA_Z
+  Segment part 89. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           nextIV                  
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000065E6 - 000065FF (0x1a bytes), align: 0
+  Segment part 100.           Intra module refs:   Segment part 151
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           abs                     000065E6 
+               stack 1 = 00000038 ( 00000000 )
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000F9FE - 0000FA00 (0x3 bytes), align: 0
+  Segment part 90.            Intra module refs:   def_freq
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           the_frequency           0000F9FE 
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006600 - 0000660D (0xe bytes), align: 0
+  Segment part 101.           Intra module refs:   init
+                                                   softKick
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           def_freq                00006600 
+               calls direct
+               stack 1 = 00000008 ( 00000000 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Segment part 102. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           wdWork                  
+               is not allocated
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000660E - 0000667E (0x71 bytes), align: 0
+  Segment part 103.           Intra module refs:   setupRadio
+                                                   setupRepeater
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           setupRadioDR            0000660E 
+               calls direct
+               stack 1 = 00000000 ( 00000008 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000667F - 00006696 (0x18 bytes), align: 0
+  Segment part 104.           Intra module refs:   Segment part 108
+                                                   main_loop
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           setupRadio              0000667F 
+               calls direct
+               stack 1 = 00000009 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006697 - 000066DA (0x44 bytes), align: 0
+  Segment part 105.           Intra module refs:   main
+                                                   main_loop
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           softKick                00006697 
+               calls direct
+               stack 1 = 00000009 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000066DB - 00006703 (0x29 bytes), align: 0
+  Segment part 106.           Intra module refs:   Segment part 141
+                                                   sendData
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           setupRepeater           000066DB 
+               calls direct
+               stack 1 = 00000038 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006704 - 00006763 (0x60 bytes), align: 0
+  Segment part 107.           Intra module refs:   main
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           init                    00006704 
+               calls direct
+               stack 1 = 00000000 ( 00000008 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006764 - 0000676C (0x9 bytes), align: 0
+  Segment part 108.           Intra module refs:   init
+                                                   setByte
+                                                   setupRepeater
+                                                   softKick
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000676D - 00006796 (0x2a bytes), align: 0
+  Segment part 109.           Intra module refs:   main
+                                                   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           ov_startup              0000676D 
+               stack 1 = 00000009 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006797 - 0000679C (0x6 bytes), align: 0
+  Segment part 110.           Intra module refs:   armAdcs
+                                                   ov_startup
+                                                   prepareJoinRequest
+                                                   prepareTxBuffer
+                                                   read_page
+                                                   receive
+                                                   reset_kicks
+                                                   savePB
+                                                   sendData
+                                                   setupRadio
+                                                   setupRepeater
+                                                   softKick
+                                                   tickWait
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000679D - 0000683D (0xa1 bytes), align: 0
+  Segment part 111.           Intra module refs:   main
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           read_page               0000679D 
+               calls direct
+               stack 1 = 00000000 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Segment part 112. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           checkItOut              
+               is not allocated
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000683E - 0000686B (0x2e bytes), align: 0
+  Segment part 113.           Intra module refs:   Segment part 164
+                                                   main
+                                                   parseCommands
+                                                   parseGWPackage
+                                                   savePB
+                                                   setupRadioDR
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           tickWait                0000683E 
+               stack 1 = 00000038 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000FA01 - 0000FA02 (0x2 bytes), align: 0
+  Segment part 92.            Intra module refs:   tickWait
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Segment part 114. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           dec                     
+               is not allocated
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000FA03 - 0000FA03 (0x1 bytes), align: 0
+  Segment part 94.            Intra module refs:   main_loop
+                                                   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000686C - 00006BA0 (0x335 bytes), align: 0
+  Segment part 115.           Intra module refs:   main
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           main_loop               0000686C 
+               calls direct
+               stack 1 = 00000000 ( 00000009 )
+               stack 2 = 00000000 ( 00000001 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006BA1 - 00006BB1 (0x11 bytes), align: 0
+  Segment part 116.           Intra module refs:   main_loop
+                                                   setByte
+                                                   softKick
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006BB2 - 00006BC4 (0x13 bytes), align: 0
+  Segment part 117.           Intra module refs:   main_loop
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006BC5 - 00006BC9 (0x5 bytes), align: 0
+  Segment part 118.           Intra module refs:   Segment part 117
+                                                   Segment part 142
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006BCA - 00006BDF (0x16 bytes), align: 0
+  Segment part 119.           Intra module refs:   main
+                                                   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           reset_kicks             00006BCA 
+               stack 1 = 00000038 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006BE0 - 00006CCD (0xee bytes), align: 0
+  Segment part 120.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           main                    00006BE0        ?call_main (?cmain)
+               calls direct
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006CCE - 00006CDB (0xe bytes), align: 0
+  Segment part 121.           Intra module refs:   main
+                                                   main_loop
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006CDC - 00006D00 (0x25 bytes), align: 0
+  Segment part 122.           Intra module refs:   main
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           armAdcs                 00006CDC 
+               is indirectly called
+               stack 1 = 00000000 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006D01 - 00006D95 (0x95 bytes), align: 0
+  Segment part 123.           Intra module refs:   main
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           readNextValue           00006D01 
+               calls direct, is indirectly called
+               stack 1 = 00000000 ( 00000009 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006D96 - 00006DA3 (0xe bytes), align: 0
+  Segment part 124.           Intra module refs:   armAdcs
+                                                   readNextValue
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006DA4 - 00006DDA (0x37 bytes), align: 0
+  Segment part 125.           Intra module refs:   prepareData
+                                                   prepareJoinRequest
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           prepareTxBuffer         00006DA4 
+               calls direct
+               stack 1 = 00000008 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006DDB - 00006DE7 (0xd bytes), align: 0
+  Segment part 126.           Intra module refs:   main
+                                                   parseGWPackage
+                                                   prepareTxBuffer
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006DE8 - 00006DF1 (0xa bytes), align: 0
+  Segment part 127.           Intra module refs:   Segment part 132
+                                                   prepareJoinRequest
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           copyMac                 00006DE8 
+               calls direct
+               stack 1 = 00000008 ( 00000000 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006DF2 - 00006EE4 (0xf3 bytes), align: 0
+  Segment part 128.           Intra module refs:   main_loop
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           prepareData             00006DF2 
+               calls direct
+               stack 1 = 00000009 ( 00000008 )
+               stack 2 = 00000000 ( 00000001 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006EE5 - 00006EED (0x9 bytes), align: 0
+  Segment part 129.           Intra module refs:   prepareData
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006EEE - 00006F2B (0x3e bytes), align: 0
+  Segment part 130.           Intra module refs:   prepareFlashCheck
+                                                   prepareScaling
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           prepareSpecial          00006EEE 
+               calls direct
+               stack 1 = 0000001E ( 00000008 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006F2C - 00006F33 (0x8 bytes), align: 0
+  Segment part 131.           Intra module refs:   clearThePage
+                                                   init
+                                                   prepareData
+                                                   prepareScaling
+                                                   prepareSpecial
+                                                   setupRadioDR
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006F34 - 00006F3F (0xc bytes), align: 0
+  Segment part 132.           Intra module refs:   prepareData
+                                                   prepareSpecial
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006F40 - 00006FE1 (0xa2 bytes), align: 0
+  Segment part 133.           Intra module refs:   prepareData
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           prepareFlashCheck       00006F40 
+               calls direct
+               stack 1 = 00000008 ( 0000001E )
+               stack 2 = 00000000 ( 00000001 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00006FE2 - 00007017 (0x36 bytes), align: 0
+  Segment part 134.           Intra module refs:   prepareData
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           prepareScaling          00006FE2 
+               calls direct, is indirectly called
+               stack 1 = 00000008 ( 00000008 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007018 - 0000702A (0x13 bytes), align: 0
+  Segment part 135.           Intra module refs:   prepareFlashCheck
+                                                   prepareScaling
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000702B - 00007052 (0x28 bytes), align: 0
+  Segment part 136.           Intra module refs:   main_loop
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           prepareJoinRequest      0000702B 
+               calls direct
+               stack 1 = 00000009 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007053 - 0000707B (0x29 bytes), align: 0
+  Segment part 137.           Intra module refs:   main_loop
+                                                   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           sendData                00007053 
+               calls direct
+               stack 1 = 00000038 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9E0 - 0000F9E3 (0x4 bytes), align: 0
+  Segment part 96.            Intra module refs:   parseGWPackage
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9E4 - 0000F9E5 (0x2 bytes), align: 0
+  Segment part 97.            Intra module refs:   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000707C - 000074F0 (0x475 bytes), align: 0
+  Segment part 138.           Intra module refs:   main_loop
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           parseGWPackage          0000707C 
+               calls direct
+               stack 1 = 00000009 ( 00000038 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000074F1 - 000074FE (0xe bytes), align: 0
+  Segment part 139.           Intra module refs:   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000074FF - 00007506 (0x8 bytes), align: 0
+  Segment part 140.           Intra module refs:   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007507 - 0000750F (0x9 bytes), align: 0
+  Segment part 141.           Intra module refs:   computeADCs
+                                                   main_loop
+                                                   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007510 - 00007523 (0x14 bytes), align: 0
+  Segment part 142.           Intra module refs:   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007524 - 0000752D (0xa bytes), align: 0
+  Segment part 143.           Intra module refs:   armAdcs
+                                                   main
+                                                   parseGWPackage
+                                                   receive
+                                                   savePB
+                                                   softKick
+                                                   tickWait
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000752E - 00007536 (0x9 bytes), align: 0
+  Segment part 144.           Intra module refs:   main_loop
+                                                   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007537 - 00007541 (0xb bytes), align: 0
+  Segment part 145.           Intra module refs:   main_loop
+                                                   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007542 - 0000754A (0x9 bytes), align: 0
+  Segment part 146.           Intra module refs:   main_loop
+                                                   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000754B - 00007550 (0x6 bytes), align: 0
+  Segment part 147.           Intra module refs:   Segment part 121
+                                                   Segment part 145
+                                                   Segment part 146
+                                                   Segment part 157
+                                                   parseGWPackage
+                                                   prepareData
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007551 - 00007564 (0x14 bytes), align: 0
+  Segment part 148.           Intra module refs:   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007565 - 0000756A (0x6 bytes), align: 0
+  Segment part 149.           Intra module refs:   Segment part 148
+                                                   Segment part 150
+                                                   Segment part 151
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000756B - 00007579 (0xf bytes), align: 0
+  Segment part 150.           Intra module refs:   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000757A - 00007597 (0x1e bytes), align: 0
+  Segment part 151.           Intra module refs:   abs
+                                                   main_loop
+                                                   parseGWPackage
+                                                   tickWait
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000FA04 - 0000FA04 (0x1 bytes), align: 0
+  Segment part 98.            Intra module refs:   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007598 - 000075BF (0x28 bytes), align: 0
+  Segment part 152.           Intra module refs:   Segment part 141
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           receive                 00007598 
+               stack 1 = 00000038 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000075C0 - 0000767B (0xbc bytes), align: 0
+  Segment part 153.           Intra module refs:   prepareData
+                                                   softKick
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           computeADCs             000075C0 
+               calls direct
+               stack 1 = 00000008 ( 0000000F )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000767C - 00007683 (0x8 bytes), align: 0
+  Segment part 154.           Intra module refs:   computeADCs
+                                                   parseCommands
+                                                   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007684 - 0000791C (0x299 bytes), align: 0
+  Segment part 155.           Intra module refs:   parseCommands
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           setByte                 00007684 
+               calls direct
+               stack 1 = 0000000E ( 00000009 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000791D - 00007921 (0x5 bytes), align: 0
+  Segment part 156.           Intra module refs:   main_loop
+                                                   readNextValue
+                                                   setByte
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007922 - 00007928 (0x7 bytes), align: 0
+  Segment part 157.           Intra module refs:   setByte
+                                                   setInt
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007929 - 00007930 (0x8 bytes), align: 0
+  Segment part 158.           Intra module refs:   parseGWPackage
+                                                   setByte
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007931 - 0000793D (0xd bytes), align: 0
+  Segment part 159.           Intra module refs:   main_loop
+                                                   setByte
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000793E - 0000794A (0xd bytes), align: 0
+  Segment part 160.           Intra module refs:   main
+                                                   setByte
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 0000794B - 0000794F (0x5 bytes), align: 0
+  Segment part 161.           Intra module refs:   main_loop
+                                                   setByte
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007950 - 0000795F (0x10 bytes), align: 0
+  Segment part 162.           Intra module refs:   Segment part 161
+                                                   parseGWPackage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007960 - 000079BE (0x5f bytes), align: 0
+  Segment part 163.           Intra module refs:   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           savePB                  00007960 
+               calls direct
+               stack 1 = 00000009 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000079BF - 000079C7 (0x9 bytes), align: 0
+  Segment part 164.           Intra module refs:   savePB
+                                                   setByte
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000079C8 - 000079D2 (0xb bytes), align: 0
+  Segment part 165.           Intra module refs:   parseCommands
+                                                   savePB
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 000079D3 - 00007AC1 (0xef bytes), align: 0
+  Segment part 166.           Intra module refs:   parseCommands
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           setInt                  000079D3 
+               stack 1 = 0000000E ( 0000000B )
+               stack 2 = 00000000 ( 00000001 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007AC2 - 00007D0C (0x24b bytes), align: 0
+  Segment part 167.           Intra module refs:   parseGWPackage
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           parseCommands           00007AC2 
+               calls direct
+               stack 1 = 00000038 ( 0000000E )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007D0D - 00007D1A (0xe bytes), align: 0
+  Segment part 168.           Intra module refs:   main
+                                                   parseCommands
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007D1B - 00007D67 (0x4d bytes), align: 0
+  Segment part 169.           Intra module refs:   Segment part 164
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           clearThePage            00007D1B 
+               calls direct
+               stack 1 = 00000009 ( 00000008 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007D68 - 00007D70 (0x9 bytes), align: 0
+  Segment part 170.           Intra module refs:   Segment part 165
+                                                   clearThePage
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007D71 - 00007D94 (0x24 bytes), align: 0
+  Segment part 171.           Intra module refs:   setByte
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           quartz                  00007D71 
+               calls direct
+               stack 1 = 00000009 ( 00000000 )
+               stack 2 = 00000000 ( 00000001 )
+    -------------------------------------------------------------------------
+ISTACK
+  Segment part 29. NOT NEEDED.
+    -------------------------------------------------------------------------
+PSTACK
+  Segment part 30. NOT NEEDED.
+    -------------------------------------------------------------------------
+XSTACK
+  Segment part 31. NOT NEEDED.
+    -------------------------------------------------------------------------
+IOVERLAY
+  Segment part 32. NOT NEEDED.
+    -------------------------------------------------------------------------
+DOVERLAY
+  Segment part 33. NOT NEEDED.
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F5F - 00007F5F (0x1 bytes), align: 0
+  Segment part 37.            Intra module refs:   search_stat
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F60 - 00007F61 (0x2 bytes), align: 0
+  Segment part 43.            Intra module refs:   lastCycle
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F62 - 00007F62 (0x1 bytes), align: 0
+  Segment part 46.            Intra module refs:   cyclesTo500
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F63 - 00007F63 (0x1 bytes), align: 0
+  Segment part 48.            Intra module refs:   cyclesTo10
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F64 - 00007F64 (0x1 bytes), align: 0
+  Segment part 50.            Intra module refs:   cyclesToStep500Channel
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F65 - 00007F65 (0x1 bytes), align: 0
+  Segment part 52.            Intra module refs:   cycles2Step10Channel
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F66 - 00007F66 (0x1 bytes), align: 0
+  Segment part 54.            Intra module refs:   cycles2SoftKick
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F67 - 00007F67 (0x1 bytes), align: 0
+  Segment part 56.            Intra module refs:   cycles2HardKick
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F68 - 00007F68 (0x1 bytes), align: 0
+  Segment part 66.            Intra module refs:   calibrationRepeat
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F69 - 00007F6B (0x3 bytes), align: 0
+  Segment part 91.            Intra module refs:   the_frequency
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F6C - 00007F6D (0x2 bytes), align: 0
+  Segment part 93.            Intra module refs:   Segment part 92
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F6E - 00007F6E (0x1 bytes), align: 0
+  Segment part 95.            Intra module refs:   Segment part 94
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F6F - 00007F6F (0x1 bytes), align: 0
+  Segment part 99.            Intra module refs:   Segment part 98
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\radio.r51
+  PROGRAM MODULE, NAME : radio
+
+  SEGMENTS IN THE MODULE
+  ======================
+XDATA_Z
+  Relative segment, address: XDATA 0000F9E6 - 0000F9E7 (0x2 bytes), align: 0
+  Segment part 6.             Intra module refs:   radioConfigure
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           perRssiOffset           0000F9E6        parseGWPackage (main-assymetric-high)
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000FA05 - 0000FA0A (0x6 bytes), align: 0
+  Segment part 7.             Intra module refs:   radioConfigure
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           mdm_rate1               0000FA05 
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000FA0B - 0000FA1E (0x14 bytes), align: 0
+  Segment part 9.             Intra module refs:   radioConfigure
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000FA1F - 0000FA21 (0x3 bytes), align: 0
+  Segment part 11.            Intra module refs:   radioConfigure
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000FA22 - 0000FA24 (0x3 bytes), align: 0
+  Segment part 13.            Intra module refs:   radioConfigure
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000FA25 - 0000FA2C (0x8 bytes), align: 0
+  Segment part 15.            Intra module refs:   radioConfigure
+    -------------------------------------------------------------------------
+XDATA_I
+  Relative segment, address: XDATA 0000FA2D - 0000FA2F (0x3 bytes), align: 0
+  Segment part 17.            Intra module refs:   radioConfigure
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007D95 - 00007E31 (0x9d bytes), align: 0
+  Segment part 19.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           radioConfigure          00007D95        setupRadioDR (main-assymetric-high)
+               calls direct
+               stack 1 = 00000000 ( 00000008 )
+    -------------------------------------------------------------------------
+ISTACK
+  Segment part 1. NOT NEEDED.
+    -------------------------------------------------------------------------
+PSTACK
+  Segment part 2. NOT NEEDED.
+    -------------------------------------------------------------------------
+XSTACK
+  Segment part 3. NOT NEEDED.
+    -------------------------------------------------------------------------
+IOVERLAY
+  Segment part 4. NOT NEEDED.
+    -------------------------------------------------------------------------
+DOVERLAY
+  Segment part 5. NOT NEEDED.
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F70 - 00007F75 (0x6 bytes), align: 0
+  Segment part 8.             Intra module refs:   mdm_rate1
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F76 - 00007F89 (0x14 bytes), align: 0
+  Segment part 10.            Intra module refs:   Segment part 9
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F8A - 00007F8C (0x3 bytes), align: 0
+  Segment part 12.            Intra module refs:   Segment part 11
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F8D - 00007F8F (0x3 bytes), align: 0
+  Segment part 14.            Intra module refs:   Segment part 13
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F90 - 00007F97 (0x8 bytes), align: 0
+  Segment part 16.            Intra module refs:   Segment part 15
+    -------------------------------------------------------------------------
+XDATA_ID
+  Relative segment, address: CODE 00007F98 - 00007F9A (0x3 bytes), align: 0
+  Segment part 18.            Intra module refs:   Segment part 17
+
+    *************************************************************************
+
+  FILE NAME : E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\utils.r51
+  PROGRAM MODULE, NAME : utils
+
+  SEGMENTS IN THE MODULE
+  ======================
+SFR_AN
+  Segment part 1. TENTATIVE. Used definition from main-assymetric-high
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           _A_IEN0                 
+    -------------------------------------------------------------------------
+SFR_AN
+  Segment part 2. TENTATIVE. Used definition from main-assymetric-high
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           WDCTL                   
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007E32 - 00007E40 (0xf bytes), align: 0
+  Segment part 17.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           reset                   00007E32        clearThePage (main-assymetric-high)
+                                                   main (main-assymetric-high)
+                                                   main_loop (main-assymetric-high)
+                                                   parseCommands (main-assymetric-high)
+               stack 1 = 00000000 ( 00000000 )
+               stack 2 = 00000000 ( 00000002 )
+    -------------------------------------------------------------------------
+XDATA_Z
+  Relative segment, address: XDATA 0000F9E8 - 0000F9EB (0x4 bytes), align: 0
+  Segment part 8.             Intra module refs:   addDF
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           delta                   0000F9E8        computeADCs (main-assymetric-high)
+                                                   softKick (main-assymetric-high)
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007E41 - 00007EBE (0x7e bytes), align: 0
+  Segment part 18.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           addDF                   00007E41        Segment part 139 (main-assymetric-high)
+                                                   computeADCs (main-assymetric-high)
+               stack 1 = 00000000 ( 0000000F )
+               stack 2 = 00000000 ( 00000001 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Segment part 19. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           substractGround         
+               is not allocated
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007EBF - 00007EE1 (0x23 bytes), align: 0
+  Segment part 20.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           zerofill                00007EBF        init (main-assymetric-high)
+                                                   radioConfigure (radio)
+                                                   readNextValue (main-assymetric-high)
+                                                   softKick (main-assymetric-high)
+               stack 1 = 00000000 ( 00000000 )
+               stack 2 = 00000000 ( 00000003 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007EE2 - 00007F16 (0x35 bytes), align: 0
+  Segment part 21.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           mymemcpy                00007EE2        copyMac (main-assymetric-high)
+                                                   def_freq (main-assymetric-high)
+                                                   parseGWPackage (main-assymetric-high)
+                                                   prepareData (main-assymetric-high)
+                                                   prepareSpecial (main-assymetric-high)
+                                                   radioConfigure (radio)
+                                                   readNextValue (main-assymetric-high)
+                                                   read_page (main-assymetric-high)
+               stack 1 = 00000000 ( 00000008 )
+               stack 2 = 00000000 ( 00000001 )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Relative segment, address: CODE 00007F17 - 00007F56 (0x40 bytes), align: 0
+  Segment part 22.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           mymemcmp                00007F17        parseCommands (main-assymetric-high)
+               stack 1 = 00000000 ( 0000000A )
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Segment part 23. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           convS                   
+               is not allocated
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Segment part 24. NOT NEEDED.
+    -------------------------------------------------------------------------
+NEAR_CODE
+  Segment part 25. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           convU                   
+               is not allocated
+    -------------------------------------------------------------------------
+ISTACK
+  Segment part 3. NOT NEEDED.
+    -------------------------------------------------------------------------
+PSTACK
+  Segment part 4. NOT NEEDED.
+    -------------------------------------------------------------------------
+XSTACK
+  Segment part 5. NOT NEEDED.
+    -------------------------------------------------------------------------
+IOVERLAY
+  Segment part 6. NOT NEEDED.
+    -------------------------------------------------------------------------
+DOVERLAY
+  Segment part 7. NOT NEEDED.
+    -------------------------------------------------------------------------
+XDATA_I
+  Segment part 9. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __Constant_8000         
+    -------------------------------------------------------------------------
+XDATA_ID
+  Segment part 10. NOT NEEDED.
+    -------------------------------------------------------------------------
+XDATA_I
+  Segment part 11. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __Constant_ffff8001     
+    -------------------------------------------------------------------------
+XDATA_ID
+  Segment part 12. NOT NEEDED.
+    -------------------------------------------------------------------------
+XDATA_I
+  Segment part 13. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __Constant_10000        
+    -------------------------------------------------------------------------
+XDATA_ID
+  Segment part 14. NOT NEEDED.
+    -------------------------------------------------------------------------
+XDATA_I
+  Segment part 15. NOT NEEDED.
+           ENTRY                   ADDRESS         REF BY
+           =====                   =======         ======
+           __Constant_0            
+    -------------------------------------------------------------------------
+XDATA_ID
+  Segment part 16. NOT NEEDED.
+
+
+
+
+                ****************************************
+                *                                      *
+                *              CALL GRAPH              *
+                *                                      *
+                ****************************************
+
+  ->Sub-tree of type: Indirectly called function tree that does not make
+                    : indirect calls (Is not an interrupt and is not flagged
+                    : as not overlayable)
+                             XSTACK   ISTACK
+    | Stack used (prev) :  00000000 00000000
+  01  armAdcs
+      | Stack used (prev) :  00000000 00000000
+      | + function block  :  00000000 00000002
+  <-Sub-tree of type: Indirectly called function tree that does not make
+                    : indirect calls (Is not an interrupt and is not flagged
+                    : as not overlayable)
+    | Stack used          :  00000000 00000002
+
+
+  ->Sub-tree of type: Indirectly called function tree that does not make
+                    : indirect calls (Is not an interrupt and is not flagged
+                    : as not overlayable)
+                             XSTACK   ISTACK
+    | Stack used (prev) :  00000000 00000000
+  02    mymemcpy
+        | Stack used (prev) :  00000000 00000000
+        | + function block  :  00000008 00000001
+  02    zerofill
+        | Stack used (prev) :  00000000 00000000
+        | + function block  :  00000000 00000003
+  01  readNextValue
+      | Stack used (prev) :  00000008 00000003
+      | + function block  :  00000012 00000000
+  <-Sub-tree of type: Indirectly called function tree that does not make
+                    : indirect calls (Is not an interrupt and is not flagged
+                    : as not overlayable)
+    | Stack used          :  0000001A 00000003
+
+
+  ->Sub-tree of type: Indirectly called function tree that does not make
+                    : indirect calls (Is not an interrupt and is not flagged
+                    : as not overlayable)
+                             XSTACK   ISTACK
+    | Stack used (prev) :  00000000 00000000
+  03      mymemcpy
+          | Stack used (prev) :  00000000 00000000
+          | + function block  :  00000008 00000001
+          |  Already listed
+  04        mymemcpy
+            | Stack used (prev) :  00000000 00000000
+            | + function block  :  00000008 00000001
+            |  Already listed
+  03      copyMac
+          | Stack used (prev) :  00000008 00000001
+          | + function block  :  00000008 00000000
+  02    prepareSpecial
+        | Stack used (prev) :  00000010 00000001
+        | + function block  :  0000002E 00000000
+  01  prepareScaling
+      | Stack used (prev) :  0000003E 00000001
+      | + function block  :  00000018 00000000
+  <-Sub-tree of type: Indirectly called function tree that does not make
+                    : indirect calls (Is not an interrupt and is not flagged
+                    : as not overlayable)
+    | Stack used          :  00000056 00000001
+
+
+  ->Sub-tree of type: Function tree
+                             XSTACK   ISTACK
+    | Stack used (prev) :  00000056 00000003
+  01  __program_start
+      | Stack used (prev) :  00000056 00000003
+      | + function block  :  00000000 00000000
+  <-Sub-tree of type: Function tree
+    | Stack used          :  00000056 00000003
+
+
+  ->Sub-tree of type: Function tree
+                             XSTACK   ISTACK
+    | Stack used (prev) :  00000056 00000003
+  02    reset
+        | Stack used (prev) :  00000056 00000003
+        | + function block  :  00000000 00000002
+  02    reset_kicks
+        | Stack used (prev) :  00000056 00000003
+        | + function block  :  00000038 00000002
+  03      reset
+          | Stack used (prev) :  00000056 00000003
+          | + function block  :  00000000 00000002
+          |  Already listed
+  03      receive
+          | Stack used (prev) :  00000056 00000003
+          | + function block  :  00000038 00000002
+  03      receive
+          | Stack used (prev) :  00000056 00000003
+          | + function block  :  00000038 00000002
+          |  Already listed
+  03      receive
+          | Stack used (prev) :  00000056 00000003
+          | + function block  :  00000038 00000002
+          |  Already listed
+  04        mymemcpy
+            | Stack used (prev) :  00000000 00000000
+            | + function block  :  00000008 00000001
+            |  Already listed
+  04        addDF
+            | Stack used (prev) :  00000056 00000003
+            | + function block  :  0000000F 00000001
+  05          mymemcmp
+              | Stack used (prev) :  00000056 00000003
+              | + function block  :  0000000A 00000000
+  05          reset
+              | Stack used (prev) :  00000056 00000003
+              | + function block  :  00000000 00000002
+              |  Already listed
+  05          setInt
+              | Stack used (prev) :  00000056 00000003
+              | + function block  :  00000019 00000001
+  07              halWait
+                  | Stack used (prev) :  00000056 00000003
+                  | + function block  :  00000000 00000000
+  06            quartz
+                | Stack used (prev) :  00000056 00000003
+                | + function block  :  00000009 00000002
+  07              reset
+                  | Stack used (prev) :  00000056 00000003
+                  | + function block  :  00000000 00000002
+                  |  Already listed
+  06            clearThePage
+                | Stack used (prev) :  00000056 00000005
+                | + function block  :  00000019 00000000
+  07              clearThePage
+                  | Stack used (prev) :  00000056 00000005
+                  | + function block  :  00000019 00000000
+                  |  Already listed
+  07              clearThePage
+                  | Stack used (prev) :  00000056 00000005
+                  | + function block  :  00000019 00000000
+                  |  Already listed
+  07              tickWait
+                  | Stack used (prev) :  00000056 00000003
+                  | + function block  :  00000038 00000002
+  07              tickWait
+                  | Stack used (prev) :  00000056 00000003
+                  | + function block  :  00000038 00000002
+                  |  Already listed
+  08                waitForClearThePage
+                    | Stack used (prev) :  00000056 00000003
+                    | + function block  :  00000000 00000000
+  08                halFlashDmaTrigger
+                    | Stack used (prev) :  00000056 00000003
+                    | + function block  :  00000000 00000000
+  07              initiateTransfer
+                  | Stack used (prev) :  00000056 00000003
+                  | + function block  :  00000014 00000000
+  06            savePB
+                | Stack used (prev) :  0000008E 00000005
+                | + function block  :  00000009 00000004
+  06            tickWait
+                | Stack used (prev) :  00000056 00000003
+                | + function block  :  00000038 00000002
+                |  Already listed
+  06            ov_startup
+                | Stack used (prev) :  00000056 00000003
+                | + function block  :  00000009 00000002
+  06            ov_startup
+                | Stack used (prev) :  00000056 00000003
+                | + function block  :  00000009 00000002
+                |  Already listed
+  06            ov_startup
+                | Stack used (prev) :  00000056 00000003
+                | + function block  :  00000009 00000002
+                |  Already listed
+  07              zerofill
+                  | Stack used (prev) :  00000000 00000000
+                  | + function block  :  00000000 00000003
+                  |  Already listed
+  08                addDF
+                    | Stack used (prev) :  00000056 00000003
+                    | + function block  :  0000000F 00000001
+                    |  Already listed
+  08                receive
+                    | Stack used (prev) :  00000056 00000003
+                    | + function block  :  00000038 00000002
+                    |  Already listed
+  12                        mymemcpy
+                            | Stack used (prev) :  00000000 00000000
+                            | + function block  :  00000008 00000001
+                            |  Already listed
+  12                        zerofill
+                            | Stack used (prev) :  00000000 00000000
+                            | + function block  :  00000000 00000003
+                            |  Already listed
+  11                      radioConfigure
+                          | Stack used (prev) :  00000056 00000003
+                          | + function block  :  00000008 00000000
+  11                      tickWait
+                          | Stack used (prev) :  00000056 00000003
+                          | + function block  :  00000038 00000002
+                          |  Already listed
+  10                    setupRadioDR
+                        | Stack used (prev) :  0000008E 00000005
+                        | + function block  :  00000010 00000000
+  09                  setupRadio
+                      | Stack used (prev) :  0000009E 00000005
+                      | + function block  :  00000009 00000004
+  09                  setupRadioDR
+                      | Stack used (prev) :  0000008E 00000005
+                      | + function block  :  00000010 00000000
+                      |  Already listed
+  08                setupRepeater
+                    | Stack used (prev) :  000000A7 00000009
+                    | + function block  :  00000038 00000004
+  07              computeADCs
+                  | Stack used (prev) :  000000DF 0000000D
+                  | + function block  :  00000026 00000000
+  07              setupRadio
+                  | Stack used (prev) :  0000009E 00000005
+                  | + function block  :  00000009 00000004
+                  |  Already listed
+  08                mymemcpy
+                    | Stack used (prev) :  00000000 00000000
+                    | + function block  :  00000008 00000001
+                    |  Already listed
+  07              def_freq
+                  | Stack used (prev) :  00000056 00000003
+                  | + function block  :  00000008 00000000
+  06            softKick
+                | Stack used (prev) :  00000105 0000000D
+                | + function block  :  00000009 00000004
+  06            setupRadio
+                | Stack used (prev) :  0000009E 00000005
+                | + function block  :  00000009 00000004
+                |  Already listed
+  06            setupRadio
+                | Stack used (prev) :  0000009E 00000005
+                | + function block  :  00000009 00000004
+                |  Already listed
+  06            setup_hopper
+                | Stack used (prev) :  00000056 00000003
+                | + function block  :  0000000F 00000001
+  05          setByte
+              | Stack used (prev) :  0000010E 00000011
+              | + function block  :  00000020 00000000
+  05          tickWait
+              | Stack used (prev) :  00000056 00000003
+              | + function block  :  00000038 00000002
+              |  Already listed
+  05          initiateTransfer
+              | Stack used (prev) :  00000056 00000003
+              | + function block  :  00000014 00000000
+              |  Already listed
+  04        parseCommands
+            | Stack used (prev) :  0000012E 00000011
+            | + function block  :  00000054 00000000
+  04        receive
+            | Stack used (prev) :  00000056 00000003
+            | + function block  :  00000038 00000002
+            |  Already listed
+  05          setupRepeater
+              | Stack used (prev) :  000000A7 00000009
+              | + function block  :  00000038 00000004
+              |  Already listed
+  04        sendData
+            | Stack used (prev) :  000000DF 0000000D
+            | + function block  :  00000038 00000004
+  04        sendData
+            | Stack used (prev) :  000000DF 0000000D
+            | + function block  :  00000038 00000004
+            |  Already listed
+  04        reset_kicks
+            | Stack used (prev) :  00000056 00000003
+            | + function block  :  00000038 00000002
+            |  Already listed
+  04        tickWait
+            | Stack used (prev) :  00000056 00000003
+            | + function block  :  00000038 00000002
+            |  Already listed
+  04        setupRepeater
+            | Stack used (prev) :  000000A7 00000009
+            | + function block  :  00000038 00000004
+            |  Already listed
+  04        abs
+            | Stack used (prev) :  00000056 00000003
+            | + function block  :  00000038 00000000
+  04        abs
+            | Stack used (prev) :  00000056 00000003
+            | + function block  :  00000038 00000000
+            |  Already listed
+  05          wait_aes
+              | Stack used (prev) :  00000056 00000003
+              | + function block  :  00000000 00000000
+  05          load
+              | Stack used (prev) :  00000056 00000003
+              | + function block  :  00000000 00000002
+  04        code
+            | Stack used (prev) :  00000056 00000005
+            | + function block  :  00000000 00000004
+  04        wait_aes
+            | Stack used (prev) :  00000056 00000003
+            | + function block  :  00000000 00000000
+            |  Already listed
+  04        load
+            | Stack used (prev) :  00000056 00000003
+            | + function block  :  00000000 00000002
+            |  Already listed
+  03      parseGWPackage
+          | Stack used (prev) :  00000182 00000011
+          | + function block  :  00000079 00000000
+  03      sendData
+          | Stack used (prev) :  000000DF 0000000D
+          | + function block  :  00000038 00000004
+          |  Already listed
+  04        copyMac
+            | Stack used (prev) :  00000008 00000001
+            | + function block  :  00000008 00000000
+            |  Already listed
+  05          code
+              | Stack used (prev) :  00000056 00000005
+              | + function block  :  00000000 00000004
+              |  Already listed
+  05          wait_aes
+              | Stack used (prev) :  00000056 00000003
+              | + function block  :  00000000 00000000
+              |  Already listed
+  05          load
+              | Stack used (prev) :  00000056 00000003
+              | + function block  :  00000000 00000002
+              |  Already listed
+  04        prepareTxBuffer
+            | Stack used (prev) :  00000056 00000009
+            | + function block  :  00000008 00000004
+  03      prepareJoinRequest
+          | Stack used (prev) :  0000005E 0000000D
+          | + function block  :  00000009 00000004
+  04        mymemcpy
+            | Stack used (prev) :  00000000 00000000
+            | + function block  :  00000008 00000001
+            |  Already listed
+  04        computeADCs
+            | Stack used (prev) :  000000DF 0000000D
+            | + function block  :  00000026 00000000
+            |  Already listed
+  04        prepareScaling
+            | Stack used (prev) :  0000003E 00000001
+            | + function block  :  00000018 00000000
+            |  Already listed
+  05          prepareSpecial
+              | Stack used (prev) :  00000010 00000001
+              | + function block  :  0000002E 00000000
+              |  Already listed
+  04        prepareFlashCheck
+            | Stack used (prev) :  0000003E 00000003
+            | + function block  :  00000044 00000001
+  04        copyMac
+            | Stack used (prev) :  00000008 00000001
+            | + function block  :  00000008 00000000
+            |  Already listed
+  04        prepareTxBuffer
+            | Stack used (prev) :  00000056 00000009
+            | + function block  :  00000008 00000004
+            |  Already listed
+  03      prepareData
+          | Stack used (prev) :  00000105 0000000D
+          | + function block  :  00000019 00000000
+  03      setupRepeater
+          | Stack used (prev) :  000000A7 00000009
+          | + function block  :  00000038 00000004
+          |  Already listed
+  03      setupRepeater
+          | Stack used (prev) :  000000A7 00000009
+          | + function block  :  00000038 00000004
+          |  Already listed
+  03      setupRepeater
+          | Stack used (prev) :  000000A7 00000009
+          | + function block  :  00000038 00000004
+          |  Already listed
+  03      softKick
+          | Stack used (prev) :  00000105 0000000D
+          | + function block  :  00000009 00000004
+          |  Already listed
+  03      setupRadio
+          | Stack used (prev) :  0000009E 00000005
+          | + function block  :  00000009 00000004
+          |  Already listed
+  03      setupRadio
+          | Stack used (prev) :  0000009E 00000005
+          | + function block  :  00000009 00000004
+          |  Already listed
+  03      setupRadio
+          | Stack used (prev) :  0000009E 00000005
+          | + function block  :  00000009 00000004
+          |  Already listed
+  03      hop
+          | Stack used (prev) :  00000056 00000003
+          | + function block  :  00000000 00000002
+  02    main_loop
+        | Stack used (prev) :  000001FB 00000011
+        | + function block  :  00000012 00000000
+  02    tickWait
+        | Stack used (prev) :  00000056 00000003
+        | + function block  :  00000038 00000002
+        |  Already listed
+  03      mymemcpy
+          | Stack used (prev) :  00000000 00000000
+          | + function block  :  00000008 00000001
+          |  Already listed
+  02    read_page
+        | Stack used (prev) :  00000056 00000003
+        | + function block  :  00000000 00000002
+  02    ov_startup
+        | Stack used (prev) :  00000056 00000003
+        | + function block  :  00000009 00000002
+        |  Already listed
+  03      zerofill
+          | Stack used (prev) :  00000000 00000000
+          | + function block  :  00000000 00000003
+          |  Already listed
+  03      setupRadio
+          | Stack used (prev) :  0000009E 00000005
+          | + function block  :  00000009 00000004
+          |  Already listed
+  03      def_freq
+          | Stack used (prev) :  00000056 00000003
+          | + function block  :  00000008 00000000
+          |  Already listed
+  03      setup_hopper
+          | Stack used (prev) :  00000056 00000003
+          | + function block  :  0000000F 00000001
+          |  Already listed
+  03      halWait
+          | Stack used (prev) :  00000056 00000003
+          | + function block  :  00000000 00000000
+          |  Already listed
+  03      dmaRadioSetup
+          | Stack used (prev) :  00000056 00000003
+          | + function block  :  00000000 00000002
+  02    init
+        | Stack used (prev) :  000000A7 00000009
+        | + function block  :  00000010 00000000
+  02    softKick
+        | Stack used (prev) :  00000105 0000000D
+        | + function block  :  00000009 00000004
+        |  Already listed
+  02    wait_aes
+        | Stack used (prev) :  00000056 00000003
+        | + function block  :  00000000 00000000
+        |  Already listed
+  02    load
+        | Stack used (prev) :  00000056 00000003
+        | + function block  :  00000000 00000002
+        |  Already listed
+  01  main
+      | Stack used (prev) :  0000020D 00000011
+      | + function block  :  00000000 00000000
+  <-Sub-tree of type: Function tree
+    | Stack used          :  0000020D 00000011
+
+
+
+
+                ****************************************
+                *                                      *
+                *      SEGMENTS IN ADDRESS ORDER       *
+                *                                      *
+                ****************************************
+
+
+SEGMENT              SPACE    START ADDRESS   END ADDRESS     SIZE  TYPE  ALIGN
+=======              =====    =============   ===========     ====  ====  =====
+INTVEC               CODE          00000000 - 00000002           3   com    0
+CSTART               CODE          00006000 - 00006057          58   rel    0
+RCODE                CODE          00006058 - 00006398         341   rel    0
+NEAR_CODE            CODE          00006399 - 00007F56        1BBE   rel    0
+IXDATA_ID            CODE               00007F57                     dse    0
+DATA_ID              CODE               00007F57                     dse    0
+BDATA_ID             CODE               00007F57                     dse    0
+PDATA_ID             CODE               00007F57                     dse    0
+BIT_ID               CODE               00007F57                     dse    0
+IDATA_ID             CODE               00007F57                     dse    0
+XDATA_ID             CODE          00007F57 - 00007F9A          44   rel    0
+XDATA_ROM_C          CODE          00007F9B - 00007FC3          29   rel    0
+REGISTERS            DATA          00000000 - 00000007           8   rel    0
+BREG                 BIT        00000020.0  -  00000020.7        8   rel    0
+VREG                 DATA          00000021 - 00000040          20   rel    0
+PSP                  DATA               00000041                     dse    0
+XSP                  DATA          00000041 - 00000042           2   rel    0
+SFR_AN               DATA          0000008F - 00000091           3   rel    0
+                     DATA          0000009A - 0000009B           2 
+                     DATA          000000A8 - 000000A8           1 
+                     DATA          000000AB - 000000AE           4 
+                     DATA          000000B1 - 000000B4           4 
+                     DATA          000000B6 - 000000B6           1 
+                     DATA          000000B8 - 000000B8           1 
+                     DATA          000000BA - 000000BE           5 
+                     DATA          000000C6 - 000000C6           1 
+                     DATA          000000C9 - 000000C9           1 
+                     DATA          000000CB - 000000CB           1 
+                     DATA          000000CD - 000000CD           1 
+                     DATA          000000CF - 000000CF           1 
+                     DATA          000000D1 - 000000D6           6 
+                     DATA          000000E1 - 000000E1           1 
+                     DATA          000000E9 - 000000E9           1 
+                     DATA          000000F2 - 000000F3           2 
+                     DATA          000000FD - 000000FD           1 
+XSTACK               XDATA         0000F600 - 0000F7FF         200   rel    0
+XDATA_N              XDATA              0000F800                     dse    0
+XDATA_Z              XDATA         0000F800 - 0000F9EB         1EC   rel    0
+XDATA_I              XDATA         0000F9EC - 0000FA2F          44   rel    0
+ISTACK               IDATA         00000046 - 000000AF          6A   rel    0
+
+                ****************************************
+                *                                      *
+                *        END OF CROSS REFERENCE        *
+                *                                      *
+                ****************************************
+
+ 8 135 bytes of CODE  memory
+    42 bytes of DATA  memory (+ 37 absolute )
+ 1 072 bytes of XDATA memory
+   106 bytes of IDATA memory
+     8 bits  of BIT   memory
+
+Errors: none
+Warnings: none
+

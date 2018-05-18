@@ -1,0 +1,3833 @@
+;-----------------------------------------------------------------------------
+;
+;	File:		iar_stack_parameter.s51
+;
+;	Version:	6.10
+;
+;	Created:	12/Mar/02 IANB
+;	Revised:
+;
+;
+;	Description:	This file contain the functions to push parameters
+;			on stack before a call.
+;
+;                       When using XDATA stack there are two ways of assamble
+;                       the PUSH-routine.
+;                       Use the assambler option:
+;                         -D__NUMBER_OF_DPTRS__= 2 : to get a routine to take advantage of 2-DPTRs.
+;                         -D__NUMBER_OF_DPTRS__= 1 :  to get a routine that uses only 1 DPTR.
+;                        
+;       REVISON INFORMATION                                 
+;                                                           
+;                                                           
+;       Log information is available at the end of this file
+;-----------------------------------------------------------------------------
+
+#include "iar_common.h"
+
+#define GP1L	R1
+#define	GP1M	R2
+#define GP1H	R3
+
+#define GP2L	R4
+#define	GP2M	R5
+#define GP2H	R6
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Push element(s) from any memory on IDATA stack.
+;	           ?PUSH_ISTACK_I
+;	           ?PUSH_ISTACK_P
+;                  ?PUSH_ISTACK_X
+;                  ?PUSH_ISTACK_C
+;
+;       Description:
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;	Function: ?PUSH_ISTACK_I
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		R1    = Nr of elements to push
+;		@R0  = Address to the first element.
+;
+;	Register output:
+;		A     = 0
+;		R1    = 0
+;		R0    = Address to the first element - Nr of elems.
+;		DPTR = Return address
+;
+;       DPTR:
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_ISTACK_I
+	RSEG	RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	PUBLIC	?PUSH_ISTACK_I
+	PUBLIC	?PUSH_ISTACK_I_FOUR
+	PUBLIC	?PUSH_ISTACK_I_THREE
+	; ----------------------------------------------------------------------------
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_I_FOUR
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS()
+    cfi CFA_MACHINE add(MACHINE_SP, sub(4, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 4
+?PUSH_ISTACK_I_FOUR:
+	MOV	R1,#0x4
+	SJMP	?PUSH_ISTACK_I
+	REQUIRE	?PUSH_ISTACK_I
+	cfi_DATA_BLOCK_end ?PUSH_ISTACK_I_FOUR
+
+; ----------------------------------------------------------------------------
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_I_THREE
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS()
+    cfi CFA_MACHINE add(MACHINE_SP, sub(3, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 3
+?PUSH_ISTACK_I_THREE:
+	MOV	R1,#0x3
+	REQUIRE	?PUSH_ISTACK_I
+	cfi_DATA_BLOCK_end ?PUSH_ISTACK_I_THREE
+
+; ----------------------------------------------------------------------------
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_I
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS()
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R1, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_REG_DEPEND R1
+?PUSH_ISTACK_I:
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R1, 2))
+    cfi ?RET_EXT DPX0
+#endif
+	POP	DPH
+    cfi ?RET_HIGH DPH0
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R1, 1))
+	POP	DPL
+    cfi ?RET_LOW DPL0
+    cfi CFA_MACHINE add(MACHINE_SP, R1)
+LOOP:
+	MOV	A,@R0
+	PUSH	A
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R1, 1))
+	INC	R0
+	DJNZ	R1,LOOP
+    cfi CFA_MACHINE MACHINE_SP
+	CLR	A
+	JMP	@A+DPTR
+
+	cfi_DATA_BLOCK_end ?PUSH_ISTACK_I
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_ISTACK_P
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		R1    = Nr of elements to push
+;		@R0  = Address to the first element.
+;
+;	Register output:
+;		A    = 0
+;		R0   = Address to the first element - Nr of elems.
+;		R1   = 0
+;		DPTR = Return address
+;
+;       DPTR:
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_ISTACK_P
+	RSEG	RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	PUBLIC	?PUSH_ISTACK_P
+	PUBLIC	?PUSH_ISTACK_P_FOUR
+	PUBLIC	?PUSH_ISTACK_P_THREE
+	PUBLIC	?PUSH_ISTACK_P_TWO
+	PUBLIC	?PUSH_ISTACK_P_ONE
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_P_FOUR
+    cfi R1 undefined
+    cfi CFA_MACHINE add(MACHINE_SP, sub(4, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 4
+?PUSH_ISTACK_P_FOUR:
+	MOV	R1,#0x4
+	SJMP	?PUSH_ISTACK_P
+	REQUIRE	?PUSH_ISTACK_P
+	cfi_DATA_BLOCK_end ?PUSH_ISTACK_P_FOUR
+
+; ----------------------------------------------------------------------------
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_P_THREE
+    cfi R1 undefined
+    cfi CFA_MACHINE add(MACHINE_SP, sub(3, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 3
+?PUSH_ISTACK_P_THREE:
+	MOV	R1,#0x3
+	SJMP	?PUSH_ISTACK_P
+	REQUIRE	?PUSH_ISTACK_P
+	cfi_DATA_BLOCK_end ?PUSH_ISTACK_P_THREE
+
+; ----------------------------------------------------------------------------
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_P_TWO
+    cfi R1 undefined
+    cfi CFA_MACHINE add(MACHINE_SP, sub(2, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 2
+?PUSH_ISTACK_P_TWO:
+	MOV	R1,#0x2
+	SJMP	?PUSH_ISTACK_P
+	REQUIRE	?PUSH_ISTACK_P
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_P_TWO
+
+; ----------------------------------------------------------------------------
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_P_ONE
+    cfi R1 undefined
+    cfi CFA_MACHINE add(MACHINE_SP, sub(1, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 1
+?PUSH_ISTACK_P_ONE:
+	MOV	R1,#0x1
+	REQUIRE	?PUSH_ISTACK_P
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_P_ONE
+
+; ----------------------------------------------------------------------------
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_P
+    cfi A  undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R1, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_REG_DEPEND R1
+?PUSH_ISTACK_P:
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R1, 2))
+    cfi ?RET_EXT DPX0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R1, 1))
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE add(MACHINE_SP, R1)
+    cfi ?RET_LOW DPL0
+LOOP:
+	MOVX	A,@R0
+	PUSH	A
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R1,1))
+	INC	R0
+	DJNZ	R1,LOOP
+    cfi CFA_MACHINE MACHINE_SP
+	CLR	A
+	JMP	@A+DPTR
+	cfi_DATA_BLOCK_end ?PUSH_ISTACK_P
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_ISTACK_X
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		R0     = Nr of elements to push
+;		DPTR   = Address to the first element.
+;
+;	Register output:
+;		A    = 0
+;		R0   = 0
+;		V0   = Ret low
+;		V1   = Ret High
+;		V2   = Ret Ext
+;		DPTR = Return address
+;
+;       DPTR:
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_ISTACK_X
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?V0
+	PUBLIC	?PUSH_ISTACK_X_FOUR
+	PUBLIC	?PUSH_ISTACK_X_THREE
+	PUBLIC	?PUSH_ISTACK_X_TWO
+	PUBLIC	?PUSH_ISTACK_X_ONE
+	PUBLIC	?PUSH_ISTACK_X
+	
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_X_FOUR
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS()
+    cfi CFA_MACHINE add(MACHINE_SP, sub(4, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 4
+?PUSH_ISTACK_X_FOUR:
+	MOV	R0,#0x4
+	SJMP	?PUSH_ISTACK_X
+	REQUIRE	?PUSH_ISTACK_X
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_X_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_X_THREE
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS()
+    cfi CFA_MACHINE add(MACHINE_SP, sub(3, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 3
+?PUSH_ISTACK_X_THREE:
+	MOV	R0,#0x3
+	SJMP	?PUSH_ISTACK_X
+	REQUIRE	?PUSH_ISTACK_X
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_X_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_X_TWO
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS()
+    cfi CFA_MACHINE add(MACHINE_SP, sub(2, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 2
+?PUSH_ISTACK_X_TWO:
+	MOV	R0,#0x2
+	SJMP	?PUSH_ISTACK_X
+	REQUIRE	?PUSH_ISTACK_X
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_X_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_X_ONE
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS()
+    cfi CFA_MACHINE add(MACHINE_SP, sub(1, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 1
+?PUSH_ISTACK_X_ONE:
+	MOV	R0,#0x1
+	REQUIRE	?PUSH_ISTACK_X
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_X_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?DPX
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_X
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS()
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_REG_DEPEND R0
+
+?PUSH_ISTACK_X:
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?V0+2
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,2))
+    cfi ?RET_EXT V2
+#endif
+	POP	?V0+1
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+    cfi ?RET_HIGH V1
+	POP	?V0+0
+    cfi CFA_MACHINE add(MACHINE_SP, R0)
+    cfi ?RET_LOW V0
+LOOP:
+	MOVX	A,@DPTR
+	PUSH	A
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+	INC	DPTR
+	DJNZ	R0,LOOP
+    cfi CFA_MACHINE MACHINE_SP
+	MOV	DPL,?V0
+    cfi ?RET_LOW DPL0
+	MOV	DPH,?V0+1
+    cfi ?RET_HIGH DPH0
+#if (__CORE__ == __CORE_EXTENDED1__)
+	MOV	?DPX,?V0+2
+    cfi ?RET_EXT DPX0
+#endif
+	CLR	A
+	JMP	@A+DPTR
+
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_X
+	ENDMOD
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_ISTACK_X_2DPTR
+;
+;	Register input:
+;		R0     = Nr of elements to push
+;               DPTR1  = Address to the first element.
+;               DPSEL  = DPTR1
+;
+;	Register output:
+;		A     = 0
+;		R0    = 0
+;		DPTR0 = Return address
+;		DPTR1 = Undefined
+;
+;       Multiple DPTR:
+;               Shadowed:       Requires DPTR: pair     Requires DPS: high
+;                               Modifies DPTR: pair     Returns  DPS: low
+;
+;               Separate:       Requires DPTR: 0,1      Requires DPS: 1
+;                               Modifies DPTR: 0,1      Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+
+	MODULE	?PUSH_ISTACK_X_2DPTR
+	RSEG	RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?V0
+	PUBLIC	?PUSH_ISTACK_X_FOUR_2DPTR
+	PUBLIC	?PUSH_ISTACK_X_THREE_2DPTR
+	PUBLIC	?PUSH_ISTACK_X_TWO_2DPTR
+	PUBLIC	?PUSH_ISTACK_X_ONE_2DPTR
+	PUBLIC	?PUSH_ISTACK_X_2DPTR
+	
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_X_FOUR_2DPTR
+    cfi R0 undefined
+    cfi CFA_MACHINE add(MACHINE_SP, sub(4, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 4
+?PUSH_ISTACK_X_FOUR_2DPTR:
+	MOV	R0,#0x4
+	SJMP	?PUSH_ISTACK_X_2DPTR
+	REQUIRE	?PUSH_ISTACK_X_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_X_FOUR_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_X_THREE_2DPTR
+    cfi R0 undefined
+    cfi CFA_MACHINE add(MACHINE_SP, sub(3, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 3
+?PUSH_ISTACK_X_THREE_2DPTR:
+	MOV	R0,#0x3
+	SJMP	?PUSH_ISTACK_X_2DPTR
+	REQUIRE	?PUSH_ISTACK_X_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_X_THREE_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_X_TWO_2DPTR
+    cfi R0 undefined
+    cfi CFA_MACHINE add(MACHINE_SP, sub(2, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 2
+?PUSH_ISTACK_X_TWO_2DPTR:
+	MOV	R0,#0x2
+	SJMP	?PUSH_ISTACK_X_2DPTR
+	REQUIRE	?PUSH_ISTACK_X_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_X_TWO_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_X_ONE_2DPTR
+    cfi R0 undefined
+    cfi CFA_MACHINE add(MACHINE_SP, sub(1, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 2
+?PUSH_ISTACK_X_ONE_2DPTR:
+	MOV	R0,#0x1
+	REQUIRE	?PUSH_ISTACK_X_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_X_ONE_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_X_2DPTR
+    cfi A undefined
+    cfi R0 undefined
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_REG_DEPEND R0
+?PUSH_ISTACK_X_2DPTR:
+
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR() ; Select DPTR0
+#endif
+
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,2))
+    cfi ?RET_EXT DPX0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE add(MACHINE_SP, R0)
+    cfi ?RET_LOW DPL0
+
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR() ; Select DPTR1
+#endif
+
+LOOP:
+	MOVX	A,@DPTR
+	PUSH	A
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+	INC	DPTR
+	DJNZ	R0,LOOP
+    cfi CFA_MACHINE MACHINE_SP
+	TOGGLE_DPTR() ; Select DPTR0
+	CLR	A
+	JMP	@A+DPTR
+
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_X_2DPTR
+	ENDMOD
+#elif (!defined(__NUMBER_OF_DPTRS__))
+#error "You must define __NUMBER_OF_DPTRS__"
+#endif
+
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_ISTACK_C
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		R0     = Nr of elements to push
+;		@DPTR  = Address to the first element.
+;
+;	Register output:
+;		A    = 0
+;		R0   = 0
+;		V0   = Ret low
+;		V1   = Ret High
+;		DPTR = Return address
+;
+;       DPTR:
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;              
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_ISTACK_C
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?V0
+	PUBLIC	?PUSH_ISTACK_C_FOUR
+	PUBLIC	?PUSH_ISTACK_C_THREE
+	PUBLIC	?PUSH_ISTACK_C_TWO
+	PUBLIC	?PUSH_ISTACK_C_ONE
+	PUBLIC	?PUSH_ISTACK_C
+        EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_C_FOUR
+    cfi CFA_MACHINE add(MACHINE_SP, sub(4, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 4
+?PUSH_ISTACK_C_FOUR:
+	MOV	R0,#0x4
+	SJMP	?PUSH_ISTACK_C
+	REQUIRE	?PUSH_ISTACK_C
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_C_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_C_THREE
+    cfi CFA_MACHINE add(MACHINE_SP, sub(3, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 3
+?PUSH_ISTACK_C_THREE:
+	MOV	R0,#0x3
+	SJMP	?PUSH_ISTACK_C
+	REQUIRE	?PUSH_ISTACK_C
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_C_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_C_TWO
+    cfi CFA_MACHINE add(MACHINE_SP, sub(2, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 2
+?PUSH_ISTACK_C_TWO:
+	MOV	R0,#0x2
+	SJMP	?PUSH_ISTACK_C
+	REQUIRE	?PUSH_ISTACK_C
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_C_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_C_ONE
+    cfi CFA_MACHINE add(MACHINE_SP, sub(1, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 1
+?PUSH_ISTACK_C_ONE:
+	MOV	R0,#0x1
+	REQUIRE	?PUSH_ISTACK_C
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_C_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_C
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_REG_DEPEND R0
+?PUSH_ISTACK_C:
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?V0+2
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,2))
+    cfi ?RET_HIGH V2
+#endif
+	POP	?V0+1
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+    cfi ?RET_HIGH V1
+	POP	?V0+0
+    cfi CFA_MACHINE add(MACHINE_SP, R0)
+    cfi ?RET_LOW V0
+
+LOOP:
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+	INC	DPTR
+	DJNZ	R0,LOOP
+    cfi CFA_MACHINE MACHINE_SP
+	MOV	DPL,?V0
+    cfi ?RET_LOW DPL0
+	MOV	DPH,?V0+1
+    cfi ?RET_HIGH DPH0
+#if (__CORE__ == __CORE_EXTENDED1__)
+	MOV	?DPX,?V0+2
+    cfi ?RET_EXT DPX0
+#endif
+	CLR	A
+	JMP	@A+DPTR
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_C
+	ENDMOD
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_ISTACK_C_2DPTR
+;
+;	Register input:
+;		R0     = Nr of elements to push
+;               DPTR1  = Address to the first element.
+;               DPSEL  = DPTR1
+;
+;	Register output:
+;		A     = 0
+;		R0    = 0
+;		DPTR0 = Return address
+;		DPTR1 = Undefined
+;
+;       Multiple DPTR:
+;               Shadowed:       Requires DPTR: pair     Requires DPS: high
+;                               Modifies DPTR: pair     Returns  DPS: low
+;
+;               Separate:       Requires DPTR: 0,1      Requires DPS: 1
+;                               Modifies DPTR: 0,1      Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_ISTACK_C
+	RSEG	RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?V0
+	PUBLIC	?PUSH_ISTACK_C_FOUR_2DPTR
+	PUBLIC	?PUSH_ISTACK_C_THREE_2DPTR
+	PUBLIC	?PUSH_ISTACK_C_TWO_2DPTR
+	PUBLIC	?PUSH_ISTACK_C_ONE_2DPTR
+	PUBLIC	?PUSH_ISTACK_C_2DPTR
+	
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_C_FOUR_2DPTR
+    cfi CFA_MACHINE add(MACHINE_SP, sub(4, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 4
+?PUSH_ISTACK_C_FOUR_2DPTR:
+	MOV	R0,#0x4
+	SJMP	?PUSH_ISTACK_C_2DPTR
+	REQUIRE	?PUSH_ISTACK_C_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_C_FOUR_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_C_THREE_2DPTR
+    cfi CFA_MACHINE add(MACHINE_SP, sub(3, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 3
+?PUSH_ISTACK_C_THREE_2DPTR:
+	MOV	R0,#0x3
+	SJMP	?PUSH_ISTACK_C_2DPTR
+	REQUIRE	?PUSH_ISTACK_C_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_C_THREE_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_C_TWO_2DPTR
+    cfi CFA_MACHINE add(MACHINE_SP, sub(2, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 2
+?PUSH_ISTACK_C_TWO_2DPTR:
+	MOV	R0,#0x2
+	SJMP	?PUSH_ISTACK_C_2DPTR
+	REQUIRE	?PUSH_ISTACK_C_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_C_TWO_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_C_ONE_2DPTR
+    cfi CFA_MACHINE add(MACHINE_SP, sub(1, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 1
+?PUSH_ISTACK_C_ONE_2DPTR:
+	MOV	R0,#0x1
+	REQUIRE	?PUSH_ISTACK_C_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_C_ONE_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_C_2DPTR
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_REG_DEPEND R0
+?PUSH_ISTACK_C_2DPTR:
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR() ; Select DPTR0
+#endif
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,2))
+    cfi ?RET_HIGH DPX0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE add(MACHINE_SP, R0)
+    cfi ?RET_LOW DPL0
+
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR() ; Select DPTR1
+#endif
+
+LOOP:
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+	INC	DPTR
+	DJNZ	R0,LOOP
+    cfi CFA_MACHINE MACHINE_SP
+	TOGGLE_DPTR() ; Select DPTR0
+
+	CLR	A
+	JMP	@A+DPTR
+
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_C_2DPTR
+	ENDMOD
+
+#elif (!defined(__NUMBER_OF_DPTRS__))
+#error "You must define __NUMBER_OF_DPTRS__"
+#endif
+
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_ISTACK_G
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		R7       = Nr of elements to push
+;		R3:R2:R1 = pointer to src
+;
+;	Register output:
+;		R7   = 0
+;		V0   = Ret low
+;		V1   = Ret High
+;		(V2   = Ret Ext)
+;		A    = Undefined
+;               R1   = Undefined
+;               R2   = Undefined
+;               R3   = Undefined
+;               DPTR = Undefined
+;
+;	Registers changed:
+;		A
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_ISTACK_G
+	RSEG	RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?V0
+	PUBLIC	?PUSH_ISTACK_G_FOUR
+	PUBLIC	?PUSH_ISTACK_G_THREE
+	PUBLIC	?PUSH_ISTACK_G_TWO
+	PUBLIC	?PUSH_ISTACK_G_ONE
+	PUBLIC	?PUSH_ISTACK_G
+	
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_G_FOUR
+    cfi CFA_MACHINE add(MACHINE_SP, sub(4, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 4
+?PUSH_ISTACK_G_FOUR:
+	MOV	R7,#0x4
+	SJMP	?PUSH_ISTACK_G
+	REQUIRE	?PUSH_ISTACK_G
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_G_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_G_THREE
+    cfi CFA_MACHINE add(MACHINE_SP, sub(3, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 3
+?PUSH_ISTACK_G_THREE:
+	MOV	R7,#0x3
+	SJMP	?PUSH_ISTACK_G
+	REQUIRE	?PUSH_ISTACK_G
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_G_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_G_TWO
+    cfi CFA_MACHINE add(MACHINE_SP, sub(2, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 2
+?PUSH_ISTACK_G_TWO:
+	MOV	R7,#0x2
+	SJMP	?PUSH_ISTACK_G
+	REQUIRE	?PUSH_ISTACK_G
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_G_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_G_ONE
+    cfi CFA_MACHINE add(MACHINE_SP, sub(1, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND 1
+?PUSH_ISTACK_G_ONE:
+	MOV	R7,#0x1
+	REQUIRE	?PUSH_ISTACK_G
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_G_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK_G
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R7, __SIZE_OF_RETADDR__))
+    cfi_PUSH_ISTACK_RET_DEFS_REG_DEPEND R7
+?PUSH_ISTACK_G:
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?V0+2
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,2))
+    cfi ?RET_EXT V2
+#endif
+	POP	?V0+1
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+    cfi ?RET_HIGH V1
+	POP	?V0+0
+    cfi CFA_MACHINE add(MACHINE_SP, R0)
+    cfi ?RET_LOW V0
+	CJNE	GP1H,#0x01,NOT_IDATA
+
+	; push IDATA object
+
+LOOP_IDATA:
+	MOV	A,@R1
+	PUSH	A
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+	INC	R1
+	DJNZ	R7,LOOP_IDATA
+    cfi CFA_MACHINE MACHINE_SP
+
+	SJMP	MAKE_RETURN
+
+    cfi CFA_MACHINE add(MACHINE_SP, R0)
+NOT_IDATA: ; CODE or XDATA object
+
+	; setup src
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX,#0
+#endif
+
+	CJNE	GP1H,#0x00,NOT_XDATA
+
+	; push XDATA object
+
+    cfi CFA_MACHINE add(MACHINE_SP, R0)
+LOOP_XDATA:
+	MOVX	A,@DPTR
+	PUSH	A
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+	INC	DPTR
+	DJNZ	R7,LOOP_XDATA
+    cfi CFA_MACHINE MACHINE_SP
+	SJMP	MAKE_RETURN
+
+NOT_XDATA:
+	; push CODE object
+
+    cfi CFA_MACHINE add(MACHINE_SP, R0)
+LOOP_CODE:
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+    cfi CFA_MACHINE add(MACHINE_SP, sub(R0,1))
+	INC	DPTR
+	DJNZ	R7,LOOP_CODE
+    cfi CFA_MACHINE MACHINE_SP
+
+MAKE_RETURN:
+
+	PUSH	?V0+0
+    cfi CFA_MACHINE add(MACHINE_SP, 1)
+    cfi ?RET_LOW frame(CFA_MACHINE, 1)
+	PUSH	?V0+1
+    cfi CFA_MACHINE add(MACHINE_SP, 2)
+    cfi ?RET_HIGH frame(CFA_MACHINE, 2)
+#if (__CORE__ == __CORE_EXTENDED1__)
+	PUSH	?V0+2
+    cfi CFA_MACHINE add(MACHINE_SP, 3)
+    cfi ?RET_EXT frame(CFA_MACHINE, 3)
+#endif
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK_G
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_ISTACK16_X
+;
+;	Description: Push a block of bytes, max 64k bytes.
+;
+;	Register input:
+;		R0     = Nr of elements to push (low)
+;		R3     = Nr of elements to push (high +1)
+;		DPTR   = Address to the first element.
+;
+;	Register output:
+;		A    = 0
+;		R0   = 0
+;		R3   = 0
+;		V0   = Ret low
+;		V1   = Ret High
+;		V2   = Ret Ext
+;		DPTR = Return address
+;
+;       DPTR:
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_ISTACK16_X
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?V0
+	EXTERN  ?DPX
+	PUBLIC	?PUSH_ISTACK16_X
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK16_X
+
+?PUSH_ISTACK16_X:
+?PUSH_ISTACK16_X_CFI_INVALID_BEGINS:
+    cfi invalid
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?V0+2
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_EXT V2
+#endif
+	POP	?V0+1
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH V1
+	POP	?V0+0
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW V0
+LOOP:
+	MOVX	A,@DPTR
+	PUSH	A
+	INC	DPTR
+	DJNZ	R0,LOOP
+	DJNZ	R3,LOOP
+
+	MOV	DPL,?V0
+    cfi ?RET_LOW DPL0
+	MOV	DPH,?V0+1
+    cfi ?RET_HIGH DPH0
+#if (__CORE__ == __CORE_EXTENDED1__)
+	MOV	?DPX,?V0+2
+    cfi ?RET_EXT DPX0
+#endif
+	CLR	A
+	JMP	@A+DPTR
+
+?PUSH_ISTACK16_X_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK16_X
+	ENDMOD
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_ISTACK16_X_2DPTR
+;
+;	Description: Push a block of bytes, max 64k bytes.
+;
+;	Register input:
+;		R0     = Nr of elements to push (low)
+;		R3     = Nr of elements to push (high + 1)
+;               DPTR1  = Address to the first element.
+;               DPSEL  = DPTR1
+;
+;	Register output:
+;		A     = 0
+;		R0    = 0
+;		R3    = 0
+;		DPTR0 = Return address
+;		DPTR1 = Undefined
+;
+;       Multiple DPTR:
+;               Shadowed:       Requires DPTR: pair     Requires DPS: high
+;                               Modifies DPTR: pair     Returns  DPS: low
+;
+;               Separate:       Requires DPTR: 0,1      Requires DPS: 1
+;                               Modifies DPTR: 0,1      Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_ISTACK16_X_2DPTR
+	RSEG	RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?V0
+	PUBLIC	?PUSH_ISTACK16_X_2DPTR
+	
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK16_X_2DPTR
+
+
+?PUSH_ISTACK16_X_2DPTR:
+?PUSH_ISTACK16_X_2DPTR_CFI_INVALID_BEGINS:
+    cfi invalid
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR() ; Select DPTR0
+#endif
+
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_EXT DPX0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR() ; Select DPTR1
+#endif
+
+LOOP:
+	MOVX	A,@DPTR
+	PUSH	A
+	INC	DPTR
+	DJNZ	R0,LOOP
+	DJNZ	R3,LOOP
+	TOGGLE_DPTR() ; Select DPTR0
+	CLR	A
+	JMP	@A+DPTR
+
+?PUSH_ISTACK16_X_2DPTR_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK16_X_2DPTR
+	ENDMOD
+
+#elif (!defined(__NUMBER_OF_DPTRS__))
+#error "You must define __NUMBER_OF_DPTRS__"
+#endif
+
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_ISTACK16_C
+;
+;	Description: Push a block of bytes, max 64k bytes.
+;
+;	Register input:
+;		R0     = Nr of elements to push (low)
+;		R3     = Nr of elements to push (high + 1)
+;		@DPTR  = Address to the first element.
+;
+;	Register output:
+;		A    = 0
+;		R0   = 0
+;		R3   = 0
+;		V0   = Ret low
+;		V1   = Ret High
+;		DPTR = Return address
+;
+;       DPTR:
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_ISTACK16_C
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?V0
+	PUBLIC	?PUSH_ISTACK16_C
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK16_C
+?PUSH_ISTACK16_C:
+?PUSH_ISTACK16_C_CFI_INVALID_BEGINS:
+    cfi invalid
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?V0+2
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_HIGH V2
+#endif
+	POP	?V0+1
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH V1
+	POP	?V0+0
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW V0
+LOOP:
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+	INC	DPTR
+	DJNZ	R0,LOOP
+	DJNZ	R3,LOOP
+
+	MOV	DPL,?V0
+    cfi ?RET_LOW DPL0
+	MOV	DPH,?V0+1
+    cfi ?RET_HIGH DPH0
+#if (__CORE__ == __CORE_EXTENDED1__)
+	MOV	?DPX,?V0+2
+    cfi ?RET_EXT DPX0
+#endif
+	CLR	A
+	JMP	@A+DPTR
+?PUSH_ISTACK16_C_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK16_C
+	ENDMOD
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_ISTACK16_C (two DPTR)
+;
+;	Description: Push a block of bytes, max 64k bytes.
+;
+;	Register input:
+;		R0     = Nr of elements to push (low)
+;		R3     = Nr of elements to push (high + 1)
+;               DPTR1  = Address to the first element.
+;               DPSEL  = DPTR1
+;
+;	Register output:
+;		A     = 0
+;		R0    = 0
+;		R3    = 0
+;		DPTR0 = Return address
+;		DPTR1 = Undefined
+;
+;       Multiple DPTR:
+;               Shadowed:       Requires DPTR: pair     Requires DPS: high
+;                               Modifies DPTR: pair     Returns  DPS: low
+;
+;               Separate:       Requires DPTR: 0,1      Requires DPS: 1
+;                               Modifies DPTR: 0,1      Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_ISTACK16_C_2DPTR
+	RSEG	RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?V0
+	PUBLIC	?PUSH_ISTACK16_C_2DPTR
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK16_C_2DPTR
+?PUSH_ISTACK16_C_2DPTR:
+?PUSH_ISTACK16_C_2DPTR_CFI_INVALID_BEGINS:
+    cfi invalid
+#ifdef __DPTR_SHADOWED__
+	SELECT_DPTR0()
+#endif
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_HIGH DPX0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR() ; Select DPTR1
+#endif
+
+LOOP:
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+	INC	DPTR
+	DJNZ	R0,LOOP
+	DJNZ	R3,LOOP
+
+	TOGGLE_DPTR() ; Select DPTR0
+
+	CLR	A
+	JMP	@A+DPTR
+
+?PUSH_ISTACK16_C_2DPTR_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK16_C_2DPTR
+	ENDMOD
+
+#elif (!defined(__NUMBER_OF_DPTRS__))
+#error "You must define __NUMBER_OF_DPTRS__"
+#endif
+
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_ISTACK16_G
+;
+;	Description: Push a block of bytes, max 64k bytes.
+;
+;	Register input:
+;		R7        = Nr of elements to push (low)
+;		R0        = Nr of elements to push (high + 1)
+;		R1:R2:R3  = Address to the first element.
+;
+;	Register output:
+;		A    = Undefined
+;		R0   = 0
+;		R7   = 0
+;		V0   = Ret low
+;		V1   = Ret High
+;		(V2  = Ret Ext)
+;               R1   = Undefined
+;               R2   = Undefined
+;               R3   = Undefined
+;		DPTR = Undefined
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_ISTACK16_G
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?V0
+#ifdef __EXTENDED_DPTR__
+	EXTERN	?DPX
+#endif
+	PUBLIC	?PUSH_ISTACK16_G
+    cfi_DATA_BLOCK_start ?PUSH_ISTACK16_G
+?PUSH_ISTACK16_G:
+?PUSH_ISTACK16_G_CFI_INVALID_BEGINS:
+    cfi invalid
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?V0+2
+	POP	?V0+1
+	POP	?V0+0
+#else
+	POP	?V0+1
+	POP	?V0+0
+#endif
+
+	CJNE	GP1H,#0x01,NOT_IDATA
+
+	; push IDATA object
+
+LOOP_IDATA:
+	MOV	A,@R1
+	PUSH	A
+	INC	R1
+	DJNZ	R7,LOOP_IDATA
+	DJNZ	R0,LOOP_IDATA
+
+	SJMP	MAKE_RETURN
+
+NOT_IDATA: ; CODE or XDATA object
+
+	; setup src
+	MOV	DPL,GP1L
+	MOV	DPH,GP1M
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX,#0
+#endif
+
+	CJNE	GP1H,#0x00,NOT_XDATA
+
+	; push XDATA object
+
+LOOP_XDATA:
+	MOVX	A,@DPTR
+	PUSH	A
+	INC	DPTR
+	DJNZ	R7,LOOP_XDATA
+	DJNZ	R0,LOOP_XDATA
+
+	SJMP	MAKE_RETURN
+
+NOT_XDATA:
+	; push CODE object
+
+LOOP_CODE:
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+	INC	DPTR
+	DJNZ	R7,LOOP_CODE
+	DJNZ	R0,LOOP_CODE
+
+MAKE_RETURN:
+	PUSH	?V0+0
+	PUSH	?V0+1
+#if (__CORE__ == __CORE_EXTENDED1__)
+	PUSH	?V0+2
+#endif
+	RET
+
+?PUSH_ISTACK16_G_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_ISTACK16_G
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Push element(s) from any memory on PDATA stack.
+;	           ?PUSH_PSTACK_I
+;	           ?PUSH_PSTACK_P
+;                  ?PUSH_PSTACK_X
+;                  ?PUSH_PSTACK_C
+;
+;       Description:
+;
+;	        Use PUSH_PSTACK_I_ONE when pushing 1 element.
+;	        Use PUSH_PSTACK_I_TWO when pushing 2 element.
+;	        Use PUSH_PSTACK_I_THREE when pushing 3 element.
+;	        Use PUSH_PSTACK_I_FOUR when pushing 4 element.
+;
+;               NOTE: The above routines does not use R0.
+;
+;	        Use PUSH_PSTACK_P_ONE when pushing 1 element.
+;	        Use PUSH_PSTACK_P_TWO when pushing 2 element.
+;	        Use PUSH_PSTACK_P_THREE when pushing 3 element.
+;	        Use PUSH_PSTACK_P_FOUR when pushing 4 element.
+;
+;               NOTE: The above routines does not use R0.
+;
+;	        Use PUSH_PSTACK_C_ONE when pushing 1 element.
+;	        Use PUSH_PSTACK_C_TWO when pushing 2 element.
+;	        Use PUSH_PSTACK_C_THREE when pushing 3 element.
+;	        Use PUSH_PSTACK_C_FOUR when pushing 4 element.
+;
+;	        Use PUSH_PSTACK_X_ONE when pushing 1 element.
+;	        Use PUSH_PSTACK_X_TWO when pushing 2 element.
+;	        Use PUSH_PSTACK_X_THREE when pushing 3 element.
+;	        Use PUSH_PSTACK_X_FOUR when pushing 4 element.
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;	Function: ?PUSH_PSTACK_I
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		A    = Nr of elements to push
+;		@R0  = Address to the first element.
+;
+;	Register output:
+;		A  = Undefined
+;		R0 = Undefined
+;               Carry = Undefined
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_PSTACK_I
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?MOVE_LONG8_PDATA_IDATA
+        EXTERN	?PSP
+	PUBLIC	?PUSH_PSTACK_I
+	PUBLIC	?PUSH_PSTACK_I_FOUR
+	PUBLIC	?PUSH_PSTACK_I_THREE
+	PUBLIC	?PUSH_PSTACK_I_TWO
+	PUBLIC	?PUSH_PSTACK_I_ONE
+	
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_I_FOUR
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,4)
+?PUSH_PSTACK_I_FOUR:
+	MOV	A,#0x4
+	SJMP	?PUSH_PSTACK_I
+	REQUIRE	?PUSH_PSTACK_I
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_I_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_I_THREE
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,3)
+?PUSH_PSTACK_I_THREE:
+	MOV	A,#0x3
+	SJMP	?PUSH_PSTACK_I
+	REQUIRE	?PUSH_PSTACK_I
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_I_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_I_TWO
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,2)
+      
+?PUSH_PSTACK_I_TWO:
+	MOV	A,#0x2
+	SJMP	?PUSH_PSTACK_I
+	REQUIRE	?PUSH_PSTACK_I
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_I_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_I_ONE
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,1)
+?PUSH_PSTACK_I_ONE:
+	MOV	A,#0x1
+	REQUIRE	?PUSH_PSTACK_I
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_I_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_I
+    cfi A undefined
+    cfi R0 undefined
+    cfi CFA_SPP sub(SPP,A)
+?PUSH_PSTACK_I:
+	XCH	A,R1
+    cfi CFA_SPP sub(SPP,R1)
+	PUSH	A
+    cfi_PUSH_REG R1
+	MOV	A,?PSP
+	CLR	C
+	SUBB	A,R1
+	MOV	?PSP,A
+    cfi CFA_SPP SPP
+	XCH	A,R1
+	CALL	?MOVE_LONG8_PDATA_IDATA    ; @R1 = dst, @R0 = src, A = Nr of elements
+	POP	A
+    cfi_STACK_DEALL 1
+	MOV	R1,A
+    cfi R1 samevalue
+	RET
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_I
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_PSTACK_P
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		A    = Nr of elements to push
+;		@R0  = Address to the first element.
+;
+;	Register output:
+;		A  = Undefined
+;		R0 = Undefined
+;               Carry = Undefined
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_PSTACK_P
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?MOVE_LONG8_PDATA_PDATA
+	EXTERN	?PSP
+	PUBLIC	?PUSH_PSTACK_P
+	PUBLIC	?PUSH_PSTACK_P_FOUR
+	PUBLIC	?PUSH_PSTACK_P_THREE
+	PUBLIC	?PUSH_PSTACK_P_TWO
+	PUBLIC	?PUSH_PSTACK_P_ONE	
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_P_FOUR
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,4)
+?PUSH_PSTACK_P_FOUR:
+	MOV	A,#0x4
+	SJMP	?PUSH_PSTACK_P
+	REQUIRE	?PUSH_PSTACK_P
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_P_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_P_THREE
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,3)
+?PUSH_PSTACK_P_THREE:
+	MOV	A,#0x3
+	SJMP	?PUSH_PSTACK_P
+	REQUIRE	?PUSH_PSTACK_P
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_P_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_P_TWO
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,2)
+?PUSH_PSTACK_P_TWO:
+	MOV	A,#0x2
+	SJMP	?PUSH_PSTACK_P
+	REQUIRE	?PUSH_PSTACK_P
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_P_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_P_ONE
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,1)
+?PUSH_PSTACK_P_ONE:
+	MOV	A,#0x1
+	REQUIRE	?PUSH_PSTACK_P
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_P_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_P
+    cfi A undefined
+    cfi R0 undefined
+    cfi CFA_SPP sub(SPP,A)
+?PUSH_PSTACK_P:
+	XCH	A,R1
+    cfi CFA_SPP sub(SPP,R1)
+	PUSH	A
+    cfi_PUSH_REG R1
+	MOV	A,?PSP
+	CLR	C
+	SUBB	A,R1
+	MOV	?PSP,A
+    cfi CFA_SPP SPP
+	XCH	A,R1
+	CALL	?MOVE_LONG8_PDATA_PDATA    ; @R1 = dst, @R0 = src, A = Nr of elements
+	POP	A
+    cfi_STACK_DEALL 1
+	MOV	R1,A
+    cfi R1 samevalue
+	RET
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_P
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_PSTACK_X
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		A      = Nr of elements to push
+;		@DPTR  = Address to the first element.
+;
+;	Register output:
+;		A      = Zero
+;		@DPTR  = Undefined
+;               Carry  = Undefined
+;
+;       Multiple DPTR:
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx     Requires DPS: DPTRx 
+;                               Modifies DPTR: DPTRx     Returns  DPS: DPTRx
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_PSTACK_X
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?MOVE_LONG8_PDATA_XDATA
+	EXTERN	?PSP
+	PUBLIC	?PUSH_PSTACK_X
+	PUBLIC	?PUSH_PSTACK_X_FOUR
+	PUBLIC	?PUSH_PSTACK_X_THREE
+	PUBLIC	?PUSH_PSTACK_X_TWO
+	PUBLIC	?PUSH_PSTACK_X_ONE
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_X_FOUR
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,4)
+?PUSH_PSTACK_X_FOUR:
+	MOV	A,#0x4
+	SJMP	?PUSH_PSTACK_X
+	REQUIRE	?PUSH_PSTACK_X
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_X_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_X_THREE
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,3)
+?PUSH_PSTACK_X_THREE:
+	MOV	A,#0x3
+	SJMP	?PUSH_PSTACK_X
+	REQUIRE	?PUSH_PSTACK_X
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_X_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_X_TWO
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,2)
+?PUSH_PSTACK_X_TWO:
+	MOV	A,#0x2
+	SJMP	?PUSH_PSTACK_X
+	REQUIRE	?PUSH_PSTACK_X
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_X_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_X_ONE
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,1)
+?PUSH_PSTACK_X_ONE:
+	MOV	A,#0x1
+	REQUIRE	?PUSH_PSTACK_X
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_X_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_X
+    cfi A undefined
+    cfi DPTR0 undefined
+    cfi CFA_SPP sub(SPP,A)
+?PUSH_PSTACK_X:
+	XCH	A,R0
+    cfi CFA_SPP sub(SPP,R0)
+	PUSH	A
+	cfi_PUSH_REG R0
+	MOV	A,?PSP
+	CLR	C
+	SUBB	A,R0
+	MOV	?PSP,A
+    cfi CFA_SPP SPP
+	XCH	A,R0
+	CALL	?MOVE_LONG8_PDATA_XDATA    ; @R0 = dst, @DPTR = src, A = Nr of elements
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R0,A
+    cfi R0 samevalue
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_X
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_PSTACK_C
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		A      = Nr of elements to push
+;		@DPTR  = Address to the first element.
+;
+;	Register output:
+;		A     = 0
+;		@DPTR = Undefined
+;               Carry = Undefined
+;
+;       Multiple DPTR:
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx     Requires DPS: DPTRx 
+;                               Modifies DPTR: DPTRx     Returns  DPS: DPTRx
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_PSTACK_C
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?MOVE_LONG8_PDATA_CODE
+	EXTERN  ?PSP
+	PUBLIC	?PUSH_PSTACK_C
+	PUBLIC	?PUSH_PSTACK_C_FOUR
+	PUBLIC	?PUSH_PSTACK_C_THREE
+	PUBLIC	?PUSH_PSTACK_C_TWO
+	PUBLIC	?PUSH_PSTACK_C_ONE
+
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_C_FOUR
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,4)
+?PUSH_PSTACK_C_FOUR:
+	MOV	A,#0x4
+	SJMP	?PUSH_PSTACK_C
+	REQUIRE	?PUSH_PSTACK_C
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_C_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_C_THREE
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,3)
+?PUSH_PSTACK_C_THREE:
+	MOV	A,#0x3
+	SJMP	?PUSH_PSTACK_C
+	REQUIRE	?PUSH_PSTACK_C
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_C_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_C_TWO
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,2)
+?PUSH_PSTACK_C_TWO:
+	MOV	A,#0x2
+	SJMP	?PUSH_PSTACK_C
+	REQUIRE	?PUSH_PSTACK_C
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_C_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_C_ONE
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,1)
+?PUSH_PSTACK_C_ONE:
+	MOV	A,#0x1
+	REQUIRE	?PUSH_PSTACK_C
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_C_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_C
+    cfi A undefined
+    cfi DPTR0 undefined
+    cfi CFA_SPP sub(SPP,A)
+?PUSH_PSTACK_C:
+	XCH	A,R0
+    cfi CFA_SPP sub(SPP,R0)
+	PUSH	A
+	cfi_PUSH_REG R0
+	MOV	A,?PSP
+	CLR	C
+	SUBB	A,R0
+	MOV	?PSP,A
+    cfi CFA_SPP SPP
+	XCH	A,R0
+	CALL	?MOVE_LONG8_PDATA_CODE    ; @R0 = dst, @DPTR = src, A = Nr of elements
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R0,A
+    cfi R0 samevalue
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_C
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_PSTACK_G
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		A         = Nr of elements to push
+;		R3:R2:R1  = Address to the first element.
+;
+;	Register output:
+;		R3:R2:R1  = Address to the first element (same as in)
+;		A         = Undefined
+;               Carry     = Undefined
+;
+;       Multiple DPTR
+;               DPTR/DPS: Unchanged
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_PSTACK_G
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?PSP
+	EXTERN	?MOVE_LONG_PDATA_GPTR
+	PUBLIC	?PUSH_PSTACK_G
+	PUBLIC	?PUSH_PSTACK_G_FOUR
+	PUBLIC	?PUSH_PSTACK_G_THREE
+	PUBLIC	?PUSH_PSTACK_G_TWO
+	PUBLIC	?PUSH_PSTACK_G_ONE
+
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_G_FOUR
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,4)
+?PUSH_PSTACK_G_FOUR:
+	MOV	A,#0x4
+	SJMP	?PUSH_PSTACK_G
+	REQUIRE	?PUSH_PSTACK_G
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_G_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_G_THREE
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,3)
+?PUSH_PSTACK_G_THREE:
+	MOV	A,#0x3
+	SJMP	?PUSH_PSTACK_G
+	REQUIRE	?PUSH_PSTACK_G
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_G_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_G_TWO
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,2)
+?PUSH_PSTACK_G_TWO:
+	MOV	A,#0x2
+	SJMP	?PUSH_PSTACK_G
+	REQUIRE	?PUSH_PSTACK_G
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_G_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_G_ONE
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,1)
+?PUSH_PSTACK_G_ONE:
+	MOV	A,#0x1
+	REQUIRE	?PUSH_PSTACK_G
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_G_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_PSTACK_G
+    cfi A undefined
+    cfi CFA_SPP sub(SPP,A)
+?PUSH_PSTACK_G:
+	XCH	A,R7                     ; R7 = Nr of elements
+    cfi CFA_SPP sub(SPP,R7)
+	PUSH	A
+	cfi_PUSH_REG R7
+	MOV	A,R0
+	PUSH	A
+	cfi_PUSH_REG R0
+	MOV	A,?PSP
+	CLR	C
+	SUBB	A,R7
+	MOV	?PSP,A
+    cfi CFA_SPP SPP
+	MOV	R0,A
+	CALL	?MOVE_LONG_PDATA_GPTR    ; @R0 = dst, R3:R2:R1 = src, R7 = Nr of elements
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R0,A
+    cfi R0 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R7,A
+    cfi R7 samevalue
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_PSTACK_G
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Push element(s) from any memory on XDATA stack.
+;	           ?PUSH_XSTACK_I
+;	           ?PUSH_XSTACK_P
+;                  ?PUSH_XSTACK_X
+;                  ?PUSH_XSTACK_C
+;
+;       Description:
+;               There are two different routines to push elements into the
+;               XDATA stack. One that uses 2 DPTR:s an one that uses only
+;               1 DPTR.
+;
+;               See the description at the top of this file on how to assemble
+;               each variant.
+;
+;
+;	        Use PUSH_XSTACK_X_ONE when pushing 1 element.
+;	        Use PUSH_XSTACK_X_ONE when pushing 1 element.
+;	        Use PUSH_XSTACK_X_ONE when pushing 1 element.
+;	        Use PUSH_XSTACK_X_ONE when pushing 1 element.
+;	        Use PUSH_XSTACK_C_ONE when pushing 1 element.
+;	        Use PUSH_XSTACK_C_ONE when pushing 1 element.
+;	        Use PUSH_XSTACK_C_ONE when pushing 1 element.
+;	        Use PUSH_XSTACK_C_ONE when pushing 1 element.
+;	        Use PUSH_XSTACK_P_ONE when pushing 1 element.
+;	        Use PUSH_XSTACK_I_ONE when pushing 1 element.
+;
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_XSTACK_I
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		A    = Nr of elements to push
+;		R0   = Address to the first element.
+;
+;	Register output:
+;		A     = Undefined
+;		R0    = Undefined
+;		DPTR  = Undefined
+;               Carry = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0 
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_XSTACK_I
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?ADD_XSTACK_DISP0_8
+	EXTERN	?MOVE_LONG8_XDATA_IDATA
+        EXTERN	?XSP
+	PUBLIC	?PUSH_XSTACK_I_ONE
+	PUBLIC	?PUSH_XSTACK_I_TWO
+	PUBLIC	?PUSH_XSTACK_I_THREE
+	PUBLIC	?PUSH_XSTACK_I_FOUR
+	PUBLIC	?PUSH_XSTACK_I
+
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK_I_FOUR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,4)
+?PUSH_XSTACK_I_FOUR:
+	MOV	A,#0x04
+	SJMP	?PUSH_XSTACK_I	
+	REQUIRE	?PUSH_XSTACK_I
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK_I_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK_I_THREE
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,3)
+?PUSH_XSTACK_I_THREE:
+	MOV	A,#0x03
+	SJMP	?PUSH_XSTACK_I	
+	REQUIRE	?PUSH_XSTACK_I
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK_I_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK_I_TWO
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,2)
+?PUSH_XSTACK_I_TWO:
+	MOV	A,#0x02
+	SJMP	?PUSH_XSTACK_I	
+	REQUIRE	?PUSH_XSTACK_I
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK_I_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK_I_ONE
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,1)
+?PUSH_XSTACK_I_ONE:
+	MOV	A,#0x01
+	REQUIRE	?PUSH_XSTACK_I
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK_I_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK_I
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,A)
+?PUSH_XSTACK_I:
+	PUSH	A
+    cfi_STACK_ALLOC 1
+#if (defined(__EXTENDED_STACK__))
+    cfi CFA_SPX sub(SPX,load(1,XDATA,MACHINE_SP))
+#else
+    cfi CFA_SPX sub(SPX,load(1,IDATA,MACHINE_SP))
+#endif
+	CPL	A
+	INC	A
+	CALL	?ADD_XSTACK_DISP0_8    ; DPTR = TOS
+    cfi CFA_SPX SPX
+	POP	A	         ; Size of the data to move.
+	cfi_STACK_DEALL 1
+	CALL	?MOVE_LONG8_XDATA_IDATA ; DPTR = dst, R0 = src, A = Nr of elements to move
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK_I
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_XSTACK_P
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		A    = Nr of elements to push
+;		R0   = Address to the first element.
+;
+;	Register output:
+;		A     = Undefined
+;		R0    = Undefined
+;		DPTR  = Undefined
+;               Carry = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0 
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_XSTACK_P
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?ADD_XSTACK_DISP0_8
+	EXTERN	?MOVE_LONG8_XDATA_PDATA
+        EXTERN	?XSP
+	PUBLIC	?PUSH_XSTACK_P_ONE
+	PUBLIC	?PUSH_XSTACK_P_TWO
+	PUBLIC	?PUSH_XSTACK_P_THREE
+	PUBLIC	?PUSH_XSTACK_P_FOUR
+	PUBLIC	?PUSH_XSTACK_P
+
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK_P_FOUR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,4)
+?PUSH_XSTACK_P_FOUR:
+	MOV	A,#0x04
+	SJMP	?PUSH_XSTACK_P	
+	REQUIRE	?PUSH_XSTACK_P
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK_P_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK_P_THREE
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,3)
+?PUSH_XSTACK_P_THREE:
+	MOV	A,#0x03
+	SJMP	?PUSH_XSTACK_P	
+	REQUIRE	?PUSH_XSTACK_P
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK_P_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK_P_TWO
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,2)
+?PUSH_XSTACK_P_TWO:
+	MOV	A,#0x02
+	SJMP	?PUSH_XSTACK_P	
+	REQUIRE	?PUSH_XSTACK_P
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK_P_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK_P_ONE
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,1)
+?PUSH_XSTACK_P_ONE:
+	MOV	A,#0x01
+	REQUIRE	?PUSH_XSTACK_P
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK_P_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK_P
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,A)
+?PUSH_XSTACK_P:
+	PUSH	A
+	cfi_STACK_ALLOC 1
+	CPL	A
+	INC	A
+	CALL	?ADD_XSTACK_DISP0_8    ; DPTR = TOS
+    cfi CFA_SPX SPX
+	POP	A	         ; Size of the data to move.
+	cfi_STACK_DEALL 1
+	CALL	?MOVE_LONG8_XDATA_PDATA ; DPTR = dst, R0 = src, A = Nr of elements to push
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK_P
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_XSTACK8_X
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		A    = Nr of elements to push
+;		DPTR = Address to the first element.
+;
+;	Register output:
+;		A     = Undefined
+;		DPTR  = Undefined
+;               Carry = Undefined
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+#if (__NUMBER_OF_DPTRS__ == 1)
+	MODULE	?PUSH_XSTACK8_X
+	RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?XSP
+	EXTERN	?MOVE_LONG8_XDATA_XDATA
+	PUBLIC	?PUSH_XSTACK8_X_ONE
+	PUBLIC	?PUSH_XSTACK8_X_TWO
+	PUBLIC	?PUSH_XSTACK8_X_THREE
+	PUBLIC	?PUSH_XSTACK8_X_FOUR
+	PUBLIC	?PUSH_XSTACK8_X
+
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_X_FOUR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,4)
+?PUSH_XSTACK8_X_FOUR:
+	MOV	A,#0x04
+	SJMP	?PUSH_XSTACK8_X	
+	REQUIRE	?PUSH_XSTACK8_X
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_X_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_X_THREE
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,3)
+?PUSH_XSTACK8_X_THREE:
+	MOV	A,#0x03
+	SJMP	?PUSH_XSTACK8_X	
+	REQUIRE	?PUSH_XSTACK8_X
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_X_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_X_TWO
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,2)
+?PUSH_XSTACK8_X_TWO:
+	MOV	A,#0x02
+	SJMP	?PUSH_XSTACK8_X	
+	REQUIRE	?PUSH_XSTACK8_X
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_X_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_X_ONE
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,1)
+?PUSH_XSTACK8_X_ONE:
+	MOV	A,#0x01
+	REQUIRE	?PUSH_XSTACK8_X
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_X_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_X
+    cfi A undefined
+    cfi DPTR0 undefined
+    cfi CFA_SPX sub(SPX,A)
+#ifdef __EXTENDED_DPTR__
+?PUSH_XSTACK8_X:
+	XCH	A,R4           ; R4 = Nr of elements to push
+    cfi CFA_SPX sub(SPX,R4)
+	PUSH	A	
+    cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+    cfi_PUSH_REG R5
+	MOV	A,R6
+	PUSH	A
+    cfi_PUSH_REG R6
+
+;;;;; Update XSP and let R6:R5:R4 point at start
+	MOV	A,XSP_L
+	CLR	C
+	SUBB	A,R4
+	XCH	A,R4               ; A = Nr of elements to push, R4 = TOS_L
+    cfi CFA_SPX sub(SPX,A)
+	MOV	R5,XSP_H
+	JNC	NoBorrow
+	DEC	R5
+NoBorrow:
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+    cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+?PUSH_XSTACK8_X_CFI_INVALID_BEGINS:
+    cfi invalid
+	MOV	XSP_L,R4
+	MOV	XSP_H,R5
+?PUSH_XSTACK8_X_CFI_INVALID_ENDS:
+    cfi valid
+    cfi CFA_SPX SPX
+	POP	0xA8 /* IE */
+    cfi_STACK_DEALL 1
+	MOV	R6,#BYTE3(sfb(XSTACK))
+;;;;;;;;
+
+	CALL	?MOVE_LONG8_XDATA_XDATA ; R456 = dst, DPTR = src, A = Nr of elements to push
+	POP	A
+    cfi_STACK_DEALL 1
+	MOV	R6,A
+    cfi R6 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+    cfi R5 samevalue
+	POP	A
+    cfi_STACK_DEALL 1
+	MOV	R4,A
+    cfi R4 samevalue
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_X
+	ENDMOD
+
+#else
+?PUSH_XSTACK8_X:
+	XCH	A,R4           ; R4 = Nr of elements to push
+    cfi CFA_SPX sub(SPX,R4)
+	PUSH	A	
+    cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+    cfi_PUSH_REG R4
+
+;;;;; Update XSP and let R5:R4 point at start
+	MOV	A,XSP_L
+	CLR	C
+	SUBB	A,R4
+	XCH	A,R4           ; A = Nr of elements to push, R4 = TOS_L
+    cfi CFA_SPX sub(SPX,A)
+	MOV	R5,XSP_H
+	JNC	NoBorrow
+	DEC	R5
+NoBorrow:
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+?PUSH_XSTACK8_X_CFI_INVALID_BEGINS:
+    cfi invalid
+	MOV	XSP_L,R4
+	MOV	XSP_H,R5
+?PUSH_XSTACK8_X_CFI_INVALID_ENDS:
+    cfi valid
+    cfi CFA_SPX SPX
+	POP	0xA8 /* IE */
+	cfi_STACK_DEALL 1
+;;;;;;;;
+
+	CALL	?MOVE_LONG8_XDATA_XDATA ; R45 = dst, DPTR = src, A = Nr of elements to push
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+    cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+    cfi R4 samevalue
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_X
+	ENDMOD
+
+#endif
+#elif  (__NUMBER_OF_DPTRS__ > 1)
+;-----------------------------------------------------------------------------
+;	Function: ?PUSH_XSTACK8_X_2DPTR
+;
+;	Register input:
+;		A      = Nr of elements to push
+;               DPTR1  = Address to the first element.
+;               DPSEL  = DPTR1
+;
+;	Register output:
+;		A     = Undefined
+;		DPTR0 = Undefined
+;		DPTR1 = Undefined
+;               DPSEL = DPTR1
+;               Carry = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: pair     Requires DPS: high
+;                               Modifies DPTR: pair     Returns  DPS: high
+;
+;               Separate:       Requires DPTR: 0 (stack),     Requires DPS: 1
+;                                              1 (pointer)    Returns  DPS: 1
+;                               Modifies DPTR: 0 (stack), 
+;                                              1 (pointer)
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_XSTACK8_X_2DPTR
+	RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?ADD_XSTACK_DISP0_8
+	EXTERN	?MOVE_LONG8_XDATA_XDATA_2DPTR
+	PUBLIC	?PUSH_XSTACK8_X_ONE_2DPTR
+	PUBLIC	?PUSH_XSTACK8_X_TWO_2DPTR
+	PUBLIC	?PUSH_XSTACK8_X_THREE_2DPTR
+	PUBLIC	?PUSH_XSTACK8_X_FOUR_2DPTR
+	PUBLIC	?PUSH_XSTACK8_X_2DPTR
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_X_FOUR_2DPTR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,4)
+?PUSH_XSTACK8_X_FOUR_2DPTR:
+	MOV	A,#0x04
+	SJMP	?PUSH_XSTACK8_X_2DPTR
+	REQUIRE	?PUSH_XSTACK8_X_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_X_FOUR_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_X_THREE_2DPTR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,3)
+?PUSH_XSTACK8_X_THREE_2DPTR:
+	MOV	A,#0x03
+	SJMP	?PUSH_XSTACK8_X_2DPTR
+	REQUIRE	?PUSH_XSTACK8_X_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_X_THREE_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_X_TWO_2DPTR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,2)
+?PUSH_XSTACK8_X_TWO_2DPTR:
+	MOV	A,#0x02
+	SJMP	?PUSH_XSTACK8_X_2DPTR
+	REQUIRE	?PUSH_XSTACK8_X_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_X_TWO_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_X_ONE_2DPTR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,1)
+?PUSH_XSTACK8_X_ONE_2DPTR:
+	MOV	A,#0x01
+	REQUIRE	?PUSH_XSTACK8_X_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_X_ONE_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_X_2DPTR
+    cfi A undefined
+    cfi DPTR0 undefined
+    cfi DPTR1 undefined
+    cfi CFA_SPX sub(SPX,A)
+?PUSH_XSTACK8_X_2DPTR:
+	PUSH	A
+	cfi CFA_SPX sub(SPX,load(1,IDATA,MACHINE_SP))
+	cfi_STACK_ALLOC 1
+	CPL	A
+	INC	A
+
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR() ; Select DPTR0
+#endif
+	CALL	?ADD_XSTACK_DISP0_8 ; DPTR0 = TOS
+    cfi CFA_SPX SPX
+	POP	A
+	cfi_STACK_DEALL 1
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR() ; Select DPTR1
+#endif
+	CALL	?MOVE_LONG8_XDATA_XDATA_2DPTR ; DPTR0 = dst, DPTR1 = src, A = Nr of elements to push
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_X_2DPTR
+	ENDMOD
+
+#else
+#error "You must define __NUMBER_OF_DPTRS__"
+#endif
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_XSTACK8_C
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		A    = Nr of elements to push
+;		DPTR = Address to the first element.
+;
+;	Register output:
+;		A     = Undefined
+;		DPTR  = Undefined
+;               Carry = Undefined
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+#if (__NUMBER_OF_DPTRS__ == 1)
+	MODULE	?PUSH_XSTACK8_C
+	RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?ADD_XSTACK_DISP0_8
+	EXTERN	?MOVE_LONG8_XDATA_CODE
+	PUBLIC	?PUSH_XSTACK8_C_ONE
+	PUBLIC	?PUSH_XSTACK8_C_TWO
+	PUBLIC	?PUSH_XSTACK8_C_THREE
+	PUBLIC	?PUSH_XSTACK8_C_FOUR
+	PUBLIC	?PUSH_XSTACK8_C
+
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_C_FOUR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,4)
+?PUSH_XSTACK8_C_FOUR:
+	MOV	A,#0x04
+	SJMP	?PUSH_XSTACK8_C	
+	REQUIRE	?PUSH_XSTACK8_C
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_C_FOUR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_C_THREE
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,3)
+?PUSH_XSTACK8_C_THREE:
+	MOV	A,#0x03
+	SJMP	?PUSH_XSTACK8_C	
+	REQUIRE	?PUSH_XSTACK8_C
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_C_THREE
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_C_TWO
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,2)
+?PUSH_XSTACK8_C_TWO:
+	MOV	A,#0x02
+	SJMP	?PUSH_XSTACK8_C	
+	REQUIRE	?PUSH_XSTACK8_C
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_C_TWO
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_C_ONE
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,1)
+?PUSH_XSTACK8_C_ONE:
+	MOV	A,#0x01
+	REQUIRE	?PUSH_XSTACK8_C
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_C_ONE
+
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?XSP
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_C
+    cfi A undefined
+    cfi DPTR0 undefined
+    cfi CFA_SPX sub(SPX,A)
+
+#ifdef __EXTENDED_DPTR__
+
+?PUSH_XSTACK8_C:
+	XCH	A,R4         ; R4 = Nr of elements to push
+    cfi CFA_SPX sub(SPX,R4)
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+	MOV	A,R6
+	PUSH	A
+	cfi_PUSH_REG R6
+
+;;;;; Update XSP and let R6:R5:R4 point at start
+	MOV	A,XSP_L
+	CLR	C
+	SUBB	A,R4
+	XCH	A,R4               ; A = Nr of elements to push, R4 = TOS_L
+    cfi CFA_SPX sub(SPX,A)
+	MOV	R5,XSP_H
+	JNC	NoBorrow
+	DEC	R5
+NoBorrow:
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+?PUSH_XSTACK8_C_CFI_INVALID_BEGINS:
+    cfi invalid
+	MOV	XSP_L,R4
+	MOV	XSP_H,R5
+?PUSH_XSTACK8_C_CFI_INVALID_ENDS:
+    cfi invalid
+    cfi CFA_SPX SPX
+	POP	0xA8 /* IE */
+	cfi_STACK_DEALL 1
+	MOV	R6,#BYTE3(sfb(XSTACK))
+;;;;;;;;
+
+	CALL	?MOVE_LONG8_XDATA_CODE ; R456 = dst, DPTR = src, A= Nr of elements to push
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R6,A
+    cfi R6 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+    cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+    cfi R4 samevalue
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_C
+	ENDMOD
+
+#else
+
+?PUSH_XSTACK8_C:
+	XCH	A,R4         ; R4 = Nr of elements to push
+    cfi CFA_SPX sub(SPX,R4)
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+
+;;;;; Update XSP and let R5:R4 point at start
+	MOV	A,XSP_L
+	CLR	C
+	SUBB	A,R4
+	XCH	A,R4                ; A = Nr of elements to push, R4 = TOS_L
+    cfi CFA_SPX sub(SPX,A)
+	MOV	R5,XSP_H
+	JNC	NoBorrow
+	DEC	R5
+NoBorrow:
+	PUSH	0xA8 /* IE */        ; Preserve the Interrupt Enable register
+	cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */   ; Disable all interrupts for max 6 cycles
+?PUSH_XSTACK8_C_CFI_INVALID_BEGINS:
+    cfi invalid
+	MOV	XSP_L,R4
+	MOV	XSP_H,R5
+?PUSH_XSTACK8_C_CFI_INVALID_ENDS:
+    cfi valid
+    cfi CFA_SPX SPX
+	POP	0xA8 /* IE */
+	cfi_STACK_DEALL 1
+;;;;;;;;
+
+	CALL	?MOVE_LONG8_XDATA_CODE ; R45 = dst, DPTR = src, A= Nr of elements to push
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+    cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+    cfi R4 samevalue
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_C
+	ENDMOD
+
+#endif
+
+#elif (__NUMBER_OF_DPTRS__ > 1)
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_XSTACK8_C_2DPTR
+;
+;	Description: Push a block of bytes, max 256 bytes.
+;
+;	Register input:
+;		A     = Nr of elements to push
+;		DPTR1 = Address to the first element.
+;
+;	Register output:
+;		A     = Undefined
+;		DPTR1 = Undefined
+;		DPTR0 = Undefined
+;               Carry = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: pair     Requires DPS: high
+;                               Modifies DPTR: pair     Returns  DPS: high
+;
+;               Separate:       Requires DPTR: 0 (stack),     Requires DPS: 1
+;                                              1 (pointer)    Returns  DPS: 1
+;                               Modifies DPTR: 0 (stack), 
+;                                              1 (pointer)
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+
+	MODULE	?PUSH_XSTACK8_C
+	RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?ADD_XSTACK_DISP0_8
+	EXTERN	?MOVE_LONG8_XDATA_CODE_2DPTR
+	PUBLIC	?PUSH_XSTACK8_C_ONE_2DPTR
+	PUBLIC	?PUSH_XSTACK8_C_TWO_2DPTR
+	PUBLIC	?PUSH_XSTACK8_C_THREE_2DPTR
+	PUBLIC	?PUSH_XSTACK8_C_FOUR_2DPTR
+	PUBLIC	?PUSH_XSTACK8_C_2DPTR
+
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_C_FOUR_2DPTR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,4)
+?PUSH_XSTACK8_C_FOUR_2DPTR:
+	MOV	A,#0x04
+	SJMP	?PUSH_XSTACK8_C_2DPTR
+	REQUIRE	?PUSH_XSTACK8_C_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_C_FOUR_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_C_THREE_2DPTR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,3)
+?PUSH_XSTACK8_C_THREE_2DPTR:
+	MOV	A,#0x03
+	SJMP	?PUSH_XSTACK8_C_2DPTR
+	REQUIRE	?PUSH_XSTACK8_C_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_C_THREE_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_C_TWO_2DPTR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,2)
+?PUSH_XSTACK8_C_TWO_2DPTR:
+	MOV	A,#0x02
+	SJMP	?PUSH_XSTACK8_C_2DPTR
+	REQUIRE	?PUSH_XSTACK8_C_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_C_TWO_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_C_ONE_2DPTR
+    cfi A undefined
+    cfi CFA_SPX sub(SPX,1)
+?PUSH_XSTACK8_C_ONE_2DPTR:
+	MOV	A,#0x01
+	REQUIRE	?PUSH_XSTACK8_C_2DPTR
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_C_ONE_2DPTR
+
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?XSP
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK8_C_2DPTR
+    cfi A undefined
+    cfi DPTR0 undefined
+    cfi DPTR1 undefined
+    cfi CFA_SPX sub(SPX,A)
+?PUSH_XSTACK8_C_2DPTR:
+	PUSH	A
+	cfi_STACK_ALLOC 1
+	CPL	A
+	INC	A
+
+#ifdef __DPTR_SHADOWED__
+		TOGGLE_DPTR ; Select DPTR0
+#endif
+	CALL	?ADD_XSTACK_DISP0_8  ; DPTR0 = TOS
+    cfi CFA_SPX SPX
+	POP	A
+	cfi_STACK_DEALL 1
+
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR ; Select DPTR1
+#endif
+
+	CALL	?MOVE_LONG8_XDATA_CODE_2DPTR ; DPTR0 = dst, DPTR1 = src, A = Nr of elements to push
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK8_C_2DPTR
+	ENDMOD
+
+#else
+#error "You must define __NUMBER_OF_DPTRS__"
+#endif
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_XSTACK16_X
+;
+;	Description: Push a block of bytes, max 64k bytes.
+;
+;	Register input:
+;		A    = Nr of elements to push (low)
+;		R3   = Nr of elements to push (high + 1)
+;		DPTR = Address to the first element.
+;
+;	Register output:
+;		A     = Undefined
+;		R3    = Undefined
+;		DPTR  = Undefined
+;               Carry = Undefined
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+#if (__NUMBER_OF_DPTRS__ == 1)
+	MODULE	?PUSH_XSTACK16_X
+	RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN  ?XSP
+	EXTERN	?MOVE_LONG16_XDATA_XDATA
+	PUBLIC	?PUSH_XSTACK16_X
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK16_X
+    cfi A undefined
+    cfi R3 undefined
+    cfi DPTR0 undefined
+#ifdef __EXTENDED_DPTR__
+?PUSH_XSTACK16_X:
+?PUSH_XSTACK16_X_CFI_INVALID_BEGINS:
+    cfi invalid
+	XCH	A,R4
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+	MOV	A,R6
+	PUSH	A
+	cfi_PUSH_REG R6
+	MOV	A,R4
+	PUSH	A
+	cfi_STACK_ALLOC 1
+	CPL	A
+	INC	A
+
+;;;;; Update XSP and let R6:R5:R4 point at start
+	CLR	C
+	MOV	A,XSP_L
+	SUBB	A,R4
+	MOV	R4,A
+	MOV	A,XSP_H
+	DEC	R3
+	SUBB	A,R3
+	INC	R3
+	MOV	R5,A
+	
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,A
+	MOV	XSP_L,R4
+	POP	0xA8 /* IE */
+	cfi_STACK_DEALL 1
+	MOV	R6,#BYTE3(sfb(XSTACK))
+;;;;;;;;
+
+	POP	A	    ; Size of the data to move, Low.
+	cfi_STACK_DEALL 1
+	CALL	?MOVE_LONG16_XDATA_XDATA ; R45 = dst, DPTR = src, AR3 = 0x100 + Nr of elements to push
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R6,A
+    cfi R6 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+    cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+    cfi R4 samevalue
+	RET
+?PUSH_XSTACK16_X_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK16_X
+	ENDMOD
+
+#else
+
+?PUSH_XSTACK16_X:
+?PUSH_XSTACK16_X_CFI_INVALID_BEGINS:
+    cfi invalid
+	XCH	A,R4
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+	MOV	A,R4
+	PUSH	A
+	cfi_STACK_ALLOC 1
+	CPL	A
+	INC	A
+
+;;;;; Update XSP and let R5:R4 point at start
+	CLR	C
+	MOV	A,XSP_L
+	SUBB	A,R4
+	MOV	R4,A
+	MOV	A,XSP_H
+	DEC	R3
+	SUBB	A,R3
+	INC	R3
+	MOV	R5,A
+	
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,A
+	MOV	XSP_L,R4
+	POP	0xA8 /* IE */
+	cfi_STACK_DEALL 1
+;;;;;;;;
+
+	POP	A	    ; Size of the data to move, Low.
+	cfi_STACK_DEALL 1
+	CALL	?MOVE_LONG16_XDATA_XDATA ; R45 = dst, DPTR = src, AR3 = 0x100 + Nr of elements to push
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+    cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+    cfi R4 samevalue
+	RET
+
+?PUSH_XSTACK16_X_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK16_X
+	ENDMOD
+
+#endif
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_XSTACK16_X_2DPTR
+;
+;	Description: Push a block of bytes, max 64k bytes.
+;
+;	Register input:
+;		A     = Nr of elements to push (low)
+;		R3    = Nr of elements to push (high + 1)
+;		DPTR1 = Address to the first element.
+;
+;	Register output:
+;		A     = Undefined
+;		R3    = Undefined
+;		DPTR1 = Undefined
+;		DPTR0 = Undefined
+;               Carry = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: pair     Requires DPS: high
+;                               Modifies DPTR: pair     Returns  DPS: high
+;
+;               Separate:       Requires DPTR: 0 (stack),     Requires DPS: 1
+;                                              1 (pointer)    Returns  DPS: 1
+;                               Modifies DPTR: 0 (stack), 
+;                                              1 (pointer)
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+#elif (__NUMBER_OF_DPTRS__ > 1)
+
+	MODULE	?PUSH_XSTACK16_X_2DPTR
+	RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN  ?XSP
+	EXTERN	?MOVE_LONG16_XDATA_XDATA_2DPTR
+	PUBLIC	?PUSH_XSTACK16_X_2DPTR
+
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK16_X_2DPTR
+    cfi A     undefined
+    cfi R3    undefined
+    cfi DPTR0 undefined
+    cfi DPTR1 undefined
+
+?PUSH_XSTACK16_X_2DPTR:
+?PUSH_XSTACK16_X_2DPTR_CFI_INVALID_BEGINS:
+    cfi invalid
+
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR ; Select DPTR0
+#endif
+	PUSH	A
+	cfi_STACK_ALLOC 1
+;;;;; Update XSP and let ?DPX:DPH:DPL point at start
+	CLR	C
+	MOV	DPL,A
+	MOV	A,XSP_L
+	SUBB	A,DPL
+	MOV	DPL,A
+	MOV	A,XSP_H
+	DEC	R3
+	SUBB	A,R3
+	INC	R3
+	MOV	DPH,A
+	
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,A
+	MOV	XSP_L,DPL
+	POP	0xA8 /* IE */
+	cfi_STACK_DEALL 1
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+;;;;;;;;
+
+	POP	A
+	cfi_STACK_DEALL 1
+
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR ; Select DPTR1
+#endif
+
+	CALL	?MOVE_LONG16_XDATA_XDATA_2DPTR ; DPTR0 = dst, DPTR1 = src, A,R3 = Nr of elements to push
+	RET
+?PUSH_XSTACK16_X_2DPTR_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK16_X_2DPTR
+	ENDMOD
+
+#else
+#error "You must define __NUMBER_OF_DPTRS__"
+#endif
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_XSTACK16_C
+;
+;	Description: Push a block of bytes, max 64k bytes.
+;
+;	Register input:
+;		A    = Nr of elements to push (low)
+;		R3   = Nr of elements to push (high + 1)
+;		DPTR = Address to the first element.
+;
+;	Register output:
+;		A     = Undefined
+;		R3    = Undefined
+;		DPTR  = Undefined
+;               Carry = Undefined
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+#if (__NUMBER_OF_DPTRS__ == 1)
+	MODULE	?PUSH_XSTACK16_C
+	RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?MOVE_LONG16_XDATA_CODE
+	PUBLIC	?PUSH_XSTACK16_C
+
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK16_C
+    cfi A undefined
+    cfi R3 undefined
+    cfi DPTR0 undefined
+
+#ifdef __EXTENDED_DPTR__
+
+?PUSH_XSTACK16_C:
+?PUSH_XSTACK16_C_CFI_INVALID_BEGINS:
+    cfi invalid
+	XCH	A,R4
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R6
+	PUSH	A
+	cfi_PUSH_REG R6
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+	MOV	A,R4
+	PUSH	A
+	cfi_STACK_ALLOC 1
+	CPL	A
+	INC	A
+
+;;;;; Update XSP and let R6:R5:R4 point at start
+	CLR	C
+	MOV	A,XSP_L
+	SUBB	A,R4
+	MOV	R4,A
+	MOV	A,XSP_H
+	DEC	R3
+	SUBB	A,R3
+	INC	R3
+	MOV	R5,A
+	
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,A
+	MOV	XSP_L,R4
+	POP	0xA8 /* IE */
+	cfi_STACK_DEALL 1
+	MOV	R6,#BYTE3(sfb(XSTACK))
+;;;;;;;;
+
+	POP	A	    ; Size of the data to move, Low.
+	cfi_STACK_DEALL 1
+	CALL	?MOVE_LONG16_XDATA_CODE ; R45 = dst, DPTR = src, AR3 = 0x100 + Nr of elements to push
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R6,A
+    cfi R6 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+    cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+    cfi R4 samevalue
+	RET
+
+?PUSH_XSTACK16_C_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK16_C
+	ENDMOD
+
+#else
+
+?PUSH_XSTACK16_C:
+?PUSH_XSTACK16_C_CFI_INVALID_BEGINS:
+    cfi invalid
+	XCH	A,R4
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+	MOV	A,R4
+	PUSH	A
+	cfi_STACK_ALLOC 1
+	CPL	A
+	INC	A
+
+;;;;; Update XSP and let R5:R4 point at start
+	CLR	C
+	MOV	A,XSP_L
+	SUBB	A,R4
+	MOV	R4,A
+	MOV	A,XSP_H
+	DEC	R3
+	SUBB	A,R3
+	INC	R3
+	MOV	R5,A
+	
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,A
+	MOV	XSP_L,R4
+	POP	0xA8 /* IE */
+	cfi_STACK_DEALL 1
+;;;;;;;;
+
+	POP	A	    ; Size of the data to move, Low.
+	cfi_STACK_DEALL 1
+	CALL	?MOVE_LONG16_XDATA_CODE ; R45 = dst, DPTR = src, AR3 = 0x100 + Nr of elements to push
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+    cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+    cfi R4 samevalue
+	RET
+?PUSH_XSTACK16_C_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK16_C
+	ENDMOD
+
+#endif
+
+#elif (__NUMBER_OF_DPTRS__ > 1)
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_XSTACK16_C_2DPTR
+;
+;	Description: Push a block of bytes, max 64k bytes.
+;
+;	Register input:
+;		A     = Nr of elements to push (low)
+;		R3    = Nr of elements to push (high + 1)
+;		DPTR1 = Address to the first element.
+;
+;	Register output:
+;		A      = Undefined
+;		R3     = Undefined
+;		DPTR0  = Undefined
+;		DPTR1  = Undefined
+;               Carry  = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: pair     Requires DPS: high
+;                               Modifies DPTR: pair     Returns  DPS: high
+;
+;               Separate:       Requires DPTR: 0 (stack),     Requires DPS: 1
+;                                              1 (pointer)    Returns  DPS: 1
+;                               Modifies DPTR: 0 (stack), 
+;                                              1 (pointer)
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_XSTACK16_C_2DPTR
+	RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?MOVE_LONG16_XDATA_CODE_2DPTR
+	PUBLIC	?PUSH_XSTACK16_C_2DPTR
+
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK16_C_2DPTR
+    cfi A     undefined
+    cfi R3    undefined
+    cfi DPTR0 undefined
+    cfi DPTR1 undefined
+
+?PUSH_XSTACK16_C_2DPTR:
+?PUSH_XSTACK16_C_2DPTR_CFI_INVALID_BEGINS:
+    cfi invalid
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR ; Select DPTR0
+#endif
+	PUSH	A
+	cfi_STACK_ALLOC 1
+;;;;; Update XSP and let ?DPX:DPH:DPL point at start
+	CLR	C
+	MOV	DPL,A
+	MOV	A,XSP_L
+	SUBB	A,DPL
+	MOV	DPL,A
+	MOV	A,XSP_H
+	DEC	R3
+	SUBB	A,R3
+	INC	R3
+	MOV	DPH,A
+	
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,A
+	MOV	XSP_L,DPL
+	POP	0xA8 /* IE */
+	cfi_STACK_DEALL 1
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+;;;;;;;;
+	POP	A
+	cfi_STACK_DEALL 1
+
+#ifdef __DPTR_SHADOWED__
+	TOGGLE_DPTR ; Select DPTR1
+#endif
+
+	CALL	?MOVE_LONG16_XDATA_CODE_2DPTR ; DPTR0 = dst, DPTR1 = src, A,R3 = Nr of elements to push
+	RET
+?PUSH_XSTACK16_C_2DPTR_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK16_C_2DPTR
+	ENDMOD
+
+#else
+#error "You must define __NUMBER_OF_DPTRS__"
+#endif
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_XSTACK16_G
+;
+;	Description: Push a block of bytes, max 64k bytes.
+;
+;	Register input:
+;		A        = Nr of elements to push (low)
+;		R0       = Nr of elements to push (high + 1)
+;		R3:R2:R1 = Address to the first element.
+;
+;	Register output:
+;		R0       = Undefined
+;		R3:R2:R1 = Address to the first element (same as in)
+;		A        = Undefined
+;               Carry    = Undefined
+;               AuxCarry = Undefined
+;               Overflow = Undefined
+;
+;       Multiple DPTR:
+;               DPTR/DPS: Unchanged
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_XSTACK16_G
+	RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN  ?XSP
+	EXTERN	?MOVE_LONG_XDATA_GPTR
+	PUBLIC	?PUSH_XSTACK16_G
+
+    cfi_DATA_BLOCK_start ?PUSH_XSTACK16_G
+    cfi R0 undefined
+
+#ifdef __EXTENDED_DPTR__
+?PUSH_XSTACK16_G:
+?PUSH_XSTACK16_G_CFI_INVALID_BEGINS:
+    cfi invalid
+	XCH	A,R7              ; R7 = Nr of elements to push (low)
+	PUSH	A
+	cfi_PUSH_REG R7
+	MOV	A,R4
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+	MOV	A,R6
+	PUSH	A
+	cfi_PUSH_REG R6
+
+;;;;; Update XSP and let R6:R5:R4 point at start
+	CLR	C
+	MOV	A,XSP_L
+	SUBB	A,R7
+	MOV	R4,A
+	MOV	A,XSP_H
+	DEC	R0
+	SUBB	A,R0
+	INC	R0
+	MOV	R5,A
+	MOV	R6,#BYTE3(sfb(XSTACK))
+	
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,A
+	MOV	XSP_L,R4
+	POP	0xA8 /* IE */
+	cfi_STACK_DEALL 1
+;;;;;;;;
+
+	CALL	?MOVE_LONG_XDATA_GPTR   ; R4:R5:R6 = dst, R3:R2:R1 = src, R0:R7 = Nr of elements to push
+
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R6,A
+    cfi R6 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+    cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+    cfi R4 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R7,A
+    cfi R7 samevalue
+	RET
+?PUSH_XSTACK16_G_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK16_G
+	ENDMOD
+#else
+
+?PUSH_XSTACK16_G:
+?PUSH_XSTACK16_G_CFI_INVALID_BEGINS:
+    cfi invalid
+	XCH	A,R7              ; R7 = Nr of elements to push (low)
+	PUSH	A
+	cfi_PUSH_REG R7
+	MOV	A,R4
+	PUSH	A
+	cfi_PUSH_REG R4
+	MOV	A,R5
+	PUSH	A
+	cfi_PUSH_REG R5
+
+;;;;; Update XSP and let R5:R4 point at start
+	CLR	C
+	MOV	A,XSP_L
+	SUBB	A,R7
+	MOV	R4,A
+	MOV	A,XSP_H
+	DEC	R0
+	SUBB	A,R0
+	INC	R0
+	MOV	R5,A
+	
+	PUSH	0xA8 /* IE */       ; Preserve the Interrupt Enable register
+	cfi_STACK_ALLOC 1
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,A
+	MOV	XSP_L,R4
+	POP	0xA8 /* IE */
+	cfi_STACK_DEALL 1
+;;;;;;;;
+
+	CALL	?MOVE_LONG_XDATA_GPTR   ; R4:R5 = dst, R3:R2:R1 = src, R0:R7 = Nr of elements to push
+
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R5,A
+    cfi R5 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R4,A
+    cfi R4 samevalue
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R7,A
+    cfi R7 samevalue
+	RET
+?PUSH_XSTACK16_G_CFI_INVALID_ENDS:
+    cfi valid
+    cfi_DATA_BLOCK_end ?PUSH_XSTACK16_G
+	ENDMOD
+#endif
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_IND_OVERLAY16_I
+;
+;	Description: Push 2-bytes of data from idata to overlay frame
+;
+;	Register input:
+;		R1 = Address to the first element.
+;		R0 = Pointer to parameter area
+;
+;	Register output:
+;		A  = Undefined
+;		R1 = Undefined
+;		R0 = Pointer to next parameter location
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_IND_OVERLAY16_I
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PUSH_IND_OVERLAY16_I
+
+    cfi_DATA_BLOCK_start ?PUSH_IND_OVERLAY16_I
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+?PUSH_IND_OVERLAY16_I:
+	INC	R1
+	MOV	A,@R1
+	MOV	@R0,A
+	DEC	R0
+	DEC	R1
+	MOV	A,@R1
+	MOV	@R0,A
+	DEC	R0
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_IND_OVERLAY16_I
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_IND_OVERLAY16_P
+;
+;	Description: Push 2-bytes of data from idata to overlay frame
+;
+;	Register input:
+;		R1 = Address to the first element.
+;		R0 = Pointer to parameter area
+;
+;	Register output:
+;		A  = Undefined
+;		R1 = Undefined
+;		R0 = Pointer to next parameter location
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_IND_OVERLAY16_P
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PUSH_IND_OVERLAY16_P
+
+    cfi_DATA_BLOCK_start ?PUSH_IND_OVERLAY16_P
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+?PUSH_IND_OVERLAY16_P:
+	INC	R1
+	MOVX	A,@R1
+	MOV	@R0,A
+	DEC	R0
+	DEC	R1
+	MOVX	A,@R1
+	MOV	@R0,A
+	DEC	R0
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_IND_OVERLAY16_P
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_IND_OVERLAY16_C
+;
+;	Description: Push 2-bytes of data from code to overlay frame
+;
+;	Register input:
+;		DPRT0 = Address to the first element.
+;		R0 = Pointer to parameter area
+;
+;	Register output:
+;		A  = Undefined
+;		R0 = Pointer to next parameter location
+;
+;       DPTR:
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: none     Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: none     Returns  DPS: DPTRx
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_IND_OVERLAY16_C
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PUSH_IND_OVERLAY16_C
+	EXTERN	?V0
+
+    cfi_DATA_BLOCK_start ?PUSH_IND_OVERLAY16_C
+    cfi A  undefined
+    cfi R0 undefined
+
+?PUSH_IND_OVERLAY16_C:
+	MOV	A,#1
+	MOVC	A,@A+DPTR
+	MOV	@R0,A
+	DEC	R0
+	CLR	A
+	MOVC	A,@A+DPTR
+	MOV	@R0,A
+	DEC	R0
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_IND_OVERLAY16_C
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_IND_OVERLAY16_X
+;
+;	Description: Push 2-bytes of data from xdata to overlay frame
+;
+;	Register input:
+;		DPRT0 = Address to the first element.
+;		R0 = Pointer to parameter area
+;
+;	Register output:
+;		A  = Undefined
+;		DPTR0 = Undefined
+;		R0 = Pointer to next parameter location
+;
+;       DPTR:
+;               Shadowed:       Requires DPTR: DPTRx     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx     Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx     Returns  DPS: DPTRx
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_IND_OVERLAY16_X
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PUSH_IND_OVERLAY16_X
+	EXTERN	?V0
+
+    cfi_DATA_BLOCK_start ?PUSH_IND_OVERLAY16_X
+    cfi A     undefined
+    cfi R0    undefined
+    cfi DPTR0 undefined
+
+?PUSH_IND_OVERLAY16_X:
+	MOVX	A,@DPTR
+	PUSH	A
+	cfi_STACK_ALLOC 1
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	@R0,A
+	DEC	R0
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	@R0,A
+	DEC	R0
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_IND_OVERLAY16_X
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_IND_OVERLAY_I
+;
+;	Description: Push x-bytes of data from idata to overlay frame
+;
+;	Register input:
+;		R1 = Address to the first element.
+;		R0 = Pointer to parameter area
+;		A  = size - 1
+;
+;	Register output:
+;		A     = Undefined
+;		R1    = Undefined
+;		R0    = Pointer to next parameter location
+;               Carry = Undefined
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_IND_OVERLAY_I
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PUSH_IND_OVERLAY_I
+	PUBLIC	?PUSH_IND_OVERLAY32_I
+	PUBLIC	?PUSH_IND_OVERLAY24_I
+
+    cfi_DATA_BLOCK_start ?PUSH_IND_OVERLAY_I
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+?PUSH_IND_OVERLAY24_I:
+	MOV	A,#2	; size = 3
+	SJMP	?PUSH_IND_OVERLAY_I
+
+?PUSH_IND_OVERLAY32_I:
+	MOV	A,#3	; size = 4
+	; Fall through
+
+?PUSH_IND_OVERLAY_I:
+	XCH	A,R2	; size - 1
+	PUSH	A
+	cfi_PUSH_REG R2
+	MOV	A,R2
+	ADD	A,R1
+	MOV	R1,A
+
+	INC	R2	; size
+	
+MOVE_BYTE:
+	MOV	A,@R1
+	MOV	@R0,A
+	DEC	R1
+	DEC	R0
+	DJNZ	R2,MOVE_BYTE
+
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R2,A
+    cfi R2 samevalue
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_IND_OVERLAY_I
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_IND_OVERLAY_P
+;
+;	Description: Push x-bytes of data from pdata to overlay frame
+;
+;	Register input:
+;		R1 = Address to the first element.
+;		R0 = Pointer to parameter area
+;		A  = size - 1
+;
+;	Register output:
+;		A     = Undefined
+;		R1    = Undefined
+;		R0    = Pointer to next parameter location
+;               Carry = Undefined
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_IND_OVERLAY_P
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PUSH_IND_OVERLAY_P
+	PUBLIC	?PUSH_IND_OVERLAY32_P
+	PUBLIC	?PUSH_IND_OVERLAY24_P
+
+	cfi_DATA_BLOCK_start ?PUSH_IND_OVERLAY_P
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+
+?PUSH_IND_OVERLAY24_P:
+	MOV	A,#2	// size = 3
+	SJMP	?PUSH_IND_OVERLAY_P
+
+?PUSH_IND_OVERLAY32_P:
+	MOV	A,#3	// size = 4
+	; Fall through
+
+?PUSH_IND_OVERLAY_P:
+	XCH	A,R2	// size - 1
+	PUSH	A
+	cfi_PUSH_REG R2
+	MOV	A,R2
+	ADD	A,R1
+	MOV	R1,A
+	
+	INC	R2	// size
+
+MOVE_BYTE:
+	MOVX	A,@R1
+	MOV	@R0,A
+	DEC	R1
+	DEC	R0
+	DJNZ	R2,MOVE_BYTE
+
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R2,A
+    cfi R2 samevalue
+	RET
+
+	cfi_DATA_BLOCK_end ?PUSH_IND_OVERLAY_P
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_IND_OVERLAY_X
+;
+;	Description: Push x-bytes of data from xdata to overlay frame
+;
+;	Register input:
+;		DPRT0 = Address to the first element.
+;		R0 = Pointer to parameter area
+;		A  = size - 1
+;
+;	Register output:
+;		A     = Undefined
+;		DPTR0 = Undefined
+;		R0    = Pointer to next parameter location
+;               Carry = Undefined
+;
+;       DPTR:
+;               Shadowed:       Requires DPTR: DPTRx     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx     Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx     Returns  DPS: DPTRx
+;
+;	Stack usage: 1 + return address
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_IND_OVERLAY_X
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PUSH_IND_OVERLAY_X
+	PUBLIC	?PUSH_IND_OVERLAY32_X
+	PUBLIC	?PUSH_IND_OVERLAY24_X
+
+    cfi_DATA_BLOCK_start ?PUSH_IND_OVERLAY_X
+    cfi A undefined
+    cfi R0 undefined
+    cfi DPTR0 undefined
+
+?PUSH_IND_OVERLAY24_X:
+	MOV	A,#2		// size = 3
+	SJMP	?PUSH_IND_OVERLAY_X
+
+?PUSH_IND_OVERLAY32_X:
+	MOV	A,#3		// size = 4
+	; Fall through
+
+?PUSH_IND_OVERLAY_X:
+	XCH	A,R2		// R2 = size - 1
+	PUSH	A
+	cfi_PUSH_REG R2
+	CLR	C
+	MOV	A,R0	
+	SUBB	A,R2
+	MOV	R0,A
+	PUSH	A		// A = R0_enter - (size-1)
+	cfi_STACK_ALLOC 1
+	INC	R2		// R2 = size
+
+MOVE_BYTE:
+	MOVX	A,@DPTR
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	DJNZ	R2,MOVE_BYTE
+
+	POP	A
+	cfi_STACK_DEALL 1
+	DEC	A
+	MOV	R0,A		// R0 = R0_enter - (size+1)
+
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R2,A
+    cfi R2 samevalue
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_IND_OVERLAY_X
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_IND_OVERLAY_C
+;
+;	Description: Push x-bytes of data from code to overlay frame
+;
+;	Register input:
+;		DPRT0 = Address to the first element.
+;		R0 = Pointer to parameter area
+;		A  = size - 1
+;
+;	Register output:
+;		A     = Undefined
+;		DPTR0 = Undefined
+;		R0    = Pointer to next parameter location
+;               Carry = Undefined
+;
+;       DPTR:
+;               Shadowed:       Requires DPTR: DPTRx     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx     Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx     Returns  DPS: DPTRx
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_IND_OVERLAY_C
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PUSH_IND_OVERLAY_C
+	PUBLIC	?PUSH_IND_OVERLAY32_C
+	PUBLIC	?PUSH_IND_OVERLAY24_C
+
+    cfi_DATA_BLOCK_start ?PUSH_IND_OVERLAY_C
+    cfi A undefined
+    cfi R0 undefined
+    cfi DPTR0 undefined
+
+?PUSH_IND_OVERLAY24_C:
+	MOV	A,#2		// size = 3
+	SJMP	?PUSH_IND_OVERLAY_C
+
+?PUSH_IND_OVERLAY32_C:
+	MOV	A,#3		// size = 4
+	; Fall through
+
+?PUSH_IND_OVERLAY_C:
+	XCH	A,R2		// R2 = size - 1
+	PUSH	A
+	cfi_PUSH_REG R2
+	CLR	C
+	MOV	A,R0	
+	SUBB	A,R2
+	MOV	R0,A
+	PUSH	A		// A = R0_enter - (size-1)
+	cfi_STACK_ALLOC 1
+	INC	R2		// R2 = size
+
+MOVE_BYTE:
+	CLR	A
+	MOVC	A,@A+DPTR
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	DJNZ	R2,MOVE_BYTE
+
+	POP	A
+	cfi_STACK_DEALL 1
+	DEC	A
+	MOV	R0,A		// R0 = R0_enter - (size+1)
+
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R2,A
+    cfi R2 samevalue
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_IND_OVERLAY_C
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?PUSH_IND_OVERLAY_G
+;
+;	Description: Push x-bytes to overlafram from generic pointer
+;
+;	Register input:
+;		R1:R2:R3 = Address to the first element.
+;		R0       = Pointer to parameter area
+;		A        = Nr of bytes to move - 1
+;
+;	Register output:
+;		A     = Undefined
+;		DPTR0 = Undefined
+;		R0    = Pointer to next parameter location
+;               Carry = Undefined
+;
+;       Multiple DPTR
+;               DPTR/DPS: Unchanged
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PUSH_IND_OVERLAY_G
+        EXTERN  ?MOVE_LONG_IDATA_GPTR
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PUSH_IND_OVERLAY_G
+
+    cfi_DATA_BLOCK_start ?PUSH_IND_OVERLAY_G
+    cfi A undefined
+    cfi R0 undefined
+    cfi DPTR0 undefined
+
+?PUSH_IND_OVERLAY_G:
+	XCH	A,R7		// R7 = size - 1
+	PUSH	A
+	cfi_PUSH_REG R7
+	CLR	C
+	MOV	A,R0
+	SUBB	A,R7
+	MOV	R0,A
+	PUSH	A		// A = R0_enter - (size-1)
+	cfi_STACK_ALLOC 1
+	INC	R7		// R7 = size
+	CALL	?MOVE_LONG_IDATA_GPTR ; R0=dest, R3:R2:R1=src, R7=bytes to move
+
+	POP	A
+	cfi_STACK_DEALL 1
+	DEC	A
+	MOV	R0,A		// R0 = R0_enter - (size+1)
+	POP	A
+	cfi_STACK_DEALL 1
+	MOV	R7,A
+    cfi R7 samevalue
+	RET
+
+    cfi_DATA_BLOCK_end ?PUSH_IND_OVERLAY_G
+	ENDMOD
+
+	END
+	
+;
+;   Revision control system
+;       $Log: iar_stack_parameter.s51 $
+;       Revision 1.48  2007/06/07 09:22:12Z  larssu
+;       NOROOT'ify RCODE segments
+;       Revision 1.47  2005/08/26 09:21:44Z  ola
+;       Revision 1.46  2005/01/26 10:21:33Z  ola
+;       Revision 1.45  2005/01/25 09:16:50Z  ola
+;       Revision 1.44  2004/11/22 15:15:12Z  owi
+;       Revision 1.43  2004/11/18 16:56:58Z  owi
+;       Revision 1.42  2004/11/18 15:21:35Z  owi
+;       Revision 1.41  2004/11/17 08:58:30Z  owi
+;       Revision 1.40  2004/11/16 16:41:08Z  owi
+;       Revision 1.39  2004/11/10 16:31:05Z  owi
+;       Revision 1.38  2004/09/16 10:52:27Z  owi
+;       Revision 1.37  2004/09/16 08:10:06Z  ola
+;       Revision 1.36  2004/09/16 08:03:23Z  owi
+;       Revision 1.35  2004/09/03 14:52:23Z  ola
+;       Revision 1.34  2004/09/01 16:05:04Z  ola
+;       Revision 1.33  2004/08/20 08:00:00Z  ola
+;       Revision 1.32  2004/08/04 09:27:13Z  owi
+;       Revision 1.30  2004/03/15 16:45:33Z  owi
+;       Revision 1.29  2003/12/02 18:06:33Z  owi
+;

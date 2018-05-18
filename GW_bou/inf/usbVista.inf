@@ -1,0 +1,163 @@
+;******************************************************************************
+;*   COPYRIGHT (C) 2002-2005 TEXAS INSTRUMENTS INCORPORATED.
+;*   ALL RIGHTS RESERVED. ONLY USE WITH TEXAS INSTRUMENTS SILICON.
+;******************************************************************************
+;*
+;*   FILE:           usbuart.INF
+;*   SUBSYSTEM:      UMP Devices
+;*
+;*   ABSTRACT:       Texas Instruments Driver Installation file for
+;*                   a UMP Device main driver.
+;*                   UMP installation file for TIUSB3410 and TIUSB5052
+;*
+;*
+;******************************************************************************
+;*
+[Version]
+Signature="$WINDOWS NT$"
+Class=Ports
+ClassGuid={4d36e978-e325-11ce-bfc1-08002be10318}
+Provider=%TIInc%
+DriverVer=01/14/2008,6.5.6000.0
+CatalogFile=ump3410.cat
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[SourceDisksNames]
+1 = %DiskId%
+
+[SourceDisksFiles]
+umpf3410.i51=1
+umpusbvista.sys = 1
+;umpserenum.sys = 1
+
+;*****************************************
+; 3410  Install Section
+;*****************************************
+
+[Manufacturer]
+%TI.Mfg%=TI.Section,NTx86, NTamd64, NTia64
+
+; For Win2K because it cannot parse decorated sections.
+[TI.Section]
+;
+; These are the toaster bus pnp ids
+;
+%3410.DeviceDesc%=3410_Device, USB\VID_0451&PID_3410
+%341A.DeviceDesc%=3410_Device, USB\VID_0451&PID_341A
+
+; For XP and later
+[TI.Section.NTx86]
+%3410.DeviceDesc%=3410_Device, USB\VID_0451&PID_3410
+%341A.DeviceDesc%=3410_Device, USB\VID_0451&PID_341A
+
+[TI.Section.NTamd64]
+%3410.DeviceDesc%=3410_Device, USB\VID_0451&PID_3410
+%341A.DeviceDesc%=3410_Device, USB\VID_0451&PID_341A
+
+[TI.Section.NTia64]
+%3410.DeviceDesc%=3410_Device, USB\VID_0451&PID_3410
+%341A.DeviceDesc%=3410_Device, USB\VID_0451&PID_341A
+
+[3410_Device.NT]
+Include=msports.inf
+Needs=SerialEnumerator.NT
+CopyFiles=Drivers_Dir
+AddReg = 3410_Device.NT.AddReg
+
+[3410_Device.NT.AddReg]
+HKR,,PortSubClass,1,01
+HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
+
+[3410_Device.NT.HW]
+AddReg=3410_Device.NT.HW.AddReg
+
+[3410_Device.NT.HW.AddReg]                            
+HKR,,ImageFile,,"\SystemRoot\System32\drivers\umpf3410.i51"
+HKR,,SetMSRLinesZero,%REG_BINARY%,0x00  ; 0x80=DCD 0x40=RI 0x20=DSR 0x10=CTS
+HKR,,SetMSRLinesOne, %REG_BINARY%,0x00  ; 0x80=DCD 0x40=RI 0x20=DSR 0x10=CTS 
+HKR,,NumComPorts,%REG_DWORD%,0x01
+HKR,,NumLptPorts,%REG_DWORD%,0x00
+;HKR,,TIDeviceType,,"TIUSB3410"
+; ****  Release 1.2.10.96: Theis line sets the Virtual COM Port HW ID  *****
+; ****    Vendor replace Texas Instruments VID with your own VID       *****
+;HKR,,Port1DeviceHWID,,"VID_0451_com"
+; ****
+; This defines the name shown by the Found New HW wizard for the COM port child device:
+;HKR,,ComPortChildDeviceText,,"Texas Instruments UMP Serial Port"
+HKR,,"UpperFilters", 0x00010000, "serenum"
+
+
+[Drivers_Dir]
+umpusbvista.sys
+umpf3410.i51
+;umpserenum.sys
+
+;-------------- Service installation
+[3410_Device.NT.Services]
+AddService = umpusbvista, 0x00000002, usbuart_Service_Inst
+;AddService = umpserenum,,umpserenum_Service_Inst
+
+; -------------- 3410 driver install sections
+[usbuart_Service_Inst]
+DisplayName    = %StandardUMPUSB.SvcDesc%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START 
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\umpusbvista.sys
+;LoadOrderGroup = Base
+
+; -------------- umpserenum Driver install section
+;[umpserenum_Service_Inst]
+;DisplayName    = %umpserenum.SVCDESC%
+;ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+;StartType      = 3               ; SERVICE_DEMAND_START
+;ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+;ServiceBinary  = %12%\umpserenum.sys
+;LoadOrderGroup = PNP Filter
+
+;
+;--- 3410_Device WDF Coinstaller installation ------
+;
+[DestinationDirs]
+3410_Device_CoInstaller_CopyFiles = 11
+
+[3410_Device.NT.CoInstallers]
+AddReg=3410_Device_CoInstaller_AddReg
+CopyFiles=3410_Device_CoInstaller_CopyFiles
+
+[3410_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "wdfcoinstaller01005.dll,WdfCoInstaller"
+
+[3410_Device_CoInstaller_CopyFiles]
+wdfcoinstaller01005.dll
+
+[SourceDisksFiles]
+wdfcoinstaller01005.dll=1 ; make sure the number matches with SourceDisksNames
+
+[3410_Device.NT.Wdf]
+KmdfService = TI3410, TI3410_wdfsect
+[TI3410_wdfsect]
+KmdfLibraryVersion = 1.5
+
+
+
+[Strings]
+;
+; Non-Localizable Strings
+;
+
+REG_DWORD      = 0x00010001
+REG_BINARY     = 0x00000001
+;
+; Localizable Strings
+;
+
+TIInc="Texas Instruments, Inc"
+TI.Mfg="Texas Instruments"
+DiskId = "TI UMP Installation Disk"
+3410.DeviceDesc = "TUSB3410 Device"
+341A.DeviceDesc = "TUSB3410 UART EVM"
+StandardUMPUSB.SvcDesc="Texas Instruments USB Serial Driver"
+umpserenum.SVCDESC = "Serenum Filter Driver"

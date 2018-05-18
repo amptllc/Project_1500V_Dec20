@@ -1,0 +1,1451 @@
+/*==== DECLARATION CONTROL ===================================================*/
+/*==== INCLUDES ==============================================================*/
+
+#include "hal_main.h"
+#include "main.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MKS_IN_TICK     250
+#define TICKS_IN_SEC    4000
+#define TICKS_IN_MS     4
+
+UINT32  _freq         = FREQUENCY_FCC_CC2511;
+UINT16  _slot         = ( 40 * TICKS_IN_MS );
+UINT16  _gw_delay     = ( 50 * TICKS_IN_MS );
+UINT16  _loop_delay   = ( 40 * TICKS_IN_MS );
+UINT32  _datarate     = DATA_RATE_4_CC2511;
+
+#define _mppCycle            ( TICKS_IN_SEC / 16 ) 
+#define _dogFeeding          ( TICKS_IN_SEC / 16 )
+#define _adjustFrequency     ( (UINT16)TICKS_IN_SEC * 2 )
+#define _firstAdcMeasurement ( TICKS_IN_SEC / 50 )
+#define _adcMeasurement      ( TICKS_IN_SEC / 100 )
+#define _calibrationDelay    ( TICKS_IN_MS  )
+
+//void configureAdcs(void);
+
+//void feedTheDog(void);
+void prepareData(void);
+void sendData(BYTE *buffer, BOOL is500 );
+void armAdcs(void);
+void readNextValue(void);
+void parseGWPackage(void);
+//void calibrate(void);
+void computeADCs(BOOL timeout, BOOL switchIntegrals);
+void prepareJoinRequest(void);
+void prepareScaling(void);
+void setup500( BOOL flag );
+
+void parseCommands(BYTE l);
+
+extern void flashCallback(void);
+extern void setup_hopper(BYTE curch);
+extern void hop(void);
+
+// must be even
+typedef struct {
+    UINT16 barrier;                                                                                         // 2
+    BYTE   netId, myBunch;                                                                                  // 2
+    UINT16 groupId;                                                                                         // 2
+    // MAC number is exactly a SERIAL NUMBER
+    // format:
+    // 3bit weekday | 6 bit week | 7 bit year | 1 byte test center | 2 byte seq number | 1 byte random
+    BYTE   myMac[6];                                                                                        // 6
+    // dF = -0.0005618976581444 t^3 + 0.0539971103485394 t^2 - 0.8658779608121610 t - 249.5883835010120000  
+    // t  = (adcs[5]-73000)) / 260
+    float dFk[4];                                                                                          // 16
+
+    float vrefPolynom[3];                                                                                  //* 12
+    // Vout Pin Iout Vin Text Tint
+    float linearK [6][2];                                                                                  //* 48
+
+    INT32  theDelta;                                                                                        // 4
+    INT32  dF_Tolerance; // 16 in the offset register                                                       // 4 
+
+    char curKey[ AES_SIZE ];                                                                                // 16
+    char curIV [ AES_SIZE ];                                                                                // 16
+
+    struct { 
+      BYTE   testNumber; // testNumber & 0x80 != 0 - successful, otherwise - not successful, 7 bytes for test Number
+      UINT32 testDate;   // UTC timestamp
+    }tests[4];                                                                                              // 20
+    
+    UINT32 installDate;  // UTC timestamp                                                                      4
+    BYTE   azimuth, positionInString;                                                                       // 2
+    UINT16 string, elevation, latitude, longitude, altitude;                                                // 10
+    BYTE channel;                                                                                           // 1
+    float VinTurnOn, VinShutOff, VinDisableRadio, tkCurrent, tkPower;                                       // 20
+    BOOL    mpp, module;
+    BYTE    ov,  oc;
+    BYTE    radioPower, edAddr, gwAddr, repeaterChannel, repeaterPower;
+    BOOL
+            production          :   1, 
+            ensureWDReset       :   1, 
+            use10kbod           :   1, 
+            useFEC              :   1, 
+            hoppingAllowed      :   1,
+            isRelay             :   1, 
+            is500Always         :   1, 
+            searchCommunication :   1;
+            
+    BYTE    showState;
+    BYTE    CriticalLevel500, CriticalLevel10;
+    UINT16  version;
+    
+    UINT16  defCyclesTo500, defCyclesTo10, defCyclesToStep500Channel, defCyclesToStep10Channel, 
+            defCycles2SoftKick, defCycles2HardKick;
+    UINT16  imageAddr;    // magic number 0x7CD4
+    UINT16  versionLow, versionHigh;
+    BYTE    starting500Channel;
+} ParameterBlock;
+#ifndef WHOLEFLASH
+ParameterBlock page;
+#else
+ParameterBlock page = {// 
+    0xAAAA,
+    (BYTE)0xFF, (BYTE)0xFF, 0xFFFF, //  permanent !!! Normal
+    { 0, 0, 0, 0, 0, 0 }, 
+    { 
+      //-0.000784329277, 0.069999928482, -1.557036645365, -229.914041475601 + 32.0
+      -0.000693, 0.0556, 0.613, -285.44 //+ 300.0
+    }, // temperature compensation
+    {  2435.0, 0.0000004, 73.0 }, // vref polynomials
+    //  Vout  0              Pin  1               Iout   2         Vin  3         Text 4       Tint  5                   
+    { {24.096 * 0.5, 0.0}, {28.426, 0.0}, {5.536, -502.0}, {22.063 * 0.5, 0.0}, {0.435, 625.0}, {0.39, 755.0 } },
+    0L, 
+    64L,
+    { 'A', 'N', 'D', 'S',  0,  'l', 'a', 'r', 'A', 'u', 'g', 'u', 's', 't',  0,   7 }, 
+    { 'A', 'u', 'g', 'u', 's', 't',  0,   7,  'A', 'u', 'g', 'u', 's', 't',  0,   7 }, 
+    {{(BYTE)0x01, 0xFFFFFFFFL}, {(BYTE)0x02, 0xFFFFFFFFL}, {(BYTE)0x03, 0xFFFFFFFFL}, {(BYTE)0x04, 0xFFFFFFFFL}},
+    0xFFFFFFFFL, (BYTE)0xFF, (BYTE)0xFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 
+    (BYTE)1, //  should be changed to 0 in the production version
+    24000.0*0.5, 20000.0*0.5, 0.0, //12000.0*0.5,  // 0 for debug
+    0.00002, 0.00005,
+    TRUE, TRUE,                 // mpp, module
+    (BYTE)220, (BYTE)200,       // ov, oc
+    0xFF, 2, 1, 0,              // radioPower, edAddr, gwAddr, repChannel
+    0xFF, // 500kbod Power, 0xCB => -10 db, we may think about +1 - FF, 0 0xFE, -5 0xDB, -15 0x8E, -20 0x4D, -25  0x51
+    TRUE, TRUE,                // production, ensureWD reset
+    FALSE, FALSE, TRUE,  // use10, useFEC, hoppingAllowed, 
+//    TRUE, FALSE, FALSE, 1,   // Repeater, is Relay, is500, search
+//    FALSE, TRUE, TRUE, 1,   // Slave      , is Relay, is500, search
+    FALSE, FALSE, TRUE,   1,  // Search     , is Relay, is500, search
+//   FALSE, FALSE, FALSE, 1,    // Simple, is Relay, is500, search
+    87, 92,                   // critical 500, critical 10/30
+    0xE1,                     // version
+
+    120, 220, 20, 30,
+    7, 400,
+    0x476,
+    0xE1, 0xE1,
+    0xFF
+};
+#endif
+
+BYTE dumb0; // it is needed !!!
+
+BYTE   *pagePtr = (BYTE *)&page;
+UINT16 PAGESIZE = sizeof( page );
+float invVref0 = 0;
+INT8 theRealOffset  = 0;
+
+float DEF_CURRENT_MULTYPLIER = 5.536;
+
+// float registers
+#define SET_DFK0    1
+#define SET_DFK1    2
+#define SET_DFK2    3
+#define SET_DFK3    4
+
+#define SET_TK_CUR          5
+#define SET_TK_POW          6
+#define SET_VIN_TURN_ON     7
+#define SET_VIN_SHUT_OFF    8
+
+#define SET_LC00 10
+#define SET_LC01 11
+#define SET_LC10 12
+#define SET_LC11 13 
+#define SET_LC20 14
+#define SET_LC21 15
+#define SET_LC30 16
+#define SET_LC31 17
+#define SET_LC40 18
+#define SET_LC41 19
+#define SET_LC50 20
+#define SET_LC51 21
+
+#define SET_VIN_DISABLE_RADIO 22
+
+#define SET_VREF0 24
+#define SET_VREF1 25
+#define SET_VREF2 26
+
+// INT32 registers
+#define DEBUG_POWER         1
+#define SET_DF_TOLERANCE    2
+
+// INT16 registers
+#define SET_GROUP_ID        1
+#define JOIN                2
+#define SET_ED_GW           3
+
+#define SetCyclesTo500              4   /*defCyclesTo500*/
+#define SetCyclesTo10               5   /*defCyclesTo10 */
+#define SetCyclesToStep500Channel   6   /*defCyclesToStep500Channel */
+#define SetCyclesToStep10Channel    7   /*defCyclesToStep10Channel */
+#define SetCyclesToSoftKick         8   /*defCyclesToSoftKick */ 
+#define SetCyclesToHardKick         9   /*defCyclesToHardKick */
+#define SetImageAddr                10  /*imageAddr*/
+#define SetVersionLow               11
+#define SetVersionHigh              12
+// BYTE and BOOL registers
+// from 0 to 15 - P1 and P2 pins directly - will be used for OPEN, MPP, LED (?)
+
+#define MPP     4
+#define MODULE  5
+
+#define CLEAR_THE_PAGE  10
+
+// MAC bytes
+#define MAC0    (16+0)
+#define MAC1    (16+1)
+#define MAC2    (16+2)
+#define MAC3    (16+3)
+#define MAC4    (16+4)
+#define MAC5    (16+5)
+
+// Timer channels
+#define SET_T3CH0                   22
+#define SET_T3CH1                   23
+#define SET_T4CH0                   24
+#define SET_T4CH1                   25
+
+// Radio Channel
+#define SET_CHANNEL                 26
+
+// FLASH control
+#define FLASH_REFRESH               27
+#define FLASH_AVAILABLE             28
+
+#define CW_MODE                     29
+#define RESTART_MEASUREMENT         30                         
+#define DISSOLVE_NETWORK            31
+#define REPORT_SCALING              32
+
+#define COEFFICIENTS_AVAILABLE      33
+
+#define RADIO_POWER                 35
+#define PRODUCTION                  36
+#define ENSURE_WD_RESET             37
+#define USE_10_kBod                 38
+#define USE_FEC                     39
+#define ENABLE_HOPPING              40
+#define IS_RELAY                    41
+#define IS_500_ALWAYS               42
+#define REPEATER_CHANNEL            43
+#define REPEATER_POWER              44
+#define SEARCH_FOR_COMMUNICATION    45
+
+#define SET_SHOW_STATE              46
+#define SetCriticalLevel500         47
+#define SetCriticalLevel10          48
+
+#define END_OF_TEST                 49
+#define CLEAR_MAX_BUNCH             50
+#define SYNCHRONIZE_MPP_CYCLES      51
+#define BOOT_PAGE_IMAGE             52
+#define SET_START500_CHANNEL        53
+/*==== PUBLIC FUNCTIONS ======================================================*/
+/*
+#define BUFFER_SIZE 128
+#define BUFFER_MASK 0x7F    
+#define N_CHANNELS_128  5
+#define N_CHANNELS_64   3
+#define BUFFER_SIZE_64  64
+#define BUFFER_MASK_64  0x3F
+*/
+#define BUFFER_SIZE 8
+#define BUFFER_MASK 0x7    
+#define N_CHANNELS_128  8
+#define N_CHANNELS_64   0
+#define BUFFER_SIZE_64  8
+#define BUFFER_MASK_64  0x7
+
+#define N_CHANNELS  (N_CHANNELS_128+N_CHANNELS_64)
+
+INT16 adcBuf  [ N_CHANNELS_128 ][ BUFFER_SIZE    ];
+//INT16 adcBuf64[ N_CHANNELS_64  ][ BUFFER_SIZE_64 ];
+INT32  adcs[   N_CHANNELS ];
+UINT16 adcs16[ N_CHANNELS ];
+
+INT16 adcsTemp[ N_CHANNELS ];
+BYTE tempAdcsCount = 0;
+
+UINT16 power1 = 0,   power2 = 0;
+INT16  current1 = 0, current2 = 0;
+
+// not used for now
+UINT16 //myMs = 0,           
+       ticks2ProcessCmd = 0,       
+       cmdCount = 0,
+       lastCycle   = (40 * TICKS_IN_MS * 21),
+       cyclesToHop = 0, cyclesTo500 = 120, cyclesTo10 = 220, cyclesToStep500Channel = 20, cycles2Step10Channel = 30,
+       /*cycles2LightKick = 405,*/ cycles2SoftKick = 3, cycles2HardKick = 400;
+
+BYTE   curChannel = 0, curBunch = 0,   maxBunch = 0, receiveCount = 0,
+       bufferCount = 0, adcCount = 0,  reportScaling = 0, joinRequestWasSend = 0,
+       resetReason;
+
+BOOL   enable2SendData  = FALSE, checkVinValue = FALSE,        flashDirty = FALSE,       
+       isCW = FALSE,             txDisabled = FALSE,           cleanTxBuffer   = TRUE; 
+
+UINT32 utc = 0, /*mySec = 0,*/  utcLast = 0;
+UINT16 ms  = 0, msLast = 0, processingTime, pt;
+
+SchedulerInterface *si = (SchedulerInterface *)0xF500;
+
+static BOOL  *flags;// = si->flags;
+static INT16 *ticks;// = si->ticks;
+
+float safe_vin;
+
+#define POWER   1
+#define CURRENT 2
+#define EXT_GND 3
+#define REF     4
+
+#define TINT    7
+#define TEXT    6
+
+const BYTE  adcChannels[ N_CHANNELS ] = {  
+  // Vout  0      Pin   1     Iout  2      
+    ADC_REF_P0_7   | ADC_12_BIT | ADC_AIN1,    ADC_REF_P0_7   | ADC_12_BIT | ADC_AIN2,    ADC_REF_P0_7   | ADC_12_BIT | ADC_AIN3,    
+  // Gnd ext 3        Ref 4
+    ADC_REF_P0_7   | ADC_12_BIT | ADC_AIN4,    ADC_REF_P0_7   | ADC_12_BIT | ADC_AIN6,    
+  // Vin  5                                         Text  6                          
+    ADC_REF_P0_7   | ADC_12_BIT | ADC_AIN0,    ADC_REF_P0_7   | ADC_12_BIT | ADC_AIN5,    
+  // Tin 7
+    ADC_REF_P0_7   | ADC_12_BIT | ADC_TEMP_SENS
+    //ADC_REF_1_25_V | ADC_12_BIT | ADC_TEMP_SENS
+};
+                                   // Vout Pin Iout           Vin Text Tint         
+const BYTE indices[ N_CHANNELS ] = { 0,     1,  2, 0xFF, 0xFF, 3, 0xFF, 0xFF  };
+INT16  lastOff = 0, lastRssi = 0; //, delta = 0;
+extern INT32 delta;
+
+//const char theKey[ AES_SIZE ] = { 'A', 'N', 'D', 'S',  0,  'l', 'a', 'r', 'A', 'u', 'g', 'u', 's', 't',  0,   7 };
+//const char theIV [ AES_SIZE ] = { 'A', 'u', 'g', 'u', 's', 't',  0,   7,  'A', 'u', 'g', 'u', 's', 't',  0,   7 };
+/******************************************************************************/
+/*
+void atomicChange( BYTE idx, INT16 val ){
+    INT_GLOBAL_ENABLE( INT_OFF ); 
+        ticks[ idx ] = val;
+    INT_GLOBAL_ENABLE( INT_ON ); 
+}
+*/
+#define atomicChange( idx, val ) ticks[idx]=val
+
+
+static float k_oc2timer = 0.0, k_timer2oc = 0.0;
+BYTE timer2oc(BYTE oc){ 
+  if( k_oc2timer == 0.0 ) k_oc2timer = page.linearK[2][0] / DEF_CURRENT_MULTYPLIER;
+  return (BYTE)( oc * k_oc2timer ); 
+}
+BYTE oc2timer(BYTE oc){ 
+  if( k_timer2oc == 0.0 ) k_timer2oc = DEF_CURRENT_MULTYPLIER / page.linearK[2][0];
+  return (BYTE)( oc * k_timer2oc ); 
+}
+/******************************************************************************/
+float sqr( float x ){ return x*x; }
+/******************************************************************************/
+void setupFrequency(){
+    // Configure the radio frequency to use
+    FREQ2 = 0x64;  FREQ1 = 0x6A; FREQ0 = 0xAA; // always FCC
+}
+void switchDataRate( BOOL tenKbod ){
+  _freq        = FREQUENCY_FCC_CC2511;
+  _gw_delay    = ( 30 * TICKS_IN_MS );
+  if( page.is500Always )    _datarate    = DATA_RATE_1_CC2511;
+  else  if( tenKbod )       _datarate    = DATA_RATE_3_CC2511;
+  else                      _datarate    = DATA_RATE_4_CC2511;
+}
+void setupRadioDR(UINT32 dr, BYTE channel, BOOL useFEC ){
+    INT_GLOBAL_ENABLE( INT_OFF );           // Enable interrupts globally
+        RFST = STROBE_IDLE; si->radioMode = RADIO_MODE_UNDEF;            
+        S1CON &= ~0x03; RFIF &= ~IRQ_DONE;  RFIM = IRQ_DONE;                     // Mask IRQ_DONE flag only
+        //switchDataRate( page.use10kbod );
+        radioConfigure( dr, _freq ); 
+        CHANNR = channel;      
+        if( dr == DATA_RATE_1_CC2511 ) PA_TABLE0 = page.repeaterPower;
+        else                           PA_TABLE0 = page.radioPower;
+        if( useFEC  ) MDMCFG1 |= 0x80; else MDMCFG1 &= 0x7F;
+        ADDR = page.edAddr;
+        HAL_INT_ENABLE(INUM_RF,  INT_ON);    // Enable RF general interrupt
+    INT_GLOBAL_ENABLE( INT_ON );             // Enable interrupts globally
+}
+void setupRadio( BYTE channel ){ switchDataRate( page.use10kbod ); setupRadioDR( _datarate, channel, page.useFEC || page.is500Always ); }
+void softKick(void){
+    INT_GLOBAL_ENABLE( INT_OFF );
+        halPowerClkMgmtSetMainClkSrc(CRYSTAL);
+        DMAARM = 0x83; RFST = STROBE_IDLE; si->radioMode = RADIO_MODE_UNDEF;            
+        delta = 0;      setupFrequency();       //
+        dmaRadioSetup(0);
+        loadKey( page.curKey );
+        setupRadio( curChannel );                    // global interrups are enabled inside setup radio
+        utcLast = 0; msLast = 0;
+        cmdCount = 0;
+        if( enable2SendData ){ computeADCs( TRUE, FALSE );  } // adjust quarz to temperature only if buffer is already full
+        ticks[ ReceiveData ] = 1;
+    INT_GLOBAL_ENABLE( INT_ON );
+}
+void setupRepeater( BOOL flag ){
+  DMAARM = 0x83; // stop receive and transmit
+  if( flag && (!page.is500Always) ){  
+       setupRadioDR( DATA_RATE_1_CC2511, page.repeaterChannel, TRUE );  
+       ADDR = page.gwAddr;  
+  }else setupRadio( curChannel );                    
+  // global interrups are enabled inside setup radio
+}
+/******************************************************************************/
+void init(void){
+BYTE pin;
+    if( ( PAGESIZE & 1 ) != 0 ) PAGESIZE++;
+    
+    P0DIR = 0;    // all port 0 pins are input
+    P0INP = 0xFF; // all port 0 pins are tristate
+    ADC_ENABLE_CHANNELS( 0xFF );
+    for( pin = 0; pin < 8; pin++ ){ IO_ADC_PORT0_PIN( pin, IO_ADC_EN); }
+
+    // 2 top pins are secial function - timer 3 channels
+    P1SEL = 0xC0;                          
+    // pins 7(oc) 6(ov) 4(on/off), 3(mpp), 1(LED), 0(mpp cycle) are for output
+    P1DIR = 0xDB;   // 1101 1011
+
+    T3CTL   = 0x70; // prescaler 1/16, normal operation, mode - free running
+    T3CCTL0 = 0x24; // clear output on compare up, set on 0, enabled
+    T3CCTL1 = 0x24; // clear output on compare up, set on 0, enabled
+    PERCFG  = 0x20; // Timer3 has alternate 2 location - P1_6 & P1_7
+    P2SEL   = 0x20; // Timer3 has priority over USART1
+    
+    P1_3 = 1; //P1 |= 8;  // MPP ON
+    mymemset( (BYTE *)adcsTemp, 0, sizeof(adcsTemp) );
+    //     LED down,  MPP off,  Off 
+    //P1 &= ~ ( 2 | 8 | 0x10 ); 
+    
+    P0SEL = 0;
+    // Choose the crystal oscillator as the system clock
+    halPowerClkMgmtSetMainClkSrc(CRYSTAL);
+    // Select frequency and data rate from LCD menu, then configure the radio
+    
+    // Configure interrupt for every time a packet is sent
+    
+    FSCTRL0 = 0;
+        
+    setup_hopper( page.channel );
+    dmaRadioSetup(0);
+
+    setupFrequency();
+    setupRadio( page.channel );  // global interrupts are inabled inside the setupRadio
+
+    //HAL_INT_ENABLE(INUM_RF,  INT_ON);    // Enable RF general interrupt
+
+    invVref0 = 1.0 / page.vrefPolynom[0];
+    srand( page.myMac[4]*256 + page.myMac[5] );
+    //__________________________________________________________________________
+   // Over Voltage     Over Current
+    T3CC0 = page.ov;    T3CC1 = oc2timer( page.oc );    T3CTL |= 0x14;
+    
+    HAL_INT_ENABLE(INUM_T1,  INT_ON);    // enable Timer1 interrupt
+    HAL_INT_ENABLE(INUM_ADC, INT_ON);    // enable ADC interrupt
+    HAL_INT_ENABLE(INUM_RF,  INT_ON);    // Enable RF general interrupt
+}
+/******************************************************************************/
+void init_board(void){
+    if( (!page.mpp) && page.module ){
+        P1_3 = 1; P1_4 = 1; /*P1 |= 0x18;*/ atomicChange( BypassMode, TICKS_IN_SEC ); // switching mpp on and switching it off (bypass mode) only after delay
+    }else{
+        //if( page.mpp )    P1 |= 8;    else P1 &=  ~8;
+        if( page.mpp )    P1_3 = 1;  else P1_3 = 0;
+        //if( page.module ) P1 |= 0x10; else P1 &= ~0x10;
+        if( page.module ) P1_4 = 1;  else P1_4 = 0;
+    }
+}
+/******************************************************************************/
+float *_coeff, invRef = 0;
+float lin_coeff( float f ){ return _coeff[0]*f + _coeff[1]; }
+float lin( BYTE idx, float *coeff ){
+float t  = ((float)adcs[ idx ]) * page.vrefPolynom[0] * invRef; // invRef = 1.0 / (float)adcs[ REF ];
+    return ( coeff[1] - t ) * coeff[0];  
+}
+float cube_coeff( float t ){ return ( ( ( _coeff[0]*t + _coeff[1] )*t + _coeff[2] )*t + _coeff[3] ); }
+/******************************************************************************/
+INT16 lastVin, lastRef; //, lastTex;
+void checkVin(){
+    float vref = page.vrefPolynom[0] / ((float)lastRef);
+    if( isCW ) computeADCs( TRUE, FALSE );
+      
+    safe_vin  = ((float)lastVin) * vref;
+    //safe_vin  = page.linearK[3][0] * safe_vin     +    page.linearK[3][1]; 
+    _coeff = page.linearK[3];
+    safe_vin = lin_coeff( safe_vin );    
+    
+    INT_GLOBAL_ENABLE( INT_OFF );
+        if( ((P1&0x18)==0x10) && (safe_vin < page.VinShutOff ) ){
+            ticks[ TurnOn ] = 3*TICKS_IN_SEC;     P1_4 = 0; //P1 ^= 0x10;
+        }else if( ( ticks[ TurnOn ] < 0 ) && ((P1&0x10)==0) && ( safe_vin > page.VinTurnOn ) ){
+            ticks[ TurnOn ] = 0; ticks[ BypassMode ] = TICKS_IN_SEC;  P1 ^= 0x18;
+        } 
+    INT_GLOBAL_ENABLE( INT_ON );
+    txDisabled = ( safe_vin < page.VinDisableRadio );
+}
+BOOL checkItOut( BOOL *flag_ptr ){
+  if( *flag_ptr ){ *flag_ptr = FALSE; return TRUE; }
+  return FALSE;
+}
+//void reset(void){ WDCTL = 0x8 | 0x3; while( TRUE ) halWait( 10 ); }
+BOOL dec( UINT16 *cntPtr ) { return (*cntPtr) && (--(*cntPtr) == 0 ); }
+/******************************************************************************
+* @fn  main
+* @brief
+*      Main function. Triggers setup menus and main loops for both receiver
+*      and transmitter. This function supports both CC1110 and CC2510.
+* Parameters:
+* @param  void
+* @return void
+******************************************************************************/
+BYTE sleepCounter = 5;
+void goSleep( void ){ if( sleepCounter && (--sleepCounter==0) && si->radioMode == RADIO_MODE_UNDEF ) PCON |= 1; }
+
+void main(void){
+UINT16 cwCnt = 0;
+BOOL   wasAHardResetOrPowerOn = TRUE;
+    if( PARTNUM != 0x81 ) reset(); //{ WDCTL = 0x8 | 0x3; while( TRUE ) halWait( 10 ); } //a reset  
+
+    si->armAdcs       = &armAdcs;
+    si->readNextValue = &readNextValue;
+    si->flashCallback = &flashCallback;
+    si->adcEnabled    = TRUE;
+    flags = si->flags;
+    ticks = si->ticks;
+    
+    resetReason = (SLEEP & 0x18)>>3;
+    
+    if( !readTheLatest((BYTE *)&page, PAGESIZE ) ) flashDirty = TRUE;
+    curChannel = page.channel; 
+
+    init();
+    switch( resetReason ){
+        case 2: P1_3 = 1; P1_4 = 1; wasAHardResetOrPowerOn = FALSE; break; // Watchdog Reset, MPP On, Module On 
+        case 1: case 3: 
+        case 0:             // Power On Reset      
+            //P1 &= ~ ( 8 | 0x10 );  // Mpp Off, Module Off
+            P1_3 = 0; P1_4 = 0;
+            secDelay();
+            // added May 12
+            P1_3 = 1; //P1 |=  8; // MPP on
+            atomicChange( Init, ((INT16) TICKS_IN_SEC) * 5 );
+        break; 
+    }
+    ticks[ MppCycle ]    = _mppCycle-1;   // 62.5 ms
+    ticks[ Ms       ]    = TICKS_IN_MS-1;
+    ticks[ FeedTheDog ]  = _dogFeeding; 
+    ticks[ ReceiveData ] = TICKS_IN_MS-1;
+    ticks[ Cycle ]       = lastCycle;
+
+    loadKey( page.curKey ); //ticks2Hop = lastCycle*page.defCyclesToStep10Channel; 
+    
+    for (;;){ 
+        if( ticks[ FeedTheDog ] < 0 ){ WDCTL = 0xA8;  WDCTL = 0x58;  ticks[ FeedTheDog ] = _dogFeeding;  }
+        if( isCW ){
+            if( !txDisabled ) {
+                cw();
+                if( (++cwCnt & 0x3F) == 0x3F ){ checkVin(); cwCnt = 0; }
+            }
+        }else{
+        BYTE idx;
+            for( idx = 0; idx < N_Of_Ticks; idx++ ){
+                INT_GLOBAL_ENABLE( INT_OFF ); 
+                if( ticks[ idx ] < 0 ){
+                    ticks[ idx ] = 0;
+                    INT_GLOBAL_ENABLE( INT_ON ); 
+                    switch( idx ){
+                        case FeedTheDog:        WDCTL = 0xA8;  WDCTL = 0x58;  ticks[ FeedTheDog ] = _dogFeeding;          break;
+                        case SendData:          sendData( radioPktBufferTx, FALSE );  cleanTxBuffer = TRUE; break;
+                        case ReceiveData:       setupRepeater( FALSE );     receive();                      break;
+                        case BypassMode:        P1_3 = 0;                                                   break;
+                        case Init:              init_board();                                               break;
+                        case CheckFlag:         if( si->radioMode == RADIO_MODE_TX ){
+                                INT_GLOBAL_ENABLE( INT_OFF ); 
+                                    si->radioMode = RADIO_MODE_UNDEF; 
+                                    RFIF &= ~IRQ_DONE; S1CON &= ~0x03;  RFIM = IRQ_DONE; 
+                                    RFST = STROBE_IDLE;
+                                    DMAARM = 0x80 | DMAARM_CHANNEL1;
+                                    flags[ DataSent ] = TRUE;
+                                INT_GLOBAL_ENABLE( INT_ON ); 
+                        } break;
+                        case Hop: if( page.hoppingAllowed && !page.is500Always ){
+                                if( cyclesToHop-- ){ CHANNR = curChannel; hop(); curChannel = CHANNR; atomicChange( Hop, lastCycle - _slot );  }
+                                else               { curChannel = page.channel; CHANNR = curChannel;  }
+                        } break;
+                        case Ms:                atomicChange( Ms, TICKS_IN_MS-1 );    break;
+                        case Cycle: // kicking and search logic
+                                atomicChange( Cycle, lastCycle );
+                                flags[ Cycle ] = TRUE;
+                        break;
+                    } // switch
+                } else { INT_GLOBAL_ENABLE( INT_ON ); }
+            }
+            for( idx = 0; idx < N_Of_Flags; idx ++ ){
+                if( flags[ idx ] ){
+                    flags[ idx ] = FALSE;
+                    switch( idx ){
+                        case IncreaseSleepCnt:  sleepCounter = 15;                      break;
+                        case RefreshFlash:      refreshTheFlash();                      break;
+                        //if( (!page.is500Always) && checkItOut( &time2Listen500 ) ){ setupRepeater( TRUE ); receive(); }
+                        case DataSent:
+                            if( page.isRelay /*&& (!page.is500Always)*/ ) { setupRepeater( TRUE ); receive(); }
+                            if( checkItOut(&cleanTxBuffer ) ){ radioPktBufferTx[0] = radioPktBufferTx[1] = 0; } //cleanTxBuffer = FALSE; 
+                        break;
+                        case PrepareJoin:       prepareJoinRequest( );                  break;
+                        case PrepareData:       prepareData();     // here most of the time is spent
+                                                processingTime = ( pt <= si->runningTick ) ? (si->runningTick - pt) : (si->runningTick + (65535-pt));
+                        break;
+                        case PackageReceived:   pt = si->runningTick;   parseGWPackage();    break;
+                        case CheckVin:          checkVin();                             break;
+                        case Write2Flash:       if( checkItOut(&flashDirty ) ) writeTheLatest( (BYTE *)&page, PAGESIZE ); break;
+                        case Cycle:
+                                if( enable2SendData )
+                                    { if( curBunch == maxBunch ){ computeADCs( page.is500Always, TRUE ); curBunch = 0; } else curBunch++; }
+                                
+                                //if( dec( &cycles2LightKick ) ){ lightKick(); cycles2LightKick = page.defCycles2LightKick; }
+                                if( dec( &cycles2SoftKick )  ){ softKick();  cycles2SoftKick  = page.defCycles2SoftKick;  }
+                                if( dec( &cycles2HardKick ) && page.production ) reset();  // a reset
+                                
+                                if( wasAHardResetOrPowerOn || page.searchCommunication ){
+                                    if( page.is500Always ){
+                                        if( dec( &cyclesTo10 ) ) { 
+                                            cyclesTo500 = page.defCyclesTo500;  cycles2Step10Channel = page.defCyclesToStep10Channel;
+                                            page.is500Always = FALSE; cycles2Step10Channel = page.defCyclesToStep10Channel;
+                                            setupRadio( curChannel = page.channel );
+                                        }else if( dec( &cyclesToStep500Channel ) ) { 
+                                            cyclesToStep500Channel = page.defCyclesToStep500Channel; 
+                                            page.starting500Channel = curChannel = (curChannel+25) % 250;
+                                            setupRadio( curChannel );
+                                        }
+                                    }else{
+                                        if( dec( &cyclesTo500 ) ) { 
+                                            cyclesTo10 = page.defCyclesTo10;    cycles2Step10Channel = 0;
+                                            page.is500Always = TRUE; cyclesToStep500Channel = page.defCyclesToStep500Channel; 
+                                            if( page.starting500Channel == 0xFF ) page.starting500Channel = page.channel;
+                                            curChannel = page.starting500Channel;
+                                            ticks[ Hop ] = 0;
+                                            setupRadio( curChannel );
+                                        }else if( dec( &cycles2Step10Channel ) ){
+                                            hop(); cycles2Step10Channel = page.defCyclesToStep10Channel;
+                                        }
+                                    }
+                                }
+                        break;
+                    } // switch
+                } // if( < 0 )
+            }// after the whole for cycle
+            goSleep();
+        }
+    }
+}
+/*==== PRIVATE FUNCTIONS =====================================================*/
+/******************************************************************************
+* Work with watchdogs and LED's
+******************************************************************************/
+//void feedTheDog(void){ WDCTL = 0xA8;  WDCTL = 0x58; }
+/******************************************************************************
+* initiate reading of adc channels
+******************************************************************************/
+void armAdcs(void){  
+    adcCount = 0;
+    si->inCurCycle++; 
+    if( si->inCurCycle < 4 ) ticks[ AdcMeasurement ] = _adcMeasurement;  // 5ms
+    ADC_SINGLE_CONVERSION( adcChannels[ adcCount ] ); 
+}
+/******************************************************************************
+* Read ADC's once into buffer
+******************************************************************************/
+static INT32 counts1[5] = {0L,0L,0L,0L,0L};
+static INT32 counts2[5] = {0L,0L,0L,0L,0L};
+void readNextValue(void){ 
+INT16 value;
+    if( adcCount == 0xFF ){ adcCount = 0; return; }
+    ADC_GET_VALUE( value ); value /= 16;
+    //ADCIF = 0; 
+    adcsTemp[ adcCount++ ] += value;
+
+    if( adcCount < N_CHANNELS ){
+        ADC_SINGLE_CONVERSION( adcChannels[ adcCount ] ); 
+    }else{
+        if( ++tempAdcsCount == 8 ){
+        BYTE idx;
+            for( idx = 0; idx < N_CHANNELS; idx++ ){
+                adcBuf[ idx ][ bufferCount ]                  = adcsTemp[ idx ];
+                if( ( idx < 5  ) && ( idx > 0  ) ){ counts1[ idx ] += adcsTemp[ idx ];   counts2[ idx ] += adcsTemp[ idx ]; }
+            }
+            //counts1[ 0 ]++;  counts2[ 0 ]++;
+            INT16 lastGnd  = adcsTemp[ 3 ];
+            lastRef        = adcsTemp[ 4 ] - lastGnd;
+            lastVin        = adcsTemp[ 5 ] - lastGnd;
+            checkVinValue  = TRUE; 
+            mymemset( (BYTE *)adcsTemp, 0, sizeof(adcsTemp) );    tempAdcsCount = 0;
+            if( ++bufferCount == BUFFER_SIZE ){ enable2SendData = TRUE; bufferCount = 0; }
+        }
+        adcCount = 0;
+    }
+}
+//________________________________________________________________________________
+void prepareTxBuffer(){
+     loadIV( page.curIV );  encode( PACKET_LENGTH_ED-2, (char *)radioPktBuffer, (char *)(radioPktBufferTx+2) );
+     radioPktBufferTx[0] = PACKET_LENGTH_ED;               // Length byte
+     radioPktBufferTx[1] = page.gwAddr;                    // GW address
+}
+void copyMac( BYTE *ptr) { mymemcpy( ptr, page.myMac, 6); }
+/******************************************************************************
+* Prepare data - average the round robin buffer into 10 values
+******************************************************************************/
+BYTE ndev = 0;
+void prepareData(void){  
+  if( reportScaling ) prepareScaling();
+  else if( enable2SendData ){
+      BYTE *ptr  = radioPktBuffer;
+      //BYTE i, j;
+      computeADCs( page.is500Always, TRUE ); 
+      //memset( radioPktBuffer, 0, PACKET_LENGTH_ED );
+      // Insert the 6 byte timestamp into a static packet buffer
+      mymemcpy( ptr, (BYTE *)&utc, 4 ); 
+      ptr+=4;
+      *ptr++ = (BYTE) ms;  *ptr++ = (BYTE) ((ms>>8)&0x3) | ( ( page.netId&0xF | ( ( P1 & 0x18 ) << 1 ) ) << 2 );    
+      copyMac( ptr );  
+      ptr += 6;                  // mac   
+      // 12 bytes gone
+      mymemcpy( ptr, (BYTE *)adcs16, 16 ); 
+      switch( page.showState ){
+          case 1:{
+          UINT16 value = 0; 
+              if( page.is500Always )             value += 2 + ((UINT16)CHANNR)*100;
+              else if( page.isRelay  )           value += 1 + page.repeaterChannel*100;
+              if( page.searchCommunication )     value += 4;
+              mymemcpy( ptr+14, (BYTE *)&value, 2 );  
+          }; // go through
+          case 0:
+              ptr += 16;
+              *ptr++ = (BYTE) theRealOffset;    //   lastOff;       // 28
+          break;
+          default: 
+          case 2:
+              mymemcpy( ptr + 8, (BYTE *)&power1, 8 ); ptr += 8; // light risk
+              *ptr++ = (BYTE) (adcs16[ 4 ] / 100 );    //   lastOff;       // 28
+          break;
+      }
+      // 29 bytes gone
+      *ptr++ = (BYTE) ( -lastRssi );    // 29
+      // 30 bytes gone
+      *ptr++ = (BYTE)    T3CC0;          
+      *ptr++ = (BYTE)    timer2oc( T3CC1 ); //T3CC1;         // 30 & 31
+  }else return;
+   prepareTxBuffer();        
+}
+/******************************************************************************
+* Prepare scaling coeff to send
+******************************************************************************/
+void prepareScaling(void){
+BYTE *ptr = radioPktBuffer;
+UINT16 tag = 1000 + reportScaling;
+//BYTE flg;
+    mymemcpy( ptr+4, (BYTE *)&tag, 2 );
+    copyMac( ptr+6 ); //memcpy( ptr+6, page.myMac, 6);  // mac   
+    switch( reportScaling ){
+        case 6:
+            mymemcpy( ptr, (BYTE *)&page.defCycles2SoftKick, 4 );                                                     // 4
+            ptr += 12;                                                                                                 // 12  
+            // edAddr, gwAddr, repeaterChannel, repeaterPower
+            mymemcpy( ptr, (BYTE *)&page.edAddr, 22 );          
+            //ptr += 12; // 4*sizeof(UINT16);
+            //mymemcpy( ptr, (BYTE *)(&page.version),   2);       ptr += 2;                                              // 22
+            //mymemcpy( ptr, (BYTE *)(&page.defCyclesTo500), 8);  ptr += 8;                                              // 30
+        break;
+        case 5:
+            //*ptr++ = page.mpp;     *ptr++ = page.module;      *ptr++ = page.ov;       *ptr++ = page.oc;               // 4
+            mymemcpy( ptr, (BYTE *)&page.mpp, 4 );                                                                      // 4
+            
+            ptr += 8;                                                                                                 // 12
+            *ptr++ = page.channel; *ptr++ = page.radioPower;  *ptr++ = page.azimuth;  *ptr++ = page.positionInString; // 16
+            *ptr++ = page.netId;   *ptr++ = page.myBunch;                                                             // 18
+            mymemcpy( ptr, (BYTE *)(&page.installDate), 4 );  ptr += 4;                                                 // 22
+
+            mymemcpy( ptr, (BYTE *)(&page.groupId),   2);     ptr += 2;                                                 // 24
+            mymemcpy( ptr, (BYTE *)(&page.elevation), 8);
+        break;
+        case 4: 
+            mymemcpy( ptr, (BYTE * )page.dFk, 4 );    ptr += 12; 
+            mymemcpy( ptr, ((BYTE *)page.dFk)+4, 12); ptr += 12;
+            mymemcpy( ptr, (BYTE * )page.vrefPolynom, 8); 
+        break;
+        case 3:
+            mymemcpy( ptr, ((BYTE * )page.vrefPolynom)+8, 4); ptr += 12;
+            mymemcpy( ptr, (BYTE * )page.linearK,     20); 
+        break;
+        case 2:
+            mymemcpy( ptr, ((BYTE * )page.linearK)+20, 4); ptr+=12;
+            mymemcpy( ptr, ((BYTE * )page.linearK)+24, 20); 
+        break;
+        case 1:
+            mymemcpy( ptr, ((BYTE * )page.linearK)+44, 4);       ptr+= 12;
+            // VinTurnOn, VinShutOff, VinDisableRadio, tkCurrent, tkPower
+            mymemcpy( ptr, ((BYTE * )&page.VinTurnOn), 20); 
+        break;
+    }        
+}
+/******************************************************************************
+* Prepare request to join network
+******************************************************************************/
+void prepareJoinRequest(void){  
+BYTE *ptr  = radioPktBuffer;
+    mymemset( ptr, 0xFF, 4); ptr+=4; 
+    //*ptr++ = 0xFF; *ptr++ = 0xFF; *ptr++ = 0xFF; *ptr++ = 0xFF; 
+    mymemcpy( ptr, (BYTE *)&utc, 4 ); 
+    mymemcpy( ptr+4, (BYTE *)&ms, 2 ); 
+    copyMac( ptr+6 ); //memcpy( ptr+6, page.myMac, 6 );
+    prepareTxBuffer();      radioPktBufferTx[0] = PACKET_LENGTH_GW_2;
+}
+/******************************************************************************
+* Send the previously prepared data package
+******************************************************************************/
+void sendData(BYTE *buffer, BOOL isRepeater ){  
+    if( ((buffer[0] != PACKET_LENGTH_ED) && (buffer[0] != PACKET_LENGTH_GW_2)) || txDisabled || ( receiveCount < 10 ) )
+        { cleanTxBuffer = FALSE; return; }
+    
+    setupTxBuffer( buffer );
+    setupRepeater( isRepeater );
+
+    if( reportScaling ) reportScaling--;
+    INT_GLOBAL_ENABLE(INT_OFF); 
+        si->radioMode = RADIO_MODE_TX;        
+        
+        if( page.is500Always || (page.isRelay && isRepeater) )   atomicChange( CheckFlag, 35 );
+        else if( page.use10kbod && page.useFEC )                 atomicChange( CheckFlag, 2*_slot - TICKS_IN_MS );
+        else                                                     atomicChange( CheckFlag, _slot - TICKS_IN_MS );
+        
+        //atomicChange( CheckFlag, 2*_slot - TICKS_IN_MS );
+        // Send the packet
+        DMAARM |= DMAARM_CHANNEL1;     // Arm DMA channel 1
+        RFST   = STROBE_TX;            // Switch radio to TX
+    INT_GLOBAL_ENABLE(INT_ON); 
+}
+//______________________________________________________________________________________________________________________________
+/******************************************************************************
+* Set up Timer 1 - now it is 24 MHz, sys tick is 100 mks, prescaler = 16, modulo opertaion with counter = 299, generate interrupt
+******************************************************************************/
+/*
+void setupTimer1(void){
+    SET_WORD(T1CC0H, T1CC0L, 750 - 1); // 300 - 1
+    //        prescaler = 8      modulo mode
+    T1CTL   = 0x04             | 0x02;
+    //        ie
+    T1CCTL0 = 0x44;
+}
+*/
+/******************************************************************************
+* @fn  configureAdcs
+* @brief                       This function maps all P0 pins to be input ADCs pins
+* Parameters:
+* @return void
+******************************************************************************/
+/*
+void configureAdcs(void){
+BYTE pin;
+    P0DIR = 0;    // all port 0 pins are input
+    P0INP = 0xFF; // all port 0 pins are tristate
+    ADC_ENABLE_CHANNELS( 0xFF );
+    for( pin = 0; pin < 8; pin++ ){ IO_ADC_PORT0_PIN( pin, IO_ADC_EN); }
+}
+*/
+/******************************************************************************
+* @fn  abs
+* @brief       absolute value
+* Parameters: int
+* @return     int
+******************************************************************************/
+//INT32 abs32(INT32 a){ return (a<0)?-a:a; }
+/******************************************************************************
+* @fn  parseGWPackage
+* @brief       This function makes appropriate actions after receiving message from Gateway
+* Parameters:
+* @return void
+******************************************************************************/
+#define NDEV_MASK   0x3F
+#define JOIN_MASK   0x80
+#define HOP_MASK    0x40
+
+void parseGWPackage(void){
+static UINT32 utcLocal = 0;
+static UINT16 msLocal  = 0;
+static BYTE bunch, plen;
+signed char o = FREQEST, sh = FSCTRL0;
+INT16 shift;
+
+    if( ticks[ ReceiveData ] ==  0 ) ticks[ ReceiveData ] = 2*TICKS_IN_MS-1;// 3; // 3 is too small, just AES decoding takes ~ 1ms = 10!!! Receiving flag is turned on during AES decoding. 
+    
+    plen = radioPktBufferRx[0];
+    if( ( radioPktBufferRx[1] == page.gwAddr ) && page.isRelay && (!page.is500Always) && ( radioPktBufferRx[ plen + 2 ] & 0x80 ) ) 
+        sendData( radioPktBufferRx, FALSE );   
+    else if( ( radioPktBufferRx[1] == page.edAddr ) && ( radioPktBufferRx[ plen + 2 ] & 0x80 )  && ( ( plen == PACKET_LENGTH_GW ) || ( plen == PACKET_LENGTH_GW_2 ) ) ){
+        if( page.isRelay && (!page.is500Always) ) sendData( radioPktBufferRx, TRUE ); 
+        loadIV( page.curIV );  decode( plen-2, (char *)(radioPktBufferRx+2), (char *)radioPktBuffer );
+        bunch = radioPktBuffer[0]; ndev = radioPktBuffer[1]; 
+        mymemcpy( (BYTE *)&utcLocal, radioPktBuffer+2, 4 );   mymemcpy( (BYTE *)&msLocal, radioPktBuffer+6, 2);
+
+        if( (( ndev & NDEV_MASK ) <= 16) /*&& (( ndev & NDEV_MASK ) > 0)*/ && (msLocal < 1000) && 
+            ((utcLocal > utcLast) || (utcLocal==utcLast && msLocal>msLast)) ){
+            
+            P1_1 ^= 1;
+            
+            lastRssi = convertRssiByte( (signed char)(radioPktBufferRx[ plen + 1 ]) );
+
+            curBunch = bunch;
+            if( maxBunch < curBunch ) maxBunch = curBunch;
+            
+            // critical levels does not work anymore because ticks2Cycle and CycleGone now is the same var ... fix it
+            if( page.is500Always ){
+                  if( lastRssi < page.CriticalLevel500 ) { cyclesToStep500Channel = page.defCyclesToStep500Channel; cyclesTo10 = page.defCyclesTo10; }
+            }else if( lastRssi < page.CriticalLevel10 )  { cyclesTo500 = page.defCyclesTo500;    cycles2Step10Channel = 0; }
+
+            //cycles2LightKick = page.defCycles2LightKick; 
+            cycles2SoftKick  = page.defCycles2SoftKick; 
+            cycles2HardKick  = page.defCycles2HardKick;
+           
+            if( receiveCount < 10 )     receiveCount++;
+         
+            utcLast = utcLocal;     msLast = msLocal;
+            if( bunch == 0 ){ flags[ PrepareData ] = TRUE;  utc = utcLocal;  ms = msLocal; }
+
+            if( !page.is500Always ) {                
+                shift = (INT16)sh + (INT16)o;
+                if( abs( shift ) > 96 )   addDF( shift<<2 ); 
+                else                   {  FSCTRL0 = (INT8)shift; }
+            }
+            
+            //lastRssi = convertRssiByte( (signed char)(radioPktBufferRx[ plen + 1 ]) );
+            lastCycle = _slot * ( (ndev & NDEV_MASK) + ((ndev & JOIN_MASK)?1:4) ) + _loop_delay;
+            
+            atomicChange( ReceiveData, lastCycle - _slot );  
+            if( ndev & HOP_MASK ){ atomicChange( Hop,  lastCycle - _slot - 2 * TICKS_IN_MS ); cyclesToHop = 15; }
+            else                 { cyclesToHop = 0;    atomicChange( Hop, 0 ); }
+            atomicChange(  Cycle, lastCycle +  5 * TICKS_IN_MS );
+            
+            ticks2ProcessCmd = si->runningTick;
+            parseCommands( plen-2 );
+            ticks2ProcessCmd = ( ticks2ProcessCmd <= si->runningTick ) ? (si->runningTick - ticks2ProcessCmd) : ( si->runningTick + (65535-ticks2ProcessCmd) );
+            
+            //if( ticks2SendData == 0xFFFF ){ ticks2SendData = 0; time2PrepareData = FALSE; }
+            //else{
+                if( bunch == page.myBunch ){ 
+                     atomicChange( SendData, _slot * page.netId + _gw_delay - ticks2ProcessCmd - 1 );// - TICKS_IN_MS; 
+                     //if( plen == PACKET_LENGTH_GW_2 ) ticks2SendData += 8*TICKS_IN_MS; 
+                }else if( (page.myBunch == 0xFF) && (page.netId == 0xFF) && ((ndev & JOIN_MASK) == 0) ) {
+                   flags[ PrepareData ] = FALSE;
+                   if( joinRequestWasSend > 0 )  joinRequestWasSend --;    
+                   else {
+                      joinRequestWasSend = 7 + rand() % 11; 
+                      atomicChange( SendData, ( (ndev & NDEV_MASK) + (rand()%3) ) * _slot + _gw_delay - ticks2ProcessCmd );         // 12 * 
+                      flags[ PrepareJoin ] = TRUE;
+                     //if( plen == PACKET_LENGTH_GW_2 ) ticks2SendData += 8*TICKS_IN_MS; 
+                   }
+                }else if( (page.myBunch == 0xFF) && (page.netId == 0xFF) ) flags[ PrepareData ] = 0;
+            //}
+            if( ticks[ SendData ] && (plen == PACKET_LENGTH_GW_2) ) ticks[ SendData ] += 8*TICKS_IN_MS; 
+        }
+    }
+    if( !enable2SendData ){ 
+        flags[ PrepareData ] = 0; 
+        if( !flags[ PrepareJoin ] ) flags[ SendData ] = 0; 
+    }
+}
+/******************************************************************************
+* @fn  calibrate
+* @brief       This function initiates calibration of radio.
+* Parameters:
+* @return void
+******************************************************************************/
+//void calibrate(void){  if( !ticks[ ReceiveData ] ) atomicChange( ReceiveData, _calibrationDelay ); } // calibration pushed to IDLE=> RX/TX
+/******************************************************************************
+* @fn  receive
+* @brief       This function switch radio into receiving radioMode
+* Parameters:
+* @return void
+******************************************************************************/
+void receive(void){
+    if( si->radioMode == RADIO_MODE_TX  ) { atomicChange( ReceiveData, 1 ); return; }
+    INT_GLOBAL_ENABLE( INT_OFF );
+        radioPktBufferRx[0] = 0;    radioPktBufferRx[1] = 0;
+        si->radioMode = RADIO_MODE_RX;
+        PKTLEN  = PACKET_LENGTH_GW;  
+        DMAARM |= DMAARM_CHANNEL0;            // Arm DMA channel 0
+        RFST = STROBE_RX;                     // Switch radio to RX
+    INT_GLOBAL_ENABLE( INT_ON );
+}
+/******************************************************************************
+* @fn  addDF
+* @brief       This adds function shift to compensate frequency offset
+* Parameters:  frequency shuft
+* @return void
+******************************************************************************/
+/*
+void addDF(INT32 dFreq){
+INT32 freq;
+    INT_GLOBAL_ENABLE( INT_OFF );
+        freq = 1L*FREQ0;               freq += 256L*FREQ1;                 freq += 65536L*FREQ2;    
+        freq += dFreq;
+        FREQ0 = (BYTE)(freq&0xFF);     FREQ1 = (BYTE)((freq>>8) &0xFF);    FREQ2 = (BYTE)((freq>>16)&0xFF);
+        delta += dFreq;
+    INT_GLOBAL_ENABLE( INT_ON );
+}
+*/
+/******************************************************************************
+* @fn  computeADCs
+* @brief       This function makes all the regular computations
+* Parameters:  
+* @return void
+******************************************************************************/
+static float p1, c1, p2, c2, corrP, corrC;
+float getP( INT32 p32 ){ return ((float)p32)  * invRef * corrP; }
+float getC( INT32 c32 ){ return ((float)c32)  * invRef * corrC; }
+static float vref, t;
+float computeAdjustment( float *k ){ return 1.0 + t*(*k); }
+static INT32 tempCounts[5];
+void computeIntegrals( ){
+//BYTE i;
+    mymemcpy( (BYTE *)tempCounts, (BYTE *)counts1, sizeof( counts1 ) );
+    //for( i = 1; i<5; i++) if( i!= EXT_GND ) { counts1[i] -= counts1[EXT_GND]; counts2[i] -= counts2[EXT_GND]; }
+    
+    substractGround( counts1, 1, 5 );     substractGround( counts2, 1, 5 );
+    
+    corrP = computeAdjustment( &page.tkPower ) * vref * invVref0;
+    corrC = computeAdjustment( &page.tkCurrent );
+    invRef = vref / counts1[REF];
+    p1 = getP( counts1[POWER] );   // ((float)counts1[POWER])   * invRef * corrP;
+    c1 = getC( counts1[CURRENT] ); // ((float)counts1[CURRENT]) * invRef * corrC;
+    invRef = vref / counts2[REF];
+    p2 = getP( counts2[POWER] );   // ((float)counts2[POWER])   * invRef * corrP;
+    c2 = getC( counts2[CURRENT] ); // ((float)counts2[CURRENT]) * invRef * corrC;
+    
+    _coeff = page.linearK[ indices[ POWER ] ];
+    power1   = convU(  lin_coeff( p1 ) );      power2   = convU(  lin_coeff( p2 ) );
+
+    _coeff = page.linearK[ indices[ CURRENT ] ];
+    current1 = convS(   lin_coeff( c1 ) );     current2 = convS(  lin_coeff( c2 ) ); 
+    
+    mymemcpy( (BYTE *)counts2, (BYTE *)tempCounts, sizeof( tempCounts) ); mymemset( (BYTE *)counts1, 0, sizeof( counts1 ) );
+    //for( i = 1; i<5; i++) if( i!= EXT_GND ) counts2[i] += counts2[EXT_GND];
+}
+
+void computeADCs(BOOL timeout, BOOL switchIntegrals){
+BYTE i;
+BYTE counter;
+// static is a way to reduce stack usage 
+INT32  *accptr;
+INT16  *adcptr;
+INT32  acc, df; 
+float mV, tin;
+static float temp[N_CHANNELS];
+float rOff;
+float *coeff;
+//static float intInvRef = 1.0 / (128.0 * 4096.0) ; //0.000001908; //1.0 / (float) (FFF <<7);
+signed char off = FSCTRL0;
+
+    lastOff  = (INT32)off; 
+    //HAL_INT_ENABLE(INUM_ADC, INT_OFF); 
+    //adcEnabled = FALSE;
+    accptr = adcs;
+    // averaging
+    //HAL_INT_ENABLE(INUM_ADC, INT_OFF); 
+    adcptr = adcBuf[0]; // using the fact that one buffer is defined right after another
+                        // in general it is a VERY DANGEROUS ASSUMPTION, but with this C compiler it works
+    for( i = 0; i < N_CHANNELS; i++ ){ // 128 averaging
+        counter = BUFFER_SIZE;
+        acc = 0; while( counter-- )  acc += *adcptr++;
+        *accptr++ = acc;
+    }
+    //HAL_INT_ENABLE(INUM_ADC, INT_ON); 
+    
+    //for( i = 0; i < N_CHANNELS; i++) if( i!= EXT_GND /*&& i != TINT*/ ) adcs[i] -= acc;
+    substractGround( adcs, 0, N_CHANNELS );
+
+    //invRef = 1250.0 / ( 128.0*4096.0*page.vrefPolynom[0]);
+    //tin = -lin( TINT, page.linearK[5] );
+
+    if( adcs[ REF ] == 0 ) return; 
+    invRef = 1.0 / (float)adcs[ REF ];
+    // compute correct temperature, correct vref, coeffcient to convert sum of counts to physical values
+    t   = lin(  TEXT, page.linearK[4] );
+    tin = -lin( TINT, page.linearK[5] );
+
+    //adcs[ TEXT ] = (INT32)(t*100.0);   // hundreds of degrees Celcius
+    //adcs[ TINT ] = (INT32)(tin*100.0); // hundreds of degrees Celcius
+
+    adcs16[ 4 ] = (INT16)(t  *100.0);
+    adcs16[ 5 ] = (INT16)(tin*100.0);
+    
+    //rOff = ( ( ( page.dFk[0]*t + page.dFk[1] )*t + page.dFk[2] )*t + page.dFk[3] );
+    _coeff = page.dFk;
+    if( abs( t - tin ) > 20.0 ){
+        //float temp = 0.5*( tin+t );
+        //rOff = ( ( ( coeff[0]*temp + coeff[1] )*temp + coeff[2] )*temp + coeff[3] );
+             rOff = cube_coeff( 0.5*( tin+t ) );
+    }else    rOff = cube_coeff( t );    //rOff = ( ( ( coeff[0]*t + coeff[1] )*t + coeff[2] )*t + coeff[3] );
+
+    df = (INT32) rOff;
+    theRealOffset = (INT8)( (delta + (lastOff<<2) - ( df )) >> 2 );
+
+    // adjust frequency by temperature
+    if( timeout && ( si->radioMode == RADIO_MODE_UNDEF ) ) addDF( df + page.theDelta - delta ); 
+    RFST = STROBE_CAL; 
+
+    //vref = page.vrefPolynom[0] * ( 1 - page.vrefPolynom[1]*sqr( t - page.vrefPolynom[2] ) );
+    coeff = page.vrefPolynom;
+    vref  = coeff[0] * ( 1.0 - coeff[1]*sqr( t - coeff[2] ) );
+    t -= 25.0;
+    invRef  *= vref; // / ((float)adcs[ REF ]);  
+    // scale everything to physical units
+    // Vout  0      Pin   1     Iout  2      Gnd ext 3        Ref 4      Vin  5       Text  6     Tin 7
+    for( i = 0; i<N_CHANNELS; i++) 
+        if( indices[ i ] != 0xFF ) {
+            mV = invRef * ((float)adcs[i]); //temp[i]; // adcs values (all but REF) should be scaled to fit into UINT16 - k should be accordingly set
+            switch( i ){
+                case 1:  mV *= computeAdjustment( &page.tkPower );   break; // t - 25
+                case 2:  mV *= computeAdjustment( &page.tkCurrent ); break; // t - 25
+            }
+            _coeff = page.linearK[ indices[i] ];
+            temp[i] = lin_coeff( mV );
+        }
+
+    if( switchIntegrals ) computeIntegrals( ); //vref, t );
+
+    temp[ 1 ] *= vref * invVref0;               // power correction
+    // crosstalk   Istr
+    temp[ 0 ] -= temp[ 2 ]*0.004;               // Vout
+    //                  Power     Vin
+    temp[ 5 ] += (40.0 * temp[1])/temp[5];      // Vin
+
+    //adcs[ EXT_GND ] >>= 4;
+    //adcs[ REF ] = (0xFFF<<3) - adcs[ REF ]; // (max 12-bit value)*128 - VREF>>4 - because adc counts are returned in upper 12 bits out of 16 
+    
+    adcs16[ 0 ] = convU( temp[ 0 ] ); 
+    adcs16[ 1 ] = convU( temp[ 1 ] ); 
+    adcs16[ 2 ] = convS( temp[ 2 ] );
+    adcs16[ 3 ] = convU( temp[ 5 ] );
+    adcs16[ 6 ] = (INT16)adcs[ 6 ];
+    adcs16[ 7 ] = (INT16)( (0xFFF<<3) - adcs[ REF ] );    
+    
+    /*
+    for( i = 0; i<6; i++ ) if( i < 3 || i > 4 ){ // only for 0,1,2,5
+        adcs[i] = ((INT32)temp[i]);
+        if( i == 2 ){ 
+            if( adcs[2] > 0x7FFFL) adcs[2] = 0x7FFFL; else if( adcs[2] < -32767L ) adcs[2] = -32767L; 
+        }else{
+            if( adcs[i] > 65535L ) adcs[i] = 65535L;  else if( adcs[i] < 0 )       adcs[i] = 0;
+        }
+    }
+    */
+    /* Was is das? - extended precision ... 
+    adcs[ REF ] = 0;
+    for( i = 0; i<4; i++){
+        acc = ((INT32)(temp[i]*16.0));
+        adcs[ REF ] |= (acc & 0xF)<<(i*4);  
+    }
+    */
+    
+    //HAL_INT_ENABLE(INUM_ADC, INT_ON);
+    //adcEnabled = TRUE;
+}
+//______________________________________________________________________________________________________________________________
+//BOOL checkPage( BYTE val ){ return val && val != 0x1F && ( ( val ^ (page.imageAddr>>9) ) & 0x20 ); }
+//______________________________________________________________________________________________________________________________
+/******************************************************************************
+* @fn  setByte
+* @brief       set the byte value to register
+* Parameters:  byte reg - register, byte val - value
+* @return      void
+******************************************************************************/
+void setByte( BYTE reg, BYTE val ){
+    switch( reg ) {
+        case 4: case 5: 
+        case SET_T3CH0: case SET_T3CH1: 
+        case FLASH_REFRESH: case FLASH_AVAILABLE:       case COEFFICIENTS_AVAILABLE: 
+        case CW_MODE:       case RESTART_MEASUREMENT:   case REPORT_SCALING:
+            break;
+        default: flashDirty = TRUE; break;
+    }
+    switch(reg){
+        case MPP:  // MPP
+            //if( val ) P1 |= 8;  else P1 &= ~8;
+            if( val ) P1_3 = 1; else P1_3 = 0;
+            if( val ) { 
+                atomicChange( BypassMode, 0 ); // do not need that delayed mpp off anymore
+                if( ticks[ TurnOn ] ) { ticks[ TurnOn ] = 0; P1_4 = 1; } //P1 |= 0x10; }
+            }
+        break;
+        case MODULE: // Module on / off
+            if( val && ((P1 & 0x18)==0) ){ P1_3 = 1; P1_4 = 1; /*P1 |= 0x18;*/ atomicChange( BypassMode, TICKS_IN_SEC );            } // bypass mode with delay
+            //else                         { if( val ) P1 |= 0x10; else P1 &= ~0x10; }
+            else                         { if( val ) P1_4 = 1; else P1_4 = 0; }
+        break;
+        case SET_T3CH0:       T3CC0 = val;                  break;
+        case SET_T3CH1:       T3CC1 = oc2timer( val );      break;
+
+        case MAC0: case MAC1: case MAC2: case MAC3: case MAC4: case MAC5:   page.myMac[ reg-MAC0 ] = val;         break;
+
+        //case SET_T4CH0:       T4CC0 = val;                  break;
+        //case SET_T4CH1:       T4CC1 = val;                  break;
+        case SET_CHANNEL:     curChannel = page.channel = CHANNR = val;  setup_hopper( page.channel );   break;
+        case FLASH_REFRESH:   flags[ RefreshFlash ] = TRUE;                                              break;
+  
+        case FLASH_AVAILABLE: 
+            if( P1 & 0x8 )  page.mpp    = (BYTE)TRUE; else page.mpp    = (BYTE)FALSE;
+            if( P1 & 0x10 ) page.module = (BYTE)TRUE; else page.module = (BYTE)FALSE;
+            page.ov     = T3CC0;   
+            page.oc     = timer2oc( T3CC1 ); // T3CC1
+            // go through
+        case COEFFICIENTS_AVAILABLE:  flags[ Write2Flash ] = TRUE;        break;
+
+        case CW_MODE:   
+            HAL_INT_ENABLE(INUM_RF,  INT_OFF);    // Disable RF general interrupt
+            isCW = TRUE;
+            //radioMode = CW_MODE;
+        break;
+        case RESTART_MEASUREMENT:   bufferCount = 0; adcCount = 0xFF; enable2SendData = FALSE;    break;
+        case DISSOLVE_NETWORK:      page.netId = page.myBunch =  0xFF;  flags[ Write2Flash ] = TRUE;   maxBunch = 0;         break;
+        case REPORT_SCALING: if( val && reportScaling==0 ) reportScaling = 6;        break;
+        case RADIO_POWER: page.radioPower = val;     PA_TABLE0 = val;  break;
+        
+        case PRODUCTION:      page.production = val;                   break;
+        case ENSURE_WD_RESET: page.ensureWDReset = val;                break;
+        case USE_10_kBod:     
+            page.use10kbod = val; setupRadio( curChannel ); flags[ Write2Flash ] = TRUE;  break; /* write to flash as well */
+        case USE_FEC:         
+            page.useFEC = val;     if( page.useFEC /*&& (!page.use10kbod)*/ ) MDMCFG1 |= 0x80; else MDMCFG1 &= 0x7F;     break;
+        case ENABLE_HOPPING:   page.hoppingAllowed = val;  break;     
+        case REPEATER_CHANNEL: page.repeaterChannel = val; break;     
+        case IS_RELAY:         page.isRelay = val;   if( !val ) setupRadio( curChannel );     break;     
+        case IS_500_ALWAYS:    
+            page.is500Always = val;     
+            if( val ){ cyclesTo10 = page.defCyclesTo10; cyclesTo500 = 0; }
+            else{      cyclesTo10 = 0;                  cyclesTo500 = page.defCyclesTo500; }    
+            setupRadio( curChannel = page.starting500Channel ); 
+            flags[ Hop ] = 0; 
+        break;     
+        case REPEATER_POWER:           page.repeaterPower = val;   if( page.is500Always ) setupRadio( page.channel ); break;
+        case SEARCH_FOR_COMMUNICATION: page.searchCommunication = val;  break;
+/*        
+        case SET_SHOW_STATE:           page.showState = val;            break;
+        case SetCriticalLevel500:      page.CriticalLevel500 = val;     break;
+        case SetCriticalLevel10:       page.CriticalLevel10  = val;     break;
+*/
+        // win 7 bytes. 
+        case SET_SHOW_STATE:  case SetCriticalLevel500:   case SetCriticalLevel10:
+          (&page.showState)[ reg-SET_SHOW_STATE ]  = val;            
+        break;
+        
+        case END_OF_TEST: 
+            page.channel = 0;
+            //memset( &page.netId, 0xFF, 4);
+            page.myBunch = 0xFF; page.netId = 0xFF;  page.groupId = 0xFFFF;
+            flags[ Write2Flash ] = TRUE;
+       // go through ...
+       case CLEAR_MAX_BUNCH: 
+            maxBunch = 0;
+        break;
+        case SYNCHRONIZE_MPP_CYCLES:      ticks[ MppCycle ] = _mppCycle-1; break; 
+        case BOOT_PAGE_IMAGE:{      
+            void (*f)( void ) = ( void (*)( void ) ) page.imageAddr;
+            (*f)();
+        }break;
+        case SET_START500_CHANNEL:
+            page.starting500Channel = val; if( page.is500Always ) setupRadio( curChannel = val );
+        break;
+
+        case CLEAR_THE_PAGE:
+            val <<= 1;  if( val && (val < 0x3E) && ( ( val ^ (page.imageAddr>>9) ) & 0x20 ) ) clearThePage( val );
+            //if( checkPage( val ) ) clearThePage( val );
+        break;
+    }
+}
+/******************************************************************************
+* @fn  setInt
+* @brief       set the int16 value to register
+* Parameters:  byte reg - register, int val - value
+* @return      void
+******************************************************************************/
+void setInt( BYTE reg, UINT16 val ){
+    flashDirty = TRUE;
+    switch(reg){     
+        case SET_GROUP_ID: page.groupId = val; break;
+        case JOIN: page.netId = (val & 0xF); page.myBunch = ( val >> 8 ) & 0xFF;    break;
+        /*
+        case SetCyclesTo500:            page.defCyclesTo500 = val;            break;
+        case SetCyclesTo10:             page.defCyclesTo10  = val;            break;
+        case SetCyclesToStep500Channel: page.defCyclesToStep500Channel = val; break;
+        case SetCyclesToStep10Channel:  page.defCyclesToStep10Channel  = val; break;
+        case SetCyclesToLightKick:      page.defCycles2LightKick = val;       break;
+        case SetCyclesToSoftKick:       page.defCycles2SoftKick = val;        break;
+        case SetCyclesToHardKick:       page.defCycles2HardKick =val;         break;
+        */
+        default:
+            if( (reg > (SetCyclesTo500-1) ) && ( reg < (SetVersionHigh+1) ) ){
+                UINT16 *ptr = &page.defCyclesTo500;
+                ptr[ reg - SetCyclesTo500 ] = val;
+            }
+        break;
+    }
+}
+/******************************************************************************
+* @fn  setLong
+* @brief       set the long value to register
+* Parameters:  byte reg - register, long val - value
+* @return      void
+******************************************************************************/
+//void setLong( BYTE reg, UINT32 val ){  if( reg == SET_DF_TOLERANCE ){ page.dF_Tolerance = val;  flashDirty = TRUE;  } }
+/******************************************************************************
+* @fn  setFloat
+* @brief       set the float value to register
+* Parameters:  byte reg - register, float val - value
+* @return      void
+******************************************************************************/
+void setFloat( BYTE reg, float val ){
+BYTE oc;
+    flashDirty = TRUE;
+    switch(reg){     
+        case SET_DFK0:  case SET_DFK1:  case SET_DFK2:  case SET_DFK3:     page.dFk[reg-SET_DFK0] = val; break;
+        case SET_VIN_TURN_ON:                                              page.VinTurnOn  = val;        break;
+        case SET_VIN_SHUT_OFF:                                             page.VinShutOff  = val;       break;
+
+        case SET_VIN_DISABLE_RADIO:                                        page.VinDisableRadio  = val; break;
+        case SET_TK_CUR:                                                   page.tkCurrent  = val;       break;
+        case SET_TK_POW:                                                   page.tkPower  = val;         break;
+
+        case SET_LC00:  case SET_LC01:  case SET_LC10:  case SET_LC11:  
+        case SET_LC20:  case SET_LC21:  case SET_LC30:  case SET_LC31:  
+        case SET_LC40:  case SET_LC41:  case SET_LC50:  case SET_LC51:  // linearK [6][2]  
+            if( reg == 14 ) oc = timer2oc( T3CC1 );
+            reg -= SET_LC00;
+            page.linearK[reg>>1][reg&1]     = val; 
+            if( reg == (14-SET_LC00) ){
+              //k_timer2oc = k_oc2timer = 0.0;
+              mymemset( (BYTE *)&k_oc2timer, 0, 8 );
+              T3CC1 = oc2timer( oc ); // lin coeff for Iout
+            }
+        break;
+        case SET_VREF0:                   invVref0 = 1.0 / val;                    // go through
+        case SET_VREF1: case SET_VREF2:   page.vrefPolynom[reg-SET_VREF0] = val;   break;
+
+        //default: flashDirty = FALSE; break;
+    }
+}
+/******************************************************************************/
+#define NULLOP          0
+#define SETREG          0x10
+#define RESET           0x20
+#define SILENCE         0x30
+#define CALIBRATE_R     0x40
+#define SET_MAC_CMD     0x50
+#define BOOT_OVER_AIR   0x60
+
+#define BROADCAST       0
+#define STRINGADDR      1
+#define NIADDR          2
+#define MACADDR         3
+
+#define FLOAT_VAL       0
+#define BYTE_VAL        (1<<2)
+#define SHORT_VAL       (2<<2)
+#define LONG_VAL        (3<<2)
+/******************************************************************************
+* @fn  parseCommands
+* @brief       This function parses commands and sets global flags
+* Parameters:
+* @return void
+******************************************************************************/
+extern BOOL initiateTransfer(BYTE *ptr, BYTE *addr, UINT16 len);
+void parseCommands(BYTE l){
+BYTE *ptr     = radioPktBuffer + 8;
+BYTE *barrier = radioPktBuffer + l;
+static UINT16 cmdCnt = 0; //, i;
+BYTE cmd, reg;
+BOOL flag = TRUE;
+ 
+    //while( (*ptr != NULLOP) && (ptr < barrier) ){
+    while( *ptr && (ptr < barrier) ){
+        cmd = *ptr++; 
+        
+        if( (cmd & 0xF0) == 0xF0 ){
+            reg = *ptr++;
+            if( mymemcmp( page.myMac, ptr, 6 ) == 0 ){
+                page.netId = (cmd & 0xF); page.myBunch = reg; 
+                flashDirty = TRUE;  
+            }
+            ptr += 6;
+        }else{
+            mymemcpy( (BYTE *)&cmdCnt, ptr, 2 ); ptr+=2;
+            switch( cmd & 0x3 ){ 
+                case BROADCAST:                                                             flag = TRUE; break;
+                case STRINGADDR: flag = ( *((UINT16 *) ptr) == page.groupId );              ptr += 2;    break;
+                case NIADDR:     flag = ( ptr[0] == page.myBunch && ptr[1] == page.netId ); ptr += 2;    break;
+                case MACADDR:    
+                    flag = ( mymemcmp( page.myMac, ptr, 6 ) == 0 );// flag = TRUE; else flag = FALSE;
+                    ptr += 6;
+                break;
+            }
+            
+            flag = flag && (cmdCnt > cmdCount);
+            switch( cmd & 0xF0 ){
+                case SET_MAC_CMD:
+                  if( flag && ( ( cmd & 0x3 ) == MACADDR ) ) {
+                    mymemcpy( page.myMac, ptr, 6 );
+                    flags[ Write2Flash ] = TRUE;
+                    flashDirty     = TRUE; 
+                  }
+                  ptr += 6;
+                break;
+                case SETREG:
+                    reg = *ptr++;
+                    switch( cmd&0xC ){
+                        case FLOAT_VAL:  if( flag ) setFloat( reg, *((float *)ptr) );    ptr+=4;  break;
+                        case LONG_VAL:   
+                          //if( flag ) setLong ( reg, *((UINT32 *)ptr) );   
+                          ptr+=4;  break;
+                        case BYTE_VAL:   if( flag ) setByte ( reg, *ptr );               ptr++;   break;
+                        case SHORT_VAL:  if( flag ) setInt  ( reg, *((UINT16*)ptr) );    ptr+=2;  break;
+                    }
+                break;
+                case RESET: reset();
+                //  if( flag ) { HAL_INT_ENABLE(INUM_T1,  INT_OFF);  } // disable Timer2 interrupt
+                //break;
+                //case SILENCE:       if( flag ) { time2PrepareData = FALSE; ticks2SendData = 0xFFFF;  } break;
+                //case CALIBRATE_R:   if( flag )   computeDelta     = TRUE;                              break;
+                case BOOT_OVER_AIR:{
+                UINT16 addr;  
+                    reg = *ptr++; addr = *((UINT16*)ptr);  
+                    //if( checkPage( addr>>9 ) ) {
+                    if( ( addr > 0x3FF ) && ( 0x4000 & ( addr ^ page.imageAddr ) ) && ( addr < 0x7C00 ) ){
+                    static BYTE bootBuf[18];
+                        ptr += 2;
+                        for( cmd = 0; cmd < reg; cmd++ ) bootBuf[ cmd ] = *ptr++;
+                        if( reg & 1 ) reg++;
+                        initiateTransfer( bootBuf, (BYTE *)addr, reg );
+                    }
+                }break;
+            }
+            if( cmdCnt > cmdCount ) cmdCount = cmdCnt;
+        }
+    }
+}
+/*==== END OF FILE ==========================================================*/

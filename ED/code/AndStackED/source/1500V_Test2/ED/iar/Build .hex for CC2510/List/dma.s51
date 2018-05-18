@@ -1,0 +1,476 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+// IAR 8051 C/C++ Compiler V7.30B/W32                   06/Apr/2017  13:54:46 /
+// Copyright 2004-2007 IAR Systems. All rights reserved.                      /
+//                                                                            /
+//    Core               =  plain                                             /
+//    Code model         =  near                                              /
+//    Data model         =  large                                             /
+//    Calling convention =  xdata reentrant                                   /
+//    Constant location  =  data                                              /
+//    Dptr setup         =  1,16                                              /
+//    Source file        =  E:\1500V_Test2\ED\code\AndStackED\source\dma.c    /
+//    Command line       =  E:\1500V_Test2\ED\code\AndStackED\source\dma.c    /
+//                          -D NDEBUG -D chip=2510 -D LOWER_IMAGE -lA         /
+//                          "E:\1500V_Test2\ED\iar\Build .hex for             /
+//                          CC2510\List\" -o "E:\1500V_Test2\ED\iar\Build     /
+//                          .hex for CC2510\Obj\" -e -z9 --core=plain         /
+//                          --dptr=16,1 --data_model=large --code_model=near  /
+//                          --calling_convention=xdata_reentrant              /
+//                          --place_constants=data --nr_virtual_regs 32 -I    /
+//                          E:\1500V_Test2\ED\iar\..\CODE\AndStackED\INCLUDE\ /
+//                           -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HAL\INC /
+//                          LUDE\ -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HA /
+//                          L_BUI\INCLUDE\ -I C:\IARSystems-CD-730B\8051\INC\ /
+//    List file          =  E:\1500V_Test2\ED\iar\Build .hex for              /
+//                          CC2510\List\dma.s51                               /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME dma
+
+        RTMODEL "__calling_convention", "xdata_reentrant"
+        RTMODEL "__code_model", "near"
+        RTMODEL "__core", "plain"
+        RTMODEL "__data_model", "large"
+        RTMODEL "__dptr_size", "16"
+        RTMODEL "__extended_stack", "disabled"
+        RTMODEL "__location_for_constants", "data"
+        RTMODEL "__number_of_dptrs", "1"
+        RTMODEL "__rt_version", "1"
+
+        RSEG DOVERLAY:DATA:NOROOT(0)
+        RSEG IOVERLAY:IDATA:NOROOT(0)
+        RSEG ISTACK:IDATA:NOROOT(0)
+        RSEG PSTACK:XDATA:NOROOT(0)
+        RSEG XSTACK:XDATA:NOROOT(0)
+
+        EXTERN __INIT_XDATA_Z
+
+        PUBWEAK DMA0CFGH
+        PUBWEAK DMA0CFGL
+        PUBWEAK DMA1CFGH
+        PUBWEAK DMA1CFGL
+        PUBLIC dmaConfig
+        PUBLIC dmaRadioSetup
+        FUNCTION dmaRadioSetup,0203H
+        ARGFRAME XSTACK, 0, STACK
+        LOCFRAME ISTACK, 2, STACK
+        PUBLIC radioPktBuffer
+        PUBLIC radioPktBufferRx
+        PUBLIC radioPktBufferTx
+        
+        CFI Names cfiNames0
+        CFI StackFrame CFA_SP SP DATA
+        CFI StackFrame CFA_PSP16 PSP16 XDATA
+        CFI StackFrame CFA_XSP16 XSP16 XDATA
+        CFI StaticOverlayFrame CFA_IOVERLAY IOVERLAY
+        CFI StaticOverlayFrame CFA_DOVERLAY DOVERLAY
+        CFI Resource `PSW.CY`:1, `B.BR0`:1, `B.BR1`:1, `B.BR2`:1, `B.BR3`:1
+        CFI Resource `B.BR4`:1, `B.BR5`:1, `B.BR6`:1, `B.BR7`:1, `VB.BR8`:1
+        CFI Resource `VB.BR9`:1, `VB.BR10`:1, `VB.BR11`:1, `VB.BR12`:1
+        CFI Resource `VB.BR13`:1, `VB.BR14`:1, `VB.BR15`:1, VB:8, B:8, A:8
+        CFI Resource PSW:8, DPL0:8, DPH0:8, R0:8, R1:8, R2:8, R3:8, R4:8, R5:8
+        CFI Resource R6:8, R7:8, V0:8, V1:8, V2:8, V3:8, V4:8, V5:8, V6:8, V7:8
+        CFI Resource V8:8, V9:8, V10:8, V11:8, V12:8, V13:8, V14:8, V15:8
+        CFI Resource V16:8, V17:8, V18:8, V19:8, V20:8, V21:8, V22:8, V23:8
+        CFI Resource V24:8, V25:8, V26:8, V27:8, V28:8, V29:8, V30:8, V31:8
+        CFI Resource SP:8, PSPH:8, PSPL:8, PSP16:16, XSPH:8, XSPL:8, XSP16:16
+        CFI VirtualResource ?RET:16, ?RET_HIGH:8, ?RET_LOW:8
+        CFI ResourceParts PSP16 PSPH, PSPL
+        CFI ResourceParts XSP16 XSPH, XSPL
+        CFI ResourceParts ?RET ?RET_HIGH, ?RET_LOW
+        CFI EndNames cfiNames0
+        
+        CFI Common cfiCommon0 Using cfiNames0
+        CFI CodeAlign 1
+        CFI DataAlign -1
+        CFI ReturnAddress ?RET CODE
+        CFI CFA_DOVERLAY Used
+        CFI CFA_IOVERLAY Used
+        CFI CFA_SP SP+-2
+        CFI CFA_PSP16 PSP16+0
+        CFI CFA_XSP16 XSP16+0
+        CFI `PSW.CY` SameValue
+        CFI `B.BR0` SameValue
+        CFI `B.BR1` SameValue
+        CFI `B.BR2` SameValue
+        CFI `B.BR3` SameValue
+        CFI `B.BR4` SameValue
+        CFI `B.BR5` SameValue
+        CFI `B.BR6` SameValue
+        CFI `B.BR7` SameValue
+        CFI `VB.BR8` SameValue
+        CFI `VB.BR9` SameValue
+        CFI `VB.BR10` SameValue
+        CFI `VB.BR11` SameValue
+        CFI `VB.BR12` SameValue
+        CFI `VB.BR13` SameValue
+        CFI `VB.BR14` SameValue
+        CFI `VB.BR15` SameValue
+        CFI VB SameValue
+        CFI B Undefined
+        CFI A Undefined
+        CFI PSW SameValue
+        CFI DPL0 SameValue
+        CFI DPH0 SameValue
+        CFI R0 Undefined
+        CFI R1 Undefined
+        CFI R2 Undefined
+        CFI R3 Undefined
+        CFI R4 Undefined
+        CFI R5 Undefined
+        CFI R6 SameValue
+        CFI R7 SameValue
+        CFI V0 SameValue
+        CFI V1 SameValue
+        CFI V2 SameValue
+        CFI V3 SameValue
+        CFI V4 SameValue
+        CFI V5 SameValue
+        CFI V6 SameValue
+        CFI V7 SameValue
+        CFI V8 SameValue
+        CFI V9 SameValue
+        CFI V10 SameValue
+        CFI V11 SameValue
+        CFI V12 SameValue
+        CFI V13 SameValue
+        CFI V14 SameValue
+        CFI V15 SameValue
+        CFI V16 SameValue
+        CFI V17 SameValue
+        CFI V18 SameValue
+        CFI V19 SameValue
+        CFI V20 SameValue
+        CFI V21 SameValue
+        CFI V22 SameValue
+        CFI V23 SameValue
+        CFI V24 SameValue
+        CFI V25 SameValue
+        CFI V26 SameValue
+        CFI V27 SameValue
+        CFI V28 SameValue
+        CFI V29 SameValue
+        CFI V30 SameValue
+        CFI V31 SameValue
+        CFI PSPH Undefined
+        CFI PSPL Undefined
+        CFI XSPH Undefined
+        CFI XSPL Undefined
+        CFI ?RET Concat
+        CFI ?RET_HIGH Frame(CFA_SP, 2)
+        CFI ?RET_LOW Frame(CFA_SP, 1)
+        CFI EndCommon cfiCommon0
+        
+// E:\1500V_Test2\ED\code\AndStackED\source\dma.c
+//    1 /*-----------------------------------------------------------------------------
+//    2 | Purpose:    Functions for setup of DMA used with radio.
+//    3 +------------------------------------------------------------------------------
+//    4 | Decription: Functions to configure the DMA channel 0 for transport of data
+//    5 |             either to or from the radio. For use by packet error rate test
+//    6 |             application.
+//    7 +----------------------------------------------------------------------------*/
+//    8 
+//    9 /*==== DECLARATION CONTROL ===================================================*/
+//   10 /*==== INCLUDES ==============================================================*/
+//   11 
+//   12 #include "hal_main.h"
+
+        ASEGN SFR_AN:DATA:NOROOT,0d2H
+// unsigned char volatile __sfr DMA1CFGL
+DMA1CFGL:
+        DS 1
+
+        ASEGN SFR_AN:DATA:NOROOT,0d3H
+// unsigned char volatile __sfr DMA1CFGH
+DMA1CFGH:
+        DS 1
+
+        ASEGN SFR_AN:DATA:NOROOT,0d4H
+// unsigned char volatile __sfr DMA0CFGL
+DMA0CFGL:
+        DS 1
+
+        ASEGN SFR_AN:DATA:NOROOT,0d5H
+// unsigned char volatile __sfr DMA0CFGH
+DMA0CFGH:
+        DS 1
+//   13 #include "dma.h"
+//   14 #include "main.h"
+//   15 
+//   16 
+//   17 /*==== GLOBAL VARS============================================================*/
+//   18 
+
+        RSEG XDATA_Z:XDATA:NOROOT(0)
+//   19 BYTE radioPktBuffer[  PACKET_LENGTH_ED + 3];
+radioPktBuffer:
+        DS 37
+        REQUIRE __INIT_XDATA_Z
+
+        RSEG XDATA_Z:XDATA:NOROOT(0)
+//   20 BYTE radioPktBufferRx[PACKET_LENGTH_GW + 3];  // to accomodate maximum possible package
+radioPktBufferRx:
+        DS 37
+        REQUIRE __INIT_XDATA_Z
+
+        RSEG XDATA_Z:XDATA:NOROOT(0)
+//   21 BYTE radioPktBufferTx[PACKET_LENGTH_ED + 3];
+radioPktBufferTx:
+        DS 37
+        REQUIRE __INIT_XDATA_Z
+//   22 
+
+        RSEG XDATA_Z:XDATA:NOROOT(0)
+//   23 DMA_DESC dmaConfig[3];                  // Struct for the DMA configuration
+dmaConfig:
+        DS 24
+        REQUIRE __INIT_XDATA_Z
+//   24 
+//   25 /*==== PUBLIC FUNCTIONS ======================================================*/
+//   26 
+//   27 /******************************************************************************
+//   28 * @fn  dmaRadioSetup
+//   29 *
+//   30 * @brief
+//   31 *      This funtion configures the static dmaConfig struct with the correct
+//   32 *      values for receiving or transmitting data using the DMA.
+//   33 *
+//   34 * Parameters:
+//   35 *
+//   36 * @param  BYTE mode
+//   37 *           Either RADIO_MODE_TX or RADIO_MODE_RX to select transmitter or
+//   38 *           receiver settings
+//   39 *
+//   40 * @return void
+//   41 *
+//   42 ******************************************************************************/
+//   43 
+//   44 extern BYTE *pagePtr;
+//   45 
+//   46 #define PAGESIZE 248
+//   47 
+//   48 //void setupTxBuffer( BYTE *ptr ){ SET_WORD(dmaConfig[1].SRCADDRH,  dmaConfig[1].SRCADDRL, ptr); }
+//   49 
+
+        RSEG NEAR_CODE:CODE:NOROOT(0)
+//   50 void dmaRadioSetup(void){
+dmaRadioSetup:
+        CFI Block cfiBlock0 Using cfiCommon0
+        CFI Function dmaRadioSetup
+        PUSH    DPL
+        CFI DPL0 Frame(CFA_SP, 3)
+        CFI CFA_SP SP+-3
+        PUSH    DPH
+        CFI DPH0 Frame(CFA_SP, 4)
+        CFI CFA_SP SP+-4
+        ; Saved register size: 2
+        ; Auto size: 0
+//   51     // Some configuration that are common for both TX and RX:
+//   52 /*
+//   53     // CPU has priority over DMA
+//   54     // Use 8 bits for transfer count
+//   55     // No DMA interrupt when done
+//   56     // DMA triggers on radio
+//   57     // Single transfer per trigger.
+//   58     // One byte is transferred each time.
+//   59     dmaConfig.PRIORITY       = DMA_PRI_LOW;
+//   60     dmaConfig.M8             = DMA_M8_USE_8_BITS;
+//   61     dmaConfig.IRQMASK        = DMA_IRQMASK_DISABLE;
+//   62     dmaConfig.TRIG           = DMA_TRIG_RADIO;
+//   63     dmaConfig.TMODE          = DMA_TMODE_SINGLE;
+//   64     dmaConfig.WORDSIZE       = DMA_WORDSIZE_BYTE;
+//   65 */
+//   66     //}else if (mode == RADIO_MODE_RX) {
+//   67 
+//   68         dmaConfig[0].PRIORITY       = DMA_PRI_LOW;
+//   69         dmaConfig[0].M8             = DMA_M8_USE_8_BITS;
+//   70         dmaConfig[0].IRQMASK        = DMA_IRQMASK_DISABLE;
+        MOV     DPTR,#(dmaConfig + 7)
+        MOVX    A,@DPTR
+        ANL     A,#0xf0
+        MOVX    @DPTR,A
+//   71         dmaConfig[0].TRIG           = DMA_TRIG_RADIO;
+//   72         dmaConfig[0].TMODE          = DMA_TMODE_SINGLE;
+//   73         dmaConfig[0].WORDSIZE       = DMA_WORDSIZE_BYTE;
+        MOV     A,#0x13
+        MOV     DPTR,#(dmaConfig + 6)
+        MOVX    @DPTR,A
+//   74         // Receiver specific DMA settings:
+//   75 
+//   76         // Source: RFD register
+//   77         // Destination: radioPktBuffer
+//   78         // Use the first byte read + 3 (incl. 2 status bytes)
+//   79         // Sets maximum transfer count allowed (length byte + data + 2 status bytes)
+//   80         // Data source address is constant
+//   81         // Destination address is incremented by 1 byte for each write
+//   82         SET_WORD(dmaConfig[0].SRCADDRH,  dmaConfig[0].SRCADDRL, &X_RFD);
+        MOV     A,#-0x21
+        MOV     DPTR,#dmaConfig
+        MOVX    @DPTR,A
+        MOV     A,#-0x27
+        MOV     DPTR,#(dmaConfig + 1)
+        MOVX    @DPTR,A
+//   83         SET_WORD(dmaConfig[0].DESTADDRH, dmaConfig[0].DESTADDRL, radioPktBufferRx);
+        MOV     A,#((radioPktBufferRx >> 8) & 0xff)
+        MOV     DPTR,#(dmaConfig + 2)
+        MOVX    @DPTR,A
+        MOV     A,#(radioPktBufferRx & 0xff)
+        MOV     DPTR,#(dmaConfig + 3)
+        MOVX    @DPTR,A
+//   84         dmaConfig[0].VLEN           = DMA_VLEN_FIRST_BYTE_P_3;
+//   85         SET_WORD(dmaConfig[0].LENH, dmaConfig[0].LENL, (PACKET_LENGTH_GW + 3));
+        MOV     A,#-0x80
+        MOV     DPTR,#(dmaConfig + 4)
+        MOVX    @DPTR,A
+        MOV     A,#0x25
+        MOV     DPTR,#(dmaConfig + 5)
+        MOVX    @DPTR,A
+//   86         dmaConfig[0].SRCINC         = DMA_SRCINC_0;
+//   87         dmaConfig[0].DESTINC        = DMA_DESTINC_1;
+        MOV     A,#0x10
+        MOV     DPTR,#(dmaConfig + 7)
+        MOVX    @DPTR,A
+//   88         
+//   89     //if (mode == RADIO_MODE_TX) {
+//   90         
+//   91         SET_WORD(DMA0CFGH, DMA0CFGL, &dmaConfig);
+        MOV     A,#((dmaConfig >> 8) & 0xff)
+        MOV     0xd5,A
+        MOV     0xd4,#(dmaConfig & 0xff)
+//   92         // Transmitter specific DMA settings
+//   93 
+//   94         // Source: radioPktBuffer
+//   95         // Destination: RFD register
+//   96         // Use the first byte read + 1
+//   97         // Sets the maximum transfer count allowed (length byte + data)
+//   98         // Data source address is incremented by 1 byte
+//   99         // Destination address is constant
+//  100         dmaConfig[1].PRIORITY       = DMA_PRI_LOW;
+//  101         dmaConfig[1].M8             = DMA_M8_USE_8_BITS;
+//  102         dmaConfig[1].IRQMASK        = DMA_IRQMASK_DISABLE;
+        MOV     DPTR,#(dmaConfig + 15)
+        MOVX    A,@DPTR
+        ANL     A,#0xf0
+        MOVX    @DPTR,A
+//  103         dmaConfig[1].TRIG           = DMA_TRIG_RADIO;
+//  104         dmaConfig[1].TMODE          = DMA_TMODE_SINGLE;
+//  105         dmaConfig[1].WORDSIZE       = DMA_WORDSIZE_BYTE;
+        MOV     A,#0x13
+        MOV     DPTR,#(dmaConfig + 14)
+        MOVX    @DPTR,A
+//  106         
+//  107         SET_WORD(dmaConfig[1].SRCADDRH,  dmaConfig[1].SRCADDRL, radioPktBufferTx);
+        MOV     A,#((radioPktBufferTx >> 8) & 0xff)
+        MOV     DPTR,#(dmaConfig + 8)
+        MOVX    @DPTR,A
+        MOV     A,#(radioPktBufferTx & 0xff)
+        MOV     DPTR,#(dmaConfig + 9)
+        MOVX    @DPTR,A
+//  108         SET_WORD(dmaConfig[1].DESTADDRH, dmaConfig[1].DESTADDRL, &X_RFD);
+        MOV     A,#-0x21
+        MOV     DPTR,#(dmaConfig + 10)
+        MOVX    @DPTR,A
+        MOV     A,#-0x27
+        MOV     DPTR,#(dmaConfig + 11)
+        MOVX    @DPTR,A
+//  109         dmaConfig[1].VLEN           = DMA_VLEN_FIRST_BYTE_P_1;
+//  110         SET_WORD(dmaConfig[1].LENH, dmaConfig[1].LENL, (PACKET_LENGTH_ED + 1));
+        MOV     A,#0x20
+        MOV     DPTR,#(dmaConfig + 12)
+        MOVX    @DPTR,A
+        MOV     A,#0x23
+        MOV     DPTR,#(dmaConfig + 13)
+        MOVX    @DPTR,A
+//  111         dmaConfig[1].SRCINC         = DMA_SRCINC_1;
+//  112         dmaConfig[1].DESTINC        = DMA_DESTINC_0;
+        MOV     A,#0x40
+        MOV     DPTR,#(dmaConfig + 15)
+        MOVX    @DPTR,A
+//  113         
+//  114         dmaConfig[2].PRIORITY       = DMA_PRI_LOW;                    // DMA has priority over CPU - as recommended
+//  115         dmaConfig[2].M8             = DMA_M8_USE_8_BITS;               // Use 8 bits for transfer count
+//  116         dmaConfig[2].IRQMASK        = DMA_IRQMASK_ENABLE;              // DMA interrupt when done
+        MOV     DPTR,#(dmaConfig + 23)
+        MOVX    A,@DPTR
+        ANL     A,#0xf8
+        ORL     A,#0x8
+        MOV     R2,A
+        MOVX    @DPTR,A
+//  117         dmaConfig[2].TRIG           = DMA_TRIG_FLASH;                  // DMA triggers on flash
+//  118         dmaConfig[2].TMODE          = DMA_TMODE_SINGLE;                // Single transfer per trigger.
+//  119         dmaConfig[2].WORDSIZE       = DMA_WORDSIZE_BYTE;               // One byte is transferred each time.
+        MOV     A,#0x12
+        MOV     DPTR,#(dmaConfig + 22)
+        MOVX    @DPTR,A
+//  120 
+//  121         //SET_WORD(dmaConfig[2].SRCADDRH,  dmaConfig[2].SRCADDRL,  pagePtr);     // Source: ptr
+//  122         dmaConfig[2].VLEN           = DMA_VLEN_USE_LEN;
+        MOV     DPTR,#(dmaConfig + 20)
+        MOVX    A,@DPTR
+        ANL     A,#0x1f
+        MOVX    @DPTR,A
+//  123         SET_WORD(dmaConfig[2].DESTADDRH, dmaConfig[2].DESTADDRL, 0xDFAF );   // Destination: FWDATA register
+        MOV     A,#-0x21
+        MOV     DPTR,#(dmaConfig + 18)
+        MOVX    @DPTR,A
+        MOV     A,#-0x51
+        MOV     DPTR,#(dmaConfig + 19)
+        MOVX    @DPTR,A
+//  124         dmaConfig[2].LENH = 0;
+        CLR     A
+        MOV     DPTR,#(dmaConfig + 20)
+        MOVX    @DPTR,A
+//  125         dmaConfig[2].LENL = PAGESIZE;      // Sets the maximum transfer count allowed (length byte + data)
+        MOV     A,#-0x8
+        MOV     DPTR,#(dmaConfig + 21)
+        MOVX    @DPTR,A
+//  126         dmaConfig[2].SRCINC         = DMA_SRCINC_1;                    // Data source address is incremented by 1 byte
+//  127         dmaConfig[2].DESTINC        = DMA_DESTINC_0;                   // Destination address is constant
+        MOV     A,#0xf
+        ANL     A,R2
+        ORL     A,#0x40
+        MOV     DPTR,#(dmaConfig + 23)
+        MOVX    @DPTR,A
+//  128         
+//  129     //}
+//  130     // Save pointer to the DMA configuration struct into DMA-channel 0
+//  131     // configuration registers
+//  132         
+//  133         SET_WORD(DMA1CFGH, DMA1CFGL, &dmaConfig[1]);
+        MOV     A,#(((dmaConfig + 8) >> 8) & 0xff)
+        MOV     0xd3,A
+        MOV     0xd2,#((dmaConfig + 8) & 0xff)
+//  134         
+//  135     return;
+        POP     DPH
+        CFI DPH0 SameValue
+        CFI CFA_SP SP+-3
+        POP     DPL
+        CFI DPL0 SameValue
+        CFI CFA_SP SP+-2
+        RET
+        CFI EndBlock cfiBlock0
+        REQUIRE DMA1CFGL
+        REQUIRE DMA1CFGH
+        REQUIRE DMA0CFGL
+        REQUIRE DMA0CFGH
+//  136 }
+
+        END
+//  137 
+//  138 
+//  139 /*==== END OF FILE ==========================================================*/
+// 
+// 188 bytes in segment NEAR_CODE
+//   4 bytes in segment SFR_AN
+// 135 bytes in segment XDATA_Z
+// 
+// 188 bytes of CODE  memory
+//   0 bytes of DATA  memory (+ 4 bytes shared)
+// 135 bytes of XDATA memory
+//
+//Errors: none
+//Warnings: none

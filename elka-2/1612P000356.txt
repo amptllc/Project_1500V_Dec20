@@ -1,0 +1,34 @@
+MAC  Converted on Fri Oct 31 10:32:58 2014
+ to version 0 from version 33
+Key is 74A9B40487A31C8417CE2050DF39545459
+
+IV  is 39F9F35A8E10232EFE63538DBFE198CA4C
+
+
+boot ../ED/hex/ny-boot.hex low ../ED/hex/ampt-ms-i-full-low+ret+crc.hex high ../ED/hex/ampt-ms-i-uhigh.hex
+serial number:1612P000356
+Bunch 0 id 1 stringId ffff, MAC 4063c0000164
+dFk -0.000693 0.0556 0.613 -200
+vrefPolynom 2496 4e-07 73
+Vout 13.87 -1670 
+Pin 12.65 0
+Iout 7.93 -584
+Vin 12.49 0
+Text 0.435 625
+Tint 7.76 -591
+VinTurnOn 0 
+VinSwitchOff 0
+VinDisableRadio 0
+VinLimit 0
+tkCurrent 2e-05
+tkPower 5e-05
+defaults: OV 200 OV_Startup 200 OV_Step 10 OC 210 MPP ON Module ON channel 253
+Temp Protection: TSuperHot 110 THot 100 TCold 90 OCStep 10 FallbackTime 10 OC Protection 60
+OC Ramp Level: -1000 OV Volt K 255 OC Cur K 255 
+Repeater NO Slave NO Searching NO 12kbod YES FEC NO Hopping YES 250_kbod NO
+Radio Power 0xFF 
+Repeater channel 253 R/S Power 0xFF Start R/S Channel 253 StartAddr 0x83F RepStep 25
+Critical R/S -92   Critical Direct -102     Cycles to R/S 40    Cycles to Direct 30 
+Cycles to Step R/S channel 3 Cycles to step Direct channel 4 Cycles to Soft Kick 8  Cycles to Hard Kick 80 
+edAddr: 2 gwAddr 1
+wiggle: 0 shunt 0 max-off 1 syncword 0xf0f0 

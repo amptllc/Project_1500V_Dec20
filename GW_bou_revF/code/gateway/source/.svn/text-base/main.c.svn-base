@@ -1,0 +1,1282 @@
+/*==== DECLARATION CONTROL ===================================================*/
+/*==== INCLUDES ==============================================================*/
+#include "hal_main.h"
+#include "main.h"
+#include "usb_cdc.h"
+
+#include "rf_usb_app_ex_lib_headers.h"
+#include "rf_usb_library_headers.h"
+#include "rf\include\rf_usb_dongle.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include <float.h>
+
+#define DONGLE_ADDRESS           0x01
+
+#define NETWORK_ADDRESS0         0x12
+#define NETWORK_ADDRESS1         0x13
+#define NETWORK_ADDRESS2         0x14
+
+#define USB_RX_TIMEOUT           10
+
+#define BUFFER_SIZE              137
+
+#define MAX_DATA_BYTES           ((BUFFER_SIZE - HEADER_LENGTH) - CRC_LENGTH)
+#define MAX_LENGTH_BYTE          (BUFFER_SIZE - 3)
+
+//#define MKS_IN_TICK     40
+//#define TICKS_IN_SEC    25000
+//#define TICKS_IN_MS     25
+
+#define MKS_IN_TICK     100
+#define TICKS_IN_SEC    10000
+#define TICKS_IN_MS     10
+
+#define NULLOP          0
+#define SETREG          0x10
+#define RESET           0x20
+#define SILENCE         0x30
+#define CALIBRATE_R     0x40
+#define SET_MAC_CMD     0x50
+
+#define BROADCAST       0
+#define STRINGADDR      1
+#define NIDADDR         2
+#define MACADDR         3
+
+#define FLOAT_VAL       0
+#define BYTE_VAL        (1<<2)
+#define SHORT_VAL       (2<<2)
+#define LONG_VAL        (3<<2)
+
+// double registers
+#define SET_DFK0    1
+#define SET_DFK1    2
+#define SET_DFK2    3
+#define SET_DFK3    4
+
+#define SET_TK0     5
+#define SET_TK1     6
+
+#define SET_VIN_TURN_ON     7
+#define SET_VIN_SHUT_OFF    8
+
+#define SET_LC00 10
+#define SET_LC01 11
+#define SET_LC10 12
+#define SET_LC11 13 
+#define SET_LC20 14
+#define SET_LC21 15
+#define SET_LC30 16
+#define SET_LC31 17
+#define SET_LC40 18
+#define SET_LC41 19
+#define SET_LC50 20
+#define SET_LC51 21
+#define SET_LC60 22
+#define SET_LC61 23
+
+#define SET_VREF0 24
+#define SET_VREF1 25
+#define SET_VREF2 26
+
+// INT32 registers
+#define SET_DF_TOLERANCE    2
+
+// INT16 registers
+#define SET_GROUP_ID        1
+#define JOIN                2
+
+// BYTE and BOOL registers
+// from 0 to 15 - P1 and P2 pins directly - will be used for OPEN, MPP, LED (?)
+
+// MAC bytes
+#define MAC0    (16+0)
+#define MAC1    (16+1)
+#define MAC2    (16+2)
+#define MAC3    (16+3)
+#define MAC4    (16+4)
+#define MAC5    (16+5)
+
+// Timer channels
+#define SET_T3CH0        22
+#define SET_T3CH1        23
+#define SET_T4CH0        24
+#define SET_T4CH1        25
+
+// Radio Channel
+#define SET_CHANNEL      26
+// FLASH control
+#define FLASH_REFRESH    27
+#define FLASH_AVAILABLE  28
+#define CW_MODE          29
+#define RESTART_MEASUREMENT         30                         
+#define DISSOLVE_NETWORK            31
+#define REPORT_SCALING              32
+#define COEFFICIENTS_AVAILABLE      33
+
+CDC_LINE_CODING_STRUCTURE lineCoding;
+
+typedef struct {
+   // upper nibble - command code / tag, 
+   // lower nibble - 
+   //      upper 2 bits : value format (byte, int, long, float),
+   //      lower 2 bits : address mode (broadcast, string, individual net addr, mac addr)
+   BYTE cmd;    
+   
+   union{
+     UINT16 stringAddr;
+     UINT16 netId;
+     BYTE   mac[6];
+     BYTE   arr[6];
+   } addr;
+   
+   union{
+     BYTE   bval;
+     UINT16 ival;
+     UINT32 lval;
+     double dval;
+     BYTE   arr[6];
+   } value;
+   
+   BYTE reg;
+   BYTE repCount;
+   UINT16 seq;
+   BOOL useReg, useAddr, useValue;
+} CMD;
+
+//void setupTimer3(void);
+void setupTimer1(void);
+void releaseTheDog(void);
+
+void feedTheDog(void);
+void sendRequest(void);
+void handleStdUsb(void);
+void processEDReport(void);
+void start2Receive(void);
+void parseCommand(void); 
+BOOL myIsNotSpace(int ch);
+void calibrate(void);
+void usb(char *s);
+void addDF(INT32 dFreq);
+void computeADCs(BOOL timeout);
+void  adjustF2Temperature(INT32 adcT, BOOL timeout);
+INT32 abs32(INT32 a);
+void armAdcs(void);
+void readNextValue(void);
+
+#define PAGESIZE    68
+struct{
+    UINT16 barrier;                                                                                         // 2
+    UINT16 nDevs;                                                                                           // 2
+    char curKey[ AES_SIZE ];                                                                                // 16
+    char curIV [ AES_SIZE ];                                                                                // 16
+    BYTE channel;                                                                                           // 1
+    
+    double dFk[4];                                                                                          // 16
+    double tk[2];                                                                                           // 8
+
+    INT16  theDelta;                                                                                        // 2
+    INT32  iRef;                                                                                            // 4
+    BYTE   dF_Tolerance; // 16 in the offset register                                                       // 1
+}page = {                                                                                                   // 68
+    0xAAAA, 0, 
+    { 'A', 'N', 'D', 'S',  0,  'l', 'a', 'r', 'A', 'u', 'g', 'u', 's', 't',  0,   7 },
+    { 'A', 'u', 'g', 'u', 's', 't',  0,   7,  'A', 'u', 'g', 'u', 's', 't',  0,   7 },
+    
+    0,                 // should be 0 in production, debug !!!
+    
+    { 0.0, 0.0, 0.0, 0.0 }, 
+    { 75500.0, 0.39 }, 
+    0,     121000L,    64
+};
+
+UINT16  _sendRequest = 2 * TICKS_IN_SEC, _dogsFeeding =  TICKS_IN_SEC/8, _calibrationDelay = TICKS_IN_MS-1,
+        _timeBetweenMeasurements = TICKS_IN_SEC / 100, _adjustFrequency = 5*(UINT16)TICKS_IN_SEC, 
+        _adcMeasurement = TICKS_IN_SEC / 100;
+
+UINT16  ticks2SendRequest = 0, ticks2FeedTheDog = 0,   ticks2Start2Receive = 0,  inBuffIdx = 0,     ticks2MsTime = 0, 
+        ticks2Send = 0,        runningTicks = 0,       cmdCycle,                 ticks2Measure = 0, ticks2AdjustFrequency = 0, 
+        adcCount = 0,          bufferCount = 0,        ticks2AdcMeasurement = 0, cmdCount = 1;
+
+UINT32  secondsJoinEnabled = 14L*24L*3600L; // should be 0 in production
+int     lastRssi = 0;
+
+BOOL    time2SendRequest = FALSE, time2FeedTheDog = FALSE, time2Start2Receive = FALSE, needCommandParsing = FALSE, 
+        joinEnabled  = TRUE,     echoEnabled = TRUE,      flashDirty = FALSE,         needNewPage = FALSE, 
+        computeDelta = FALSE,     time2MeasureAdc = FALSE, adcDataReady = FALSE,       time2AdjustFrequency = FALSE, 
+        bufferFilled = FALSE,     dissolveNetwork = FALSE, isCW = FALSE,               secondGone = FALSE,
+        setNewChannel = FALSE;
+
+BYTE rpbCount = 0;
+
+char theKey[ AES_SIZE ] = { 'A', 'N', 'D', 'S',  0,  'l', 'a', 'r', 'A', 'u', 'g', 'u', 's', 't',  0,   7 };
+char theIV [ AES_SIZE ] = { 'A', 'u', 'g', 'u', 's', 't',  0,   7,  'A', 'u', 'g', 'u', 's', 't',  0,   7 };
+UINT32  freqs[5]        = { FREQUENCY_B_CC2511, FREQUENCY_A_CC2511, FREQUENCY_3_CC2511, FREQUENCY_1_CC2511, FREQUENCY_C_CC2511 };
+#define N_CHANNELS      3
+#define AVERAGE_WINDOW  64
+#define BUFFER_MASK     0x3F
+
+INT16  buffer[ N_CHANNELS ][ AVERAGE_WINDOW ];
+INT32  adcs[   N_CHANNELS ];
+BYTE   adcChannels[ N_CHANNELS ] = { ADC_TEMP_SENS,    ADC_REF,    ADC_GND };
+
+#define OUT_BUF_SIZE 512
+
+unsigned char allAdcs[ OUT_BUF_SIZE ];
+unsigned char inBuff [ OUT_BUF_SIZE ];
+UINT32   utc = 0;
+UINT16   ms  = 0;
+
+#ifdef DATA_RATE_3A
+    #define  _slot  ( 40 * TICKS_IN_MS )
+    #define  _loop_delay  ( 40 * TICKS_IN_MS )
+    #define _datarate      DATA_RATE_3_CC2511
+#endif
+
+#ifdef DATA_RATE_3
+    #define  _slot  ( 50 * TICKS_IN_MS )
+    #define  _loop_delay  ( 5 * TICKS_IN_MS )
+    #define _datarate      DATA_RATE_3_CC2511
+#endif
+
+#ifdef DATA_RATE_2
+    #define  _slot          ( 10 * TICKS_IN_MS )
+    #define  _loop_delay    ( TICKS_IN_MS * 35  )
+    #define _datarate      DATA_RATE_2_CC2511
+#endif
+
+BYTE     maxDevs  = 16,  maxBunches = 255; // 4096 devices
+BYTE     bunch    = 0,   nBunches   = 1;
+
+#define CMDBUFMSK 0xF
+CMD  cmdBuf[ CMDBUFMSK+1 ];
+BYTE cmdIdx0 = 0, cmdIdx1 = 0xFF;
+
+/*==== PUBLIC FUNCTIONS ======================================================*/
+/******************************************************************************
+* @fn  main
+* @brief      Main function. Triggers setup menus and main loops for both receiver
+*             and transmitter. This function supports both CC1110 and CC2510.
+* Parameters:
+* @param  void
+* @return void
+******************************************************************************/
+void main(void){
+   //RF_PACKET __xdata * pTempPacketBuffer;
+   UINT16 outCounter, i, j;
+
+   ticks2SendRequest = _sendRequest;
+   ticks2FeedTheDog  = _dogsFeeding;
+   ticks2AdjustFrequency   = _adjustFrequency;
+   
+   ticks2MsTime      = TICKS_IN_MS;
+ 
+   P1SEL &= 0xFD;  P1DIR |= 0x02; //P1DIR ^= 0xE0;
+   //P1 &= ~0xE2;
+   P1 |= 0x02; //P1 ^= 0x40;
+   
+   //___________________________________________________________________________________________________________________________
+   CLKCON = 0x80;                // Enable XOSC
+   while ((SLEEP & 0x40) == 0);  // Wait until XOSC/USB clock has stabalized
+   
+   //set default line coding.
+   lineCoding.dteRate    = 115200;
+   lineCoding.charFormat = CDC_CHAR_FORMAT_1_STOP_BIT;
+   lineCoding.parityType = CDC_PARITY_TYPE_NONE;
+   lineCoding.dataBits   = 8;
+
+   /*
+   lineCoding.dteRate    = 230400;
+   lineCoding.charFormat = CDC_CHAR_FORMAT_1_STOP_BIT;
+   lineCoding.parityType = CDC_PARITY_TYPE_NONE;
+   lineCoding.dataBits   = 8;
+   */
+    
+   /*
+   lineCoding.dteRate    = 1500000;
+   lineCoding.charFormat = CDC_CHAR_FORMAT_1_STOP_BIT;
+   lineCoding.parityType = CDC_PARITY_TYPE_NONE;
+   lineCoding.dataBits   = 8;
+   */
+   
+   setupTimer1();   
+   releaseTheDog();
+
+   //___________________________________________________________________________________________________________________________
+   // Choose the crystal oscillator as the system clock
+   halPowerClkMgmtSetMainClkSrc(CRYSTAL);
+
+   //isCW = TRUE;
+
+   // Configure interrupt for every received packet
+   //if( ! isCW ) { 
+       HAL_INT_ENABLE(INUM_RF,  INT_ON);    // Enable RF general interrupt
+       HAL_INT_ENABLE(INUM_ADC, INT_ON);    // enable ADC interrupt
+       radioConfigure( _datarate, FREQUENCY_A_CC2511 ); 
+   //}else{ 
+   //    radioConfigure( DATA_RATE_3_CC2511, FREQUENCY_B_CC2511 ); 
+   //}
+   HAL_INT_ENABLE(INUM_T1,  INT_ON);    // enable Timer1 interrupt 
+
+   RFIM    = IRQ_DONE;
+   //___________________________________________________________________________________________________________________________
+   // Initialize the USB framework
+   usbfwInit();
+   // Initialize the USB interrupt handler with bit mask containing all processed USBIRQ events
+   usbirqInit(0xFFFF);
+   // Enable interrupts
+   USBFW_SELECT_ENDPOINT(4);
+   USBMAXO = 0;    USBMAXI = 255;
+   USBCSIH |= USBCSIH_IN_DBL_BUF;
+
+   INT_GLOBAL_ENABLE(TRUE);
+  
+   if( !readTheLatest((BYTE *)&page, PAGESIZE ) ){ flashDirty = TRUE; needNewPage = TRUE; }
+   CHANNR = page.channel;  nBunches = 1 + page.nDevs / maxDevs;
+
+   calibrate();
+   loadKey( page.curKey );
+
+   //___________________________________________________________________________________________________________________________
+   while (TRUE) {
+      if (time2FeedTheDog)   {  feedTheDog();       time2FeedTheDog    = FALSE; }
+      if( isCW ){ // Just transmit - without changing frequency
+        RFST = STROBE_TX;
+        while( !RFTXRXIF ) asm("NOP");
+        RFD = 0x55;
+        for( i = 0; i<0x55; i++){
+            while( !RFTXRXIF ) asm("NOP");
+            RFD = 0x55;
+        }
+        /*
+        if( ms > 1000 ) {
+            ms -= 1000; utc ++;
+            if( (utc % 120) == 0 ){
+                P1 ^= 2;
+                radioConfigure( DATA_RATE_3_CC2511, freqs[ (utc/120)%5 ] ); 
+                RFST = STROBE_CAL;  
+            }
+        }*/
+      }else{ // Do the real work
+          handleMyStdUsb();
+          if( secondGone ) { 
+              utc++; 
+              if( secondsJoinEnabled > 0 ){
+                  secondsJoinEnabled--;
+                  if(secondsJoinEnabled > 0) joinEnabled = TRUE; else joinEnabled = FALSE;
+              }
+              secondGone = FALSE;
+          }
+          //INT_GLOBAL_ENABLE( FALSE );
+              USBFW_SELECT_ENDPOINT(4);
+              while ((USBCSOL & USBCSOL_OUTPKT_RDY)){
+                   outCounter = 256*USBCNTH; outCounter += USBCNTL;
+                   if( outCounter == 0 ){ USBCSIL |= USBCSIL_INPKT_RDY; break; }
+                   usbfwReadFifo(&USBF4, outCounter, allAdcs);
+                   USBCSOL &= ~USBCSOL_OUTPKT_RDY;
+                   for(i = inBuffIdx, j = 0; j<outCounter; inBuffIdx++, j++ ){
+                       inBuff[ inBuffIdx ] = allAdcs[ j ];
+                       if(      inBuff[ inBuffIdx ] == '\r' ){ inBuff[ ++inBuffIdx ] = '\n'; inBuff[ ++inBuffIdx ] = 0; needCommandParsing = TRUE; break; }
+                       else if( inBuff[ inBuffIdx ] == '\n' ){ inBuff[ ++inBuffIdx ] = '\r'; inBuff[ ++inBuffIdx ] = 0; needCommandParsing = TRUE; break; }
+                   }
+                   // is it OK to ignore the rest of allAdcs when if( j < outCounter ) ???
+                   if( echoEnabled  ){
+                       usbfwWriteFifo(&USBF4, inBuffIdx-i, inBuff+i );
+                       USBCSIL |= USBCSIL_INPKT_RDY;
+                   }
+              }
+          //INT_GLOBAL_ENABLE( TRUE );
+    
+          if (time2SendRequest)  {  sendRequest();      time2SendRequest   = FALSE; }
+          if( ticks2SendRequest > 80){
+              if (pktRcvdFlag)   {  processEDReport();  pktRcvdFlag        = FALSE; }
+          }
+          if (time2Start2Receive){  start2Receive();    time2Start2Receive = FALSE; }
+          if (needCommandParsing){  parseCommand();     needCommandParsing = FALSE; }
+    
+          //if( time2MeasureAdc  ) { armAdcs();           time2MeasureAdc  = FALSE; }
+          //if( adcDataReady     ) { readNextValue();     adcDataReady     = FALSE; }
+          //if( time2AdjustFrequency && bufferFilled ) { computeADCs( TRUE ); time2AdjustFrequency  = FALSE; }
+      }  
+   }
+}
+/*==== PRIVATE FUNCTIONS =====================================================*/
+/*==== INTERRUPT SERVICE ROUTINES ============================================*/
+/******************************************************************************
+* @fn  rf_IRQ
+* @brief    The only interrupt flag which throws this interrupt is the IRQ_DONE interrupt.
+*           So this is the code which runs after a packet has been received or  transmitted.
+* Parameters:
+* @param  void
+* @return void
+******************************************************************************/
+#pragma vector=RF_VECTOR
+__interrupt void rf_IRQ(void) {
+    INT_GLOBAL_ENABLE(FALSE);
+    RFIF &= ~IRQ_DONE;        // Tx/Rx completed, clear interrupt flag
+    S1CON &= ~0x03;           // Clear the general RFIF interrupt registers
+    if (mode == RADIO_MODE_RX){   
+         if( radioPktBufferRx[0] == PACKET_LENGTH_ED ) pktRcvdFlag = TRUE;
+         else{                                         start2Receive(); return; }
+    }else if( mode == RADIO_MODE_TX )   calibrate();
+    INT_GLOBAL_ENABLE(TRUE);
+}
+/******************************************************************************
+* @fn  T3_IRQ
+* @brief    Timer interrupt - the base of the scheduler. Counts down all the counters
+*           and sets appropriate flags.
+* Parameters:
+* @param  void
+* @return void
+******************************************************************************/
+//#pragma vector=T3_VECTOR
+//__interrupt void t3_IRQ(void) {
+#pragma vector=T1_VECTOR
+__interrupt void t1_IRQ(void) {
+    TIMIF &= ~IRQ_DONE;     // clear interrupt flag
+    if( ticks2FeedTheDog    > 0 ){    ticks2FeedTheDog --;     if( ticks2FeedTheDog == 0 )      time2FeedTheDog = TRUE;     } 
+    if( ticks2SendRequest   > 0 ){    ticks2SendRequest--;     if( ticks2SendRequest == 0)      time2SendRequest  = TRUE;   }
+    if( ticks2Start2Receive > 0 ){    ticks2Start2Receive--;   if( ticks2Start2Receive == 0 )   time2Start2Receive = TRUE; }
+    if( ticks2AdcMeasurement > 0 )  { ticks2AdcMeasurement--;  if(ticks2AdcMeasurement==0)      time2MeasureAdc = TRUE; }
+    if( ticks2AdjustFrequency  > 0 ){ ticks2AdjustFrequency--; if(ticks2AdjustFrequency==0)     time2AdjustFrequency = TRUE; }
+    runningTicks++;
+    if( ticks2MsTime > 0 ){           
+        ticks2MsTime --;         
+        if( ticks2MsTime == 0 ){  
+          ms ++; ticks2MsTime = TICKS_IN_MS;  
+          if( ms == 1000 ){ ms = 0; secondGone = TRUE; }
+        }   
+    }
+}
+#pragma vector=ADC_VECTOR 
+__interrupt void adc_IRQ(void) {
+    ADCIF &= ~IRQ_DONE;     // clear interrupt flag
+    adcDataReady = TRUE;
+}
+//______________________________________________________________________________________________________________________________
+/******************************************************************************
+* Set up Timer 1 - here it is 24 MHz, sys tick is 100 mks, prescaler = 8, modulo opertaion with counter = 300, generate interrupt
+******************************************************************************/
+void setupTimer1(void){
+    SET_WORD(T1CC0H, T1CC0L, 300 - 1);
+    //        prescaler = 8      modulo mode
+    T1CTL   = 0x04             | 0x02;
+    //        ie
+    T1CCTL0 = 0x44;
+}
+/******************************************************************************
+* Initialize the Watchdog
+******************************************************************************/
+void releaseTheDog(void){ WDCTL = 0x8; }
+/******************************************************************************
+* Computes size of the command
+******************************************************************************/
+BYTE cmdSize(CMD *ptr){
+BYTE size = 3; //1+2;
+    if( ptr->useAddr )  switch( ptr->cmd & 0x3 ){
+        case BROADCAST:             break; // broadcast
+        case STRINGADDR: size += 2; break; // string
+        case NIDADDR:    size += 2; break; // netId
+        case MACADDR:    size += 6; break; // mac 
+    }
+    if( ptr->cmd == SET_MAC_CMD )
+        size += 6;
+    else{
+        if( ptr->useReg ) size++;
+        if( ptr->useValue ) switch( ptr->cmd & 0xC ){
+            case FLOAT_VAL:  size += 4; break;
+            case BYTE_VAL:   size += 1; break;
+            case SHORT_VAL:  size += 2; break;
+            case LONG_VAL:   size += 4; break;
+        }
+    }
+    return size;
+}
+/*****************************************************************************/
+#define HEX(h) ( h<10 ? (h + '0') : ((h-10)+'A') )
+//int len(char *ptr){  int cnt = 0; while( *ptr++ ) cnt++; return cnt; }
+//____________________________________________________________________________
+char* utoa(UINT16 val, int base, char *ptr){
+static char buf[32] = {0};
+BYTE   i = 30;
+    if( val == 0 ) { *ptr++ = '0'; return ptr; }
+	for(; val && i ; --i, val /= base) buf[i] = "0123456789ABCDEF"[val % base];
+    strcpy( ptr, buf+i+1 ); 
+	return ptr + (30-i);
+}
+//____________________________________________________________________________
+inline char* itoa(INT16 val, char *ptr){
+  if( val < 0 ){ *ptr++ = '-'; val = -val; }
+  return utoa( (UINT16)val, 10, ptr );
+}
+//____________________________________________________________________________
+char* ultoa(UINT32 val, int base, char *ptr){
+static char buf[32] = {0};
+BYTE   i = 30;
+    if( val == 0 ) { *ptr++ = '0'; return ptr; }
+	for(; val && i ; --i, val /= base) buf[i] = "0123456789ABCDEF"[val % base];
+    strcpy( ptr, buf+i+1 ); 
+	return ptr + (30-i);
+}
+//____________________________________________________________________________
+inline char* ltoa(INT32 val, char *ptr){
+  if( val < 0 ){ *ptr++ = '-'; val = -val; }
+  return ultoa( (UINT32)val, 10, ptr );
+}
+//____________________________________________________________________________
+inline char *ftoa(float c, char *ptr){
+UINT32 d;
+    if( c < 0 ){ *ptr++ = '-'; c = -c; }
+    d = (UINT32) c;  ptr = ultoa( d, 10, ptr );
+    c -= floor(c);
+    *ptr++ = '.';
+    if( c <= FLT_MIN ) *ptr++ = '0'; 
+    else{
+       c *= 10.0;
+       while( c < 1 && c > FLT_MIN ){ *ptr++ = '0'; c *= 10.0; }
+       d = (UINT32)(c*10000000);
+       ptr = ultoa( d, 10, ptr );
+    }
+    return ptr;
+}
+//____________________________________________________________________________
+INT16 _pktGetAdc16( BYTE *rpb,  unsigned char idx ){
+INT16 val = 0; 
+    memcpy( &val, rpb + 12 + 2*idx, 2 );
+    return val;
+}
+//____________________________________________________________________________
+char *printMac( char *ptr, char *mac ){
+register BYTE idx, h;
+    for( idx = 0; idx < 6; idx ++ ){
+      h = ( (*mac) >> 4 ) & 0xF;     *ptr++ = HEX(h);
+      h = (*mac++) & 0xF;            *ptr++ = HEX(h);
+    }               
+    return ptr;
+}
+/*****************************************************************************/
+static BYTE newChannel = 0xFF;  
+/******************************************************************************
+* Send the request for data to EDs
+******************************************************************************/
+void sendRequest(void){  
+BYTE i, j;
+BYTE *ptr;
+BYTE *rpb;
+BYTE devsInBunch = 0;
+UINT16 freeBytesCount = PACKET_LENGTH_GW - 8 - 2; //, lastSend = 0;
+
+    if( setNewChannel && CHANNR != newChannel){
+        CHANNR = newChannel;  
+        newChannel = 0xFF;  
+        page.channel = CHANNR;
+        flashDirty = TRUE;
+        mode = RADIO_MODE_CALIBRATE;
+        RFST = STROBE_IDLE; 
+        RFST = STROBE_CAL; 
+        setNewChannel = FALSE;
+    }
+
+    //if( page.nDevs > (bunch+1)*maxDevs ) devsInBunch = maxDevs; else devsInBunch = page.nDevs % maxDevs;
+    devsInBunch = maxDevs;
+    cmdCycle = ticks2SendRequest = _slot * ( devsInBunch + (joinEnabled?4:1) ) + _loop_delay;    
+
+    rpb = radioPktBuffer[rpbCount]; rpbCount = ( rpbCount + 1 ) %17;
+    memset( rpb, 0, PACKET_LENGTH_GW );
+    
+    rpb[0]   = bunch;
+    if( joinEnabled )   rpb[1] = devsInBunch; else rpb[1] = 0x80 | devsInBunch;
+
+    memcpy( rpb+2, (BYTE *)&utc, 4 ); memcpy( rpb+6, (BYTE *)&ms, 2 );
+
+    // package the commands from cmd buffer into radio buffer   -   command tag _ addr _ reg _ value
+    ptr = rpb + 8;
+    for( j = 0; freeBytesCount  && (j <= CMDBUFMSK) ; j++){
+          // if there were errors in parsing of the command - skip it
+          if( cmdBuf[ j ].cmd == NULLOP ) continue; 
+
+          // check if we still have size
+          i = cmdSize( &cmdBuf[ j ] );                     // or break ???
+          if( i <= freeBytesCount ) freeBytesCount -= i;  else   continue; // command too big to fit in buffer !!!
+          
+          // pack the command into buffer
+          *ptr++ = cmdBuf[ j ].cmd;
+          memcpy( ptr, (BYTE *)&cmdBuf[j].seq, 2 );  ptr+= 2;
+
+          // pack the address into buffer
+          if( cmdBuf[ j ].useAddr ) switch( cmdBuf[ j ].cmd & 0x3 ){
+              case BROADCAST:             break; // broadcast
+              case STRINGADDR: case NIDADDR:     // string or netid
+                  memcpy( ptr, cmdBuf[ j ].addr.arr, 2 ); ptr+=2;
+              break;
+              case MACADDR:                      // mac 
+                  memcpy( ptr, cmdBuf[ j ].addr.arr, 6 ); 
+                  ptr+=6;
+              break; 
+          }
+          // pack the reg into buffer
+          if( cmdBuf[ j ].useReg )   *ptr++ = cmdBuf[ j ].reg; 
+          // pack the value into buffer
+          if( cmdBuf[ j ].cmd == SET_MAC_CMD ) {
+              memcpy( ptr, cmdBuf[ j ].value.arr, 6 );  ptr+=6;
+          }else if( cmdBuf[ j ].useValue ) switch( cmdBuf[ j ].cmd & 0xC ){
+              case BYTE_VAL:  *ptr++ =  cmdBuf[ j ].value.arr[0];                 break;
+              case SHORT_VAL: memcpy( ptr, cmdBuf[ j ].value.arr, 2 );  ptr+=2;   break;
+              case LONG_VAL:  memcpy( ptr, cmdBuf[ j ].value.arr, 4 );  ptr+=4;   break;
+              case FLOAT_VAL: memcpy( ptr, cmdBuf[ j ].value.arr, 4 );  ptr+=4;   break; 
+          }
+          if( cmdBuf[ j ].repCount > 0 ) cmdBuf[ j ].repCount--;
+          if( cmdBuf[ j ].repCount == 0 ){
+              if( ( ( cmdBuf[ j ].cmd & 0xF0 ) == SETREG ) && 
+                  (   cmdBuf[ j ].reg          == SET_CHANNEL )   &&
+                  ( ( cmdBuf[ j ].cmd & 0xC )  == BYTE_VAL  )
+              ){
+                    newChannel = cmdBuf[ j ].value.bval;
+                    setNewChannel = TRUE;
+              }
+              cmdBuf[ j ].cmd = NULLOP;
+              // increment the cmdIdx1
+          }
+    }
+    loadIV( page.curIV );  encode( PACKET_LENGTH_GW-2, (char *)rpb, (char *)(radioPktBufferTx+2) );
+    radioPktBufferTx[0] = PACKET_LENGTH_GW;                 // Length byte
+    radioPktBufferTx[1] = 0x02;                             // ED address
+
+    if( ++bunch >= nBunches ) bunch = 0;
+
+    RFST = 4; 
+    dmaRadioSetup( mode = RADIO_MODE_TX );    
+    PKTLEN   = PACKET_LENGTH_GW;   // Packet length.
+
+    // stop the receiving if it stale
+    //RFST = STROBE_IDLE;
+    //DMAARM = 0x80 | DMAARM_CHANNEL0;
+    
+    // Send the packet
+    INT_GLOBAL_ENABLE(FALSE);
+        DMAARM = DMAARM_CHANNEL1;       // Arm DMA channel 1
+        RFST = STROBE_TX;               // Switch radio to TX
+        time2SendRequest = FALSE;
+    INT_GLOBAL_ENABLE(TRUE);
+
+    if( dissolveNetwork ){
+        page.nDevs = 0; 
+        flashDirty = TRUE; needNewPage = TRUE; 
+        dissolveNetwork = FALSE;
+        if( flashDirty ) { 
+           flashDirty = FALSE; 
+           page.channel = CHANNR;
+           writeTheLatest( (BYTE *)&page, PAGESIZE, needNewPage); 
+           needNewPage = FALSE; 
+        } 
+    }
+}
+/******************************************************************************
+* Work with watchdogs and LED's
+******************************************************************************/
+void feedTheDog(void){  
+    WDCTL = 0xA8;       WDCTL = 0x58;   // feed the dog
+    ticks2FeedTheDog = _dogsFeeding;    // manage flags
+}
+/******************************************************************************
+* Start to receive data
+******************************************************************************/
+void start2Receive(void){  
+    PKTLEN   = PACKET_LENGTH_ED;            // Packet length.
+    dmaRadioSetup( mode = RADIO_MODE_RX );  // Set up the DMA to move packet data from radio to buffer
+    DMAARM = DMAARM_CHANNEL0;               // Arm DMA channel 0
+    RFST   = STROBE_RX;                     // Switch radio to RX
+}
+/******************************************************************************
+* Receive an Report from End Device, format it into the string and send this string through the USB.
+******************************************************************************/
+void usb(char *s){
+    USBFW_SELECT_ENDPOINT(4);
+    usbfwWriteFifo(&USBF4, strlen(s), s );
+    USBCSIL |= USBCSIL_INPKT_RDY;
+}
+/******************************************************************************
+* Receive an Report from End Device, format it into the string and send this string through the USB.
+******************************************************************************/
+void processEDReport(void){
+signed char off = 0, rssi = radioPktBufferRx[PACKET_LENGTH_ED+1];
+UINT16 ticksLeft = 0;
+CMD *cmdPtr;
+char *ptr;
+BYTE *rpb;
+BYTE idx;//, i;
+UINT16 curBunch = ( bunch + nBunches + 1) % nBunches;
+static UINT32 pktUtc;
+static UINT16 pktMs;
+    ticks2Start2Receive = 1;
+    // Check if the received packet is a valid PER test packet
+    if( (radioPktBufferRx[PACKET_LENGTH_ED + 2] & 0x80) && radioPktBufferRx[0] == PACKET_LENGTH_ED) {
+        rpb = radioPktBuffer[rpbCount]; rpbCount = ( rpbCount + 1 ) % 17;
+        loadIV( page.curIV );  decode( PACKET_LENGTH_ED-2, (char *)(radioPktBufferRx+2), (char *)rpb );
+        output = TRUE;      P1 ^= 2;
+        lastRssi = convertRssiByte( rssi );
+        radioPktBufferRx[PACKET_LENGTH_ED + 2] = 0;
+        off = FREQEST;
+    }
+    // We don't need our packet buffer anymore, prepare for the next packet
+    DMAARM = DMAARM_CHANNEL0;
+    RFST = STROBE_RX;               
+
+    ticksLeft = ticks2SendRequest;
+    if (output) {
+        output = FALSE;
+        if( (rpb[0] == 0xFF) && (rpb[1] == 0xFF) && (rpb[2] == 0xFF) && (rpb[3] == 0xFF)){
+            if( joinEnabled ) {
+                rpb += 4;
+                UINT16 newBunch, newId;//, i;
+                newId = page.nDevs % maxDevs; newBunch = page.nDevs / maxDevs;
+                while( newBunch >= nBunches ) nBunches++;
+                page.nDevs++; flashDirty = TRUE; needNewPage = TRUE;
+
+                cmdPtr = &cmdBuf[cmdIdx0];
+                if( cmdIdx1 > CMDBUFMSK ) cmdIdx1 = cmdIdx0;
+                cmdIdx0 = (cmdIdx0 + 1)&CMDBUFMSK;
+                cmdPtr->cmd = SETREG | MACADDR | SHORT_VAL;
+                cmdPtr->seq = cmdCount++;
+                cmdPtr->repCount = 3;
+                cmdPtr->useReg = TRUE;   cmdPtr->useAddr = TRUE;  cmdPtr->useValue = TRUE;
+                memcpy( cmdPtr->addr.mac, (BYTE *)(rpb + 6), 6 );
+                cmdPtr->reg        = JOIN;
+                cmdPtr->value.ival = ( newBunch << 8 ) | newId;
+
+                ptr = (char *)allAdcs; *ptr++ = '\r';                          *ptr++ = '\n';
+                ptr = utoa(  ticksLeft, 10, ptr ); strcpy( ptr, " ticks\t" );   ptr += 7;
+                
+                memcpy( (BYTE *)&pktUtc, rpb, 4 );
+                ptr = ultoa( pktUtc, 10, ptr );                             *ptr++ = '\t';
+                memcpy( (BYTE *)&pktMs, rpb+4, 2 );
+                ptr = utoa(  pktMs, 10, ptr );                          *ptr++ = '\t';
+
+                ptr = itoa(  off, ptr );                                        *ptr++ = '\t';
+                ptr = itoa(  lastRssi, ptr );    
+                *ptr++ = 0;
+              usb( (char *)allAdcs );
+                strcpy((char *)allAdcs, " dB\tJoining ");  ptr = (char *)allAdcs + 12;                 
+                ptr = printMac( ptr, (char *)(rpb + 6) );
+                strcpy(ptr, "\tid="); ptr += 4;     *ptr++ = HEX( newId ); *ptr++ = '(';
+                ptr = utoa( newBunch, 10, ptr );    *ptr++ = ')';   *ptr++ = '\r';  *ptr++ = '\n'; *ptr++ = 0;
+              usb( (char *)allAdcs );
+            }
+        }else{
+        memcpy( (BYTE *)&pktMs, rpb+4, 2 ); pktMs &= 0x3FF;
+            if( pktMs > 1000 ){
+                  pktMs -= 1000;
+                  strcpy( (char *)allAdcs, "\r\nSC" ); ptr = (char *)allAdcs + 4;
+                  *ptr++ = HEX( (pktMs&0xF) );  *ptr++ = ':'; *ptr++ = '\t';  // the scaling coeff #
+                  ptr = printMac( ptr, (char *)(rpb+6) );     *ptr++ = '\t';  
+                  *ptr = 0; usb( (char *)allAdcs ); ptr = (char *)allAdcs;
+                  if( pktMs > 4 ){
+                  UINT16 u16;
+                  UINT32 u32;
+                      ptr = (char *)allAdcs; 
+                      // mpp, module, ov, oc
+                      for(idx = 0;  idx<4;  idx++) { *ptr++ = HEX( ((rpb[idx]>>4)&0xF) );  *ptr++ = HEX( (rpb[idx]&0xF) ); *ptr++ = '\t';}
+                      // channel, radioDebug, azimuth, positionInString, netId, myBunch
+                      for(idx = 12; idx<18; idx++) { *ptr++ = HEX( ((rpb[idx]>>4)&0xF) );  *ptr++ = HEX( (rpb[idx]&0xF) ); *ptr++ = '\t';}
+                      
+                      memcpy( (BYTE *)(&u32), rpb+18, 4 );
+                      ptr = ultoa( u32, 16, ptr ); *ptr++ = '\t'; // inst date, UTC sec
+                      *ptr= 0; usb( (char *)allAdcs ); ptr = (char *)allAdcs;
+                      
+                      for( idx = 22; idx<32; idx+=2){ // groupId, elevation, latitude, longitude, altitude
+                        memcpy( (BYTE *)(&u16), rpb+idx, 2 );
+                        ptr = utoa( u16, 16, ptr ); *ptr++ = '\t'; 
+                        if(idx==26){ *ptr= 0; usb( (char *)allAdcs ); ptr = (char *)allAdcs; }
+                      }
+                      *ptr= 0; usb( (char *)allAdcs ); ptr = (char *)allAdcs;
+                  }else{
+                  float  c;
+                      memcpy( (BYTE *)&c, rpb, 4 ); rpb += 12;
+                      ptr = ftoa( c, ptr );
+                      *ptr++ = '\t';
+        
+                      for( idx = 0; idx<5; idx++){
+                        memcpy( (BYTE *)&c, rpb, 4 ); rpb += 4;
+                        ptr = ftoa( c, ptr );
+                        *ptr++ = '\t';
+                        if( idx == 1 || idx == 4) { 
+                            if( idx == 5 ) { *ptr++ = '\r'; *ptr++ = '\n'; }
+                            *ptr = 0; *ptr = 0; usb( (char *)allAdcs ); ptr = (char *)allAdcs; 
+                        }
+                      }
+                  }
+            }else{
+                  strcpy( (char *)allAdcs, "\r\nL1:\t" ); ptr = (char *)allAdcs + 6;
+                  ptr = utoa( ticksLeft, 10, ptr);             *ptr++ = '\t'; 
+                  ptr = utoa( curBunch, 10, ptr);              *ptr++ = ':';   // bunch
+                  *ptr++ = HEX( ((rpb[5]>>2)&0xF) );           *ptr++ = '\t';  // no group, just netId
+                  ptr = printMac( ptr, (char *)(rpb+6) );      *ptr++ = '\t'; *ptr++ = 0;
+                usb( (char *)allAdcs );
+                  allAdcs[0] = 0; ptr = (char *)allAdcs; 
+                  memcpy( (BYTE *)&pktUtc, rpb, 4 );
+                  ptr = ultoa( pktUtc,  10, ptr );              *ptr++ = '\t';
+                  ptr = utoa( pktMs,    10, ptr );              *ptr++ = '\t';
+                  ptr = itoa( off,           ptr );             *ptr++ = '\t';
+                  ptr = itoa( lastRssi,      ptr );             *ptr++ = ' ';   *ptr++ = 'd';   *ptr++ = 'B';   *ptr++ = '\t';
+                  ptr = itoa( (signed char)rpb[28],  ptr );     *ptr++ = '\t';                             // pkt off
+                  ptr = itoa( -rpb[29], ptr );  *ptr++ = ' ';   *ptr++ = 'd';   *ptr++ = 'B';   *ptr = 0;  // pkt rssi
+                usb( (char *)allAdcs );
+                  strcpy( (char *)allAdcs, "\r\nL2:" ); ptr = (char *)allAdcs + 5;
+                  for( idx = 0; idx < 8; idx ++ ){ 
+                        *ptr++ = '\t'; 
+                        switch( idx ){
+                            case 2: case 4: case 5: case 6: case 7: ptr = itoa( _pktGetAdc16(rpb, idx), ptr );      break;
+                            default:                                ptr = utoa( _pktGetAdc16(rpb, idx), 10, ptr );  break;
+                        }
+                  }
+                  *ptr++ = '\t'; *ptr++ = 0;    
+                usb( (char *)allAdcs );
+                  strcpy( (char *)allAdcs, "OV: " ); ptr = (char *)allAdcs + 4;
+                  ptr = itoa( rpb[30],  ptr ); *ptr++ = '\t';  // over voltage
+                  *ptr++ = 'O'; *ptr++ = 'C'; *ptr++ = ':'; *ptr++ = ' ';
+                  ptr = itoa( rpb[31], ptr );  *ptr++ = '\t';  // over current
+                  if( rpb[5] & 0x40 ) strcpy( ptr, "mpp on \t" ); else strcpy( ptr, "mpp off\t" );
+                  ptr += 8;
+                  if( rpb[5] & 0x80 ) strcpy( ptr, "module on\r\n" ); else strcpy( ptr, "module off\r\n" );
+                usb( (char *)allAdcs );
+             }
+        }
+     }
+     //ticksLeft -= ticks2SendRequest;
+     //ptr = utoa( ticksLeft, 10, (char *)allAdcs ); *ptr++='\r'; *ptr++='\n'; *ptr = 0;
+     //usb( (char *)allAdcs );
+}
+/******************************************************************************/
+unsigned char* rollNW( unsigned char *ptr ) { 
+    while( *ptr ) if( *ptr != ' ' && *ptr != '\t' && *ptr != '\n' && *ptr != '\r' ) ptr++; else break; 
+    return ptr;
+}
+unsigned char* rollW( unsigned char *ptr ) { 
+    while( *ptr ) if( *ptr == ' ' || *ptr == '\t' || *ptr == '\n' || *ptr == '\r' ) ptr++; else break; 
+    return ptr;
+}
+unsigned char* roll2next(   unsigned char *ptr ) {     return rollW( rollNW( ptr ) );  }
+/******************************************************************************/
+unsigned char ch2int(   unsigned char ch ) { 
+    if(      ch >= '0' && ch <= '9' ) ch-= '0';
+    else if( ch >= 'A' && ch <= 'F' ) ch = 10 + (ch - 'A');
+    else if( ch >= 'a' && ch <= 'f' ) ch = 10 + (ch - 'a');
+    else                              ch = 0;
+    return   ch & 0xF; 
+}
+/******************************************************************************
+ * command address parsing
+******************************************************************************/
+void parseAddr(BYTE *ptr, CMD *cmdPtr){
+BYTE i;
+    switch( *ptr++ ){
+        case '*': cmdPtr->cmd |= BROADCAST;  break; // broadcast command to all
+        case 's': cmdPtr->cmd |= STRINGADDR; cmdPtr->addr.stringAddr = strtoul( (char*)ptr, 0, 16 ); break;
+        case '#': cmdPtr->cmd |= NIDADDR;    cmdPtr->addr.netId      = strtoul( (char*)ptr, 0, 16 ); break;
+        case 'm': 
+            cmdPtr->cmd |= MACADDR;    
+            for(i = 0; i<6; i++){
+                cmdPtr->addr.mac[i] =  ch2int( *ptr++ ) << 4; 
+                cmdPtr->addr.mac[i] |= ch2int( *ptr++ ); 
+            }
+        break;
+        default : cmdPtr->cmd = NULLOP; return; // error - ignore this command
+    }
+}
+/******************************************************************************
+ * allocates command from buffer 
+******************************************************************************/
+CMD *getCmdPtr(BYTE cmd, BOOL useReg, BOOL useAddr, BOOL useValue){
+int j;
+    for( j = 0; j <= CMDBUFMSK; j++) if( cmdBuf[j].cmd == NULLOP || cmdBuf[j].repCount == 0 ){
+        CMD *cmdPtr = &cmdBuf[j];
+        cmdPtr->repCount = 3;
+        cmdPtr->cmd = cmd;
+        cmdPtr->useReg = useReg;  cmdPtr->useAddr = useAddr;  cmdPtr->useValue = useValue;
+        cmdPtr->seq = cmdCount++;
+        return cmdPtr;
+    }
+    return NULL;
+}
+/******************************************************************************
+* Parse Commands from main computer and take actions
+* Commands are:
+*   'T UTC MS'              set up time in UTC + milliseconds
+*   'S Addr Reg Value'      set register in specified end device
+*
+*   Addr:  all  string  inidividual   MAC         
+*           *   |sNNNN | #NNNN      | mNNNNNNNNNN
+*
+*   Value: logical 0/1  byte hex  short hex  32bit hex    float
+*           lN         | bNN     | sNNNN    | LNNNNNNNN | fNNNNNNNN 
+*
+*   'R Addr'                reset processor on end device
+*   'E 0|1'                 echo on/off
+*   'C'                     silence
+*   'A'                     compute and store the shift on the end devices
+*   'J (sNNNN | mNNNN | hNNNN | dNNNN)'     JOIN enabled for nnnn seconds/minutes/hours/days
+*   'H NN'                  set channel - 8 bit command, BYTE for new channel number      
+*   'F Addr'                allow to write to flash for End Devices
+*   'Z Addr'                allow for flash rejuvenation on end devices
+*   'w Addr'                switch to CW mode for selected devices
+*   'W'                     switch this gateway to CW mode
+*   'D'                     decrease network id by 1 - needed for slot reusing - problem pointed out by Sayan
+*   'N'                     dissolve network - all ED forget about their id's, GW network id goes to 0
+*   'M Addr'                restart measurement - clear buffer on specified ED. Needed for test purposes.
+*   'K NN'                  make nDevs=NN
+*   'I'                     GW info
+*   'O Addr'                get coeeficients
+*   'Q'                     reset the commands counter - suppose to be done every night (before active day) by middleware
+*   'B'                     push the commands counter to the next 1k
+*   'G'                     write to flash
+******************************************************************************/
+void parseCommand(void){
+unsigned char *ptr = inBuff; 
+CMD *cmdPtr;
+BOOL parseError = FALSE;
+BYTE reg, cmd;
+static BYTE w, y, l;
+static UINT32 n;
+//    do{
+        ptr = rollW( ptr );  // leading spaces
+        reg = 0;
+        switch( cmd = *ptr++ ){
+            // K - set the amount of devices
+            case 'K':  case 'k':{
+                ptr = rollW( ptr );
+                page.nDevs = atoi( (char*)ptr );
+                nBunches = 1 + page.nDevs / maxDevs;
+                flashDirty = TRUE; needNewPage = TRUE;
+            }break;
+            
+            // 'T UTC MS' set up time in UTC + milliseconds
+            case 'T':   case 't': 
+                ptr = rollW( ptr );
+                utc = (unsigned long) strtol((char*)ptr, 0, 10);  
+                ptr = roll2next( ptr );
+                if( *ptr ){
+                    ms  = (unsigned int ) (strtol((char*)ptr, 0, 10)&0xFFFF);
+                    ptr = roll2next( ptr );
+                    ticks2MsTime = TICKS_IN_MS;
+                }
+            break;
+
+            //                          all  string  inidividual   MAC         reg#  logical  byte  hex byte    short   32bit       float
+            case 'S': case 's':  // 'S (*   |sNNNN | #NNNN      | mNNNNNNNNNN) NN   (lN     | bNN  |  hNN      | sNNNN | LNNNNNNNN | fNNNNNNNN )
+                cmdPtr = getCmdPtr( SETREG, TRUE, TRUE, TRUE ); 
+                if( cmdPtr == NULL ) { parseError = TRUE;  *ptr = 0; break; }
+                ptr = rollW( ptr );
+                // command address parsing
+                parseAddr( ptr, cmdPtr ); 
+                ptr = roll2next( ptr );
+                // parse register
+                cmdPtr->reg = atoi( (char *)ptr ); 
+                ptr = roll2next( ptr );
+                // parse value
+                switch( *ptr++ ){
+                    case 'l': cmdPtr->cmd |= BYTE_VAL;     cmdPtr->value.bval = ((*ptr)=='0')?0:0xFF;                  break;
+                    case 'b': cmdPtr->cmd |= BYTE_VAL;     cmdPtr->value.bval = (BYTE)   strtoul( (char*)ptr, 0, 10); break;
+                    case 'h': cmdPtr->cmd |= BYTE_VAL;     cmdPtr->value.bval = (BYTE)   strtoul( (char*)ptr, 0, 16); break;
+                    case 'i': case 's': cmdPtr->cmd |= SHORT_VAL;    cmdPtr->value.ival = (UINT16) strtoul( (char*)ptr, 0, 10 ); break;
+                    case 'L': cmdPtr->cmd |= LONG_VAL;     cmdPtr->value.lval = (UINT16) strtoul( (char*)ptr, 0, 10 ); break;
+                    case 'f': case 'd': 
+                              cmdPtr->cmd |= FLOAT_VAL;    cmdPtr->value.dval = atof( (char*)ptr );                    break;
+                    case 'm':
+                        cmdPtr->useReg = FALSE; cmdPtr->cmd = SET_MAC_CMD;
+                        for(reg = 0; reg<6; reg++){
+                            cmdPtr->value.arr[reg] =  ch2int( *ptr++ ) << 4; 
+                            cmdPtr->value.arr[reg] |= ch2int( *ptr++ ); 
+                        }                        
+                    break;
+                    case 'S':
+                        cmdPtr->useReg = FALSE; cmdPtr->cmd = SET_MAC_CMD;
+                        w  = ch2int( *ptr++ ) * 10; w += ch2int( *ptr++ );  w &= 0x3F;
+                        y  = ch2int( *ptr++ ) * 10; y += ch2int( *ptr++ );  y &= 0x7F;
+                        l  = *ptr++; if( l > 'a' ) l -= 'a'; else l -= 'A';
+                        n  = strtoul( (char *)ptr, 0, 10 );
+                        cmdPtr->value.arr[ 5 ] = n       & 0xFF;
+                        cmdPtr->value.arr[ 4 ] = (n>>8)  & 0xFF;
+                        cmdPtr->value.arr[ 3 ] = (n>>16) & 0xFF;
+                        n = ( ((UINT32)w) << 18 ) | ( ((UINT32)y) << 11) | ( l << 6 );
+                        cmdPtr->value.arr[ 2 ] = n       & 0xFF;
+                        cmdPtr->value.arr[ 1 ] = (n>>8)  & 0xFF;
+                        cmdPtr->value.arr[ 0 ] = (n>>16) & 0xFF;
+                    break;
+                    default : cmdPtr->cmd = NULLOP; return; // error - ignore this command
+                }
+                //usb("'s' command parsed\n\r");
+            break;
+
+            // Reset End Device processors
+            case 'R': 
+                HAL_INT_ENABLE(INUM_T1,  INT_OFF);     
+            break;
+            case 'r':
+                cmdPtr = getCmdPtr( RESET, FALSE, TRUE, FALSE );
+                if( cmdPtr == NULL ) { parseError = TRUE;  *ptr = 0; break; }
+                ptr = rollW( ptr );
+                // command address parsing
+                parseAddr( ptr, cmdPtr ); if( cmdPtr->cmd==NULLOP ){ parseError = TRUE;  *ptr = 0; break; }
+            break;
+
+            // SILENCE
+            case 'C': case 'c':
+                cmdPtr = getCmdPtr( SILENCE, FALSE, FALSE, FALSE ); cmdPtr->repCount = 1;
+                if( cmdPtr == NULL ) { parseError = TRUE;  *ptr = 0; break; }
+            break;
+
+            // CALIBRATE store the adjustments to the radio calibration curve
+            case 'A': case 'a':
+                cmdPtr = getCmdPtr( CALIBRATE_R, FALSE, FALSE, FALSE );
+                if( cmdPtr == NULL ) { parseError = TRUE;  *ptr = 0; break; }
+            break;
+
+            // JOIN enabled for nnnn seconds/minutes/hours/days
+            // J (sNNNN | mNNNN | hNNNN | dNNNN)
+            case 'J':  case 'j':{
+                UINT32 multiplier = 1; 
+                ptr = rollW( ptr );
+                switch( *ptr++ ){
+                    case 's': case 'S': multiplier = 1L;        break;
+                    case 'm': case 'M': multiplier = 60L;       break;
+                    case 'h': case 'H': multiplier = 3600L;     break;
+                    case 'd': case 'D': multiplier = 24*3600L;  break;
+                }
+                secondsJoinEnabled = multiplier * atol( (char *)ptr );
+                joinEnabled = TRUE;
+            }break;
+
+            // echo on / off
+            case 'E':  case 'e':{
+                ptr = rollW( ptr );
+                switch( *ptr++ ){
+                    case '0': echoEnabled = FALSE;  break;
+                    default : echoEnabled = TRUE;   break;
+                }
+            }break;
+
+            // decrease the nDevs - tool for filling slots by daemon - it SET netId for last ED and decrease nDevs after that
+            case 'D':  case 'd': 
+              if( page.nDevs > 0 ) page.nDevs--;   
+              nBunches = 1 + page.nDevs / maxDevs;
+              flashDirty = TRUE; needNewPage = TRUE; 
+            break;
+
+            // set channel - 16 bit command, 8 bit for new channel number, 8 bit for delay in ms ( - slot for GW )
+            case 'H':  case 'h':{
+                ptr = rollW( ptr );
+                if( *ptr>='0' && *ptr<='9' ){ 
+                    cmdPtr = getCmdPtr( SETREG | BYTE_VAL | BROADCAST, TRUE, TRUE, TRUE );
+                    if( cmdPtr == NULL ) { parseError = TRUE;  *ptr = 0; break; }
+                    cmdPtr->reg = SET_CHANNEL;
+                    cmdPtr->value.bval = (BYTE)(atoi( (char *)ptr )&0xFF);
+                    cmdPtr->repCount = 5;
+                }
+            }break;
+
+            // reset command count
+            case 'Q':  case 'q':    cmdCount = 1;                                   break;
+            case 'P':  case 'p':    cmdCount >>= 10; cmdCount++; cmdCount <<=10;    break;
+            case 'G': // write the gateway information to flash
+                page.channel = CHANNR;
+                writeTheLatest( (BYTE *)&page, PAGESIZE, needNewPage); 
+            break;
+            case 'W':
+                isCW = TRUE; 
+                HAL_INT_ENABLE(INUM_RF,  INT_OFF);    // Enable RF general interrupt
+            break;
+            
+            // allow for flash rejuvenation on end devices
+            case 'Z':  case 'z':    reg = FLASH_REFRESH;                      refreshTheFlash();
+            // switch to continues transmission - for test by FCC and Anatoli
+            case 'w':    if( reg == 0  )  reg = CW_MODE;                            
+            // restart measurement on ED's
+            case 'M':  case 'm':    if( reg == 0  )  reg = RESTART_MEASUREMENT;                            
+            // dissolve network
+            case 'N':  case 'n':    if( reg == 0  ){ reg = DISSOLVE_NETWORK; dissolveNetwork = TRUE; }
+            // ocifrovka - get scaling coefficients
+            case 'O':  case 'o':    if( reg == 0 )   reg = REPORT_SCALING; 
+            // allow for flash writing on end devices
+            case 'F':               if( reg == 0 )   reg = FLASH_AVAILABLE; 
+            
+            case 'f':
+                if( reg == 0 )    reg = COEFFICIENTS_AVAILABLE; 
+                /*
+                if( reg == COEFFICIENTS_AVAILABLE || reg == FLASH_AVAILABLE ){
+                    if( flashDirty || page.channel != CHANNR) { 
+                       flashDirty = FALSE; 
+                       page.channel = CHANNR;
+                       writeTheLatest( (BYTE *)&page, PAGESIZE, needNewPage); 
+                       needNewPage = FALSE; 
+                    } 
+                }
+                */
+                cmdPtr = getCmdPtr( SETREG, TRUE, TRUE, TRUE ); 
+                if( cmdPtr == NULL ) { parseError = TRUE;  *ptr = 0; break; }
+                if( reg != DISSOLVE_NETWORK ){
+                    ptr = rollW( ptr ); 
+                    parseAddr( ptr, cmdPtr ); // command address parsing
+                }
+                cmdPtr->cmd |= BYTE_VAL; cmdPtr->value.bval = TRUE; cmdPtr->reg = reg;
+                //usb("command parsed correctly ");
+                //allAdcs[0] = HEX( ((reg>>4)&0xF) ); allAdcs[1] = HEX( (reg&0xF) ); allAdcs[2] = '\r'; allAdcs[3] = '\n'; allAdcs[4] = 0;
+                //usb( (char *)allAdcs );
+            break;
+
+            // info about gateway
+            case 'I': case 'i':{ 
+            char *s1 = " Tick (mks) ";
+            char *s2 = " Channel ";
+            char *s3 = " Number of devices ";
+            char *s4 = " Size of bunch ";
+            char *ptr;
+                usb("AND Solar Radio Gateway\r\nDatarate:"); 
+                ptr = ultoa( _datarate,  10, (char *)allAdcs );  strcpy( ptr, s1); ptr += strlen( s1 );
+                ptr = utoa( MKS_IN_TICK, 10, ptr);               strcpy( ptr, s2); ptr += strlen( s2 );
+                ptr = utoa( CHANNR, 10, ptr );                   strcpy( ptr, s3); ptr += strlen( s3 );
+                usb( (char *)allAdcs );
+                ptr = utoa( page.nDevs, 10, (char *)allAdcs );   strcpy( ptr, s4); ptr += strlen( s4 );
+                ptr = utoa( maxDevs,    10, ptr );               *ptr = 0;
+                usb( (char *)allAdcs );
+                usb("\r\nCurrent UTC time:"); 
+                ptr = ultoa( utc, 10, (char *)allAdcs );   *ptr++ = ' '; 
+                ptr = utoa(  ms,  10, ptr );  *ptr++ = '\r'; *ptr++ = '\n'; *ptr = 0;
+                usb( (char *)allAdcs );
+            }break;
+            case '\n': case '\r': case ' ': case '\t': case 0: break;
+            default: 
+              usb("command was not recognized - "); 
+              if( cmd != 0 ) allAdcs[0] = cmd; else allAdcs[0] = ' ';
+              allAdcs[1] = '(';  allAdcs[2] = HEX(((cmd>>4)&0xF));  allAdcs[3] = HEX((cmd&0xF)); allAdcs[4] = ')';
+              allAdcs[5] = '\n'; allAdcs[6] = '\r';  allAdcs[7] = 0;
+              usb( (char *)allAdcs );
+            break;
+        }
+// One line - one command, "V ochered' sukiny deti ..."
+//        ptr = roll2next( ptr );
+//    }while( *ptr );
+    if( parseError ) usb("ERROR\n\r");
+    memset( inBuff, 0,  BUFFER_SIZE );   inBuffIdx = 0;
+}
+/******************************************************************************
+* Cheap substitute of library function
+******************************************************************************/
+BOOL myIsNotSpace(int ch){ return ((ch!=' ') && (ch!='\t') && (ch!='\r') && (ch!='\n') ); }
+/******************************************************************************
+* @fn  calibrate
+* @brief       This function initiates calibration of radio.
+* Parameters:
+* @return void
+******************************************************************************/
+void calibrate(void){
+    ticks2Start2Receive = _calibrationDelay;
+    
+    mode = RADIO_MODE_CALIBRATE;
+    INT_GLOBAL_ENABLE(FALSE);
+    RFST = STROBE_IDLE; 
+    RFST = STROBE_CAL; 
+    INT_GLOBAL_ENABLE(TRUE);
+}
+/******************************************************************************
+* @fn  abs
+* @brief       absolute value
+* Parameters: int
+* @return     int
+******************************************************************************/
+INT32 abs32(INT32 a){ return (a<0)?-a:a; }
+
+INT32 delta = 0; 
+/******************************************************************************
+* @fn  adjustF2Temperature
+* @brief       This function computes frequency compensation and writes frequency offset if required
+* Parameters:  adc for internal temperature averaged 128 times and measured with internal reference
+* @return void
+******************************************************************************/
+void  adjustF2Temperature(INT32 adcT, BOOL timeout){
+signed char off = FSCTRL0;
+INT32  lastOff  = (INT32)off; 
+    if( computeDelta ){
+    double t;
+    INT32  curdf, df;
+        t  = adcT - page.tk[0]; t *= page.tk[1];
+        df = (INT32) ( ((page.dFk[0]*t + page.dFk[1])*t+page.dFk[2])*t+page.dFk[3] );
+        if( computeDelta ){ page.theDelta = delta + lastOff*4 - df;  computeDelta = FALSE; flashDirty = TRUE;  needNewPage = TRUE; }
+        df += page.theDelta;
+
+        curdf = delta + lastOff*4;
+        if( (timeout && (abs32( curdf - df ) > page.dF_Tolerance)) )   addDF( df - delta );
+    }else if( abs32( lastOff ) > 32 )                                  addDF( 4*lastOff );
+    ticks2AdjustFrequency = _adjustFrequency;   
+}
+/******************************************************************************
+* @fn  addDF
+* @brief       This adds function shift to compensate frequency offset
+* Parameters:  frequency shuft
+* @return void
+******************************************************************************/
+void addDF(INT32 dFreq){
+INT32 freq;
+    freq = 1L*FREQ0;
+    freq += 256L*FREQ1;
+    freq += 65536L*FREQ2;
+    freq += dFreq;
+    FREQ0 = (BYTE)(freq&0xFF);
+    FREQ1 = (BYTE)((freq>>8) &0xFF);
+    FREQ2 = (BYTE)((freq>>16)&0xFF);
+    delta += dFreq;
+    FSCTRL0 = 0;
+}
+/******************************************************************************
+* @fn  computeADCs
+* @brief       This function makes all the regular computations
+* Parameters:  
+* @return void
+******************************************************************************/
+void computeADCs(BOOL timeout){
+BYTE i;
+UINT16 counter;
+INT32 *accptr;
+INT16 *adcptr;
+INT32 acc;
+double tc;
+    accptr = adcs;
+    for( i = 0; i < N_CHANNELS; i++ ){
+        adcptr = buffer[0] + i;
+        for( acc = 0, counter = 0; counter < AVERAGE_WINDOW; counter++, adcptr += N_CHANNELS ) acc += *adcptr;
+        *accptr++ = acc;
+    }
+    acc = adcs[2];
+    for( i = 0; i < N_CHANNELS-1; i++) adcs[i] -= adcs[2];
+    tc = page.iRef / (double)adcs[1];
+    adcs[ 0 ] = (INT32)( tc * (double) adcs[ 0 ] );
+    adjustF2Temperature( adcs[0], timeout ); 
+}
+/******************************************************************************
+* initiate reading of adc channels
+******************************************************************************/
+void armAdcs(void){
+    adcCount = 0;
+    ticks2AdcMeasurement = _adcMeasurement;  // 10 ms
+    ADC_SINGLE_CONVERSION( ADC_REF_1_25_V | ADC_12_BIT | adcChannels[ adcCount ] ); 
+    ADCIF = 0;
+}
+/******************************************************************************
+* Read ADC's once into buffer
+******************************************************************************/
+void readNextValue(void){  
+    UINT16 value;
+    ADC_GET_VALUE( value );
+    if( adcCount < N_CHANNELS )  buffer[ bufferCount ][ adcCount ] = value>>4;
+    adcCount++;
+    if( adcCount < N_CHANNELS ){
+        ADC_SINGLE_CONVERSION( ADC_REF_1_25_V | ADC_12_BIT | adcChannels[ adcCount ] ); 
+    }else{
+        bufferCount = (bufferCount+1) & BUFFER_MASK;
+        if( (!bufferFilled) && ( bufferCount == BUFFER_MASK ) ) bufferFilled = TRUE; 
+        ticks2AdcMeasurement = _adcMeasurement;  // 5 ms
+    }
+}

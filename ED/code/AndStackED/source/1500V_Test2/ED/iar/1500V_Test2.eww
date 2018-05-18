@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\ampt-ms-low.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\ampt-ms-high.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\ampt-spt-low.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\ampt-spt-high.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\dummy.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\fc-boot.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\nx-boot.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\ya-boot.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\ny-boot.ewp</path>
+  </project>
+  <batchBuild>
+    <batchDefinition>
+      <name>build boot and images</name>
+      <member>
+        <project>fc-boot</project>
+        <configuration>Build .hex for CC2510</configuration>
+      </member>
+      <member>
+        <project>ampt-ms-high</project>
+        <configuration>Build .hex for CC2510</configuration>
+      </member>
+      <member>
+        <project>ampt-ms-low</project>
+        <configuration>Build .hex for CC2510</configuration>
+      </member>
+      <member>
+        <project>ny-boot</project>
+        <configuration>Build .hex for CC2510</configuration>
+      </member>
+      <member>
+        <project>ampt-spt-high</project>
+        <configuration>Build .hex for CC2510</configuration>
+      </member>
+      <member>
+        <project>ampt-spt-low</project>
+        <configuration>Build .hex for CC2510</configuration>
+      </member>
+    </batchDefinition>
+  </batchBuild>
+</workspace>
+
+

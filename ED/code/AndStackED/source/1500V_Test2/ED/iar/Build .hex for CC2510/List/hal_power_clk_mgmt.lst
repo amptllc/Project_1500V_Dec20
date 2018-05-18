@@ -1,0 +1,208 @@
+###############################################################################
+#                                                                             #
+# IAR 8051 C/C++ Compiler V7.30B/W32                    06/Apr/2017  13:54:36 #
+# Copyright 2004-2007 IAR Systems. All rights reserved.                       #
+#                                                                             #
+#    Core               =  plain                                              #
+#    Code model         =  near                                               #
+#    Data model         =  large                                              #
+#    Calling convention =  xdata reentrant                                    #
+#    Constant location  =  data                                               #
+#    Dptr setup         =  1,16                                               #
+#    Source file        =  E:\1500V_Test2\ED\code\Library\HAL\source\hal_powe #
+#                          r_clk_mgmt.c                                       #
+#    Command line       =  E:\1500V_Test2\ED\code\Library\HAL\source\hal_powe #
+#                          r_clk_mgmt.c -D NDEBUG -D chip=2510 -D             #
+#                          LOWER_IMAGE -D MidString -D MIDSTRING -lCN         #
+#                          "E:\1500V_Test2\ED\iar\Build .hex for              #
+#                          CC2510\List\" -lA "E:\1500V_Test2\ED\iar\Build     #
+#                          .hex for CC2510\List\" -o                          #
+#                          "E:\1500V_Test2\ED\iar\Build .hex for              #
+#                          CC2510\Obj\" -e -z9 --core=plain --dptr=16,1       #
+#                          --data_model=large --code_model=near               #
+#                          --calling_convention=xdata_reentrant               #
+#                          --place_constants=data --nr_virtual_regs 32 -I     #
+#                          E:\1500V_Test2\ED\iar\..\CODE\AndStackED\INCLUDE\  #
+#                          -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HAL\INCLU #
+#                          DE\ -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HAL_B #
+#                          UI\INCLUDE\ -I C:\IARSystems-CD-730B\8051\INC\     #
+#    List file          =  E:\1500V_Test2\ED\iar\Build .hex for               #
+#                          CC2510\List\hal_power_clk_mgmt.lst                 #
+#    Object file        =  E:\1500V_Test2\ED\iar\Build .hex for               #
+#                          CC2510\Obj\hal_power_clk_mgmt.r51                  #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+E:\1500V_Test2\ED\code\Library\HAL\source\hal_power_clk_mgmt.c
+      1          /*-----------------------------------------------------------------------------
+      2          |   File:      hal_power_clk_mgmt.c
+      3          |   Target:    cc1110, cc2510
+      4          |   Author:    TFL
+      5          |   Revised:   2007-09-05
+      6          |   Revision:  1.0
+      7          +------------------------------------------------------------------------------
+      8          |  Copyright 2004-2007 Texas Instruments Incorporated. All rights reserved.
+      9          |
+     10          |  IMPORTANT: Your use of this Software is limited to those specific rights
+     11          |  granted under the terms of a software license agreement between the user who
+     12          |  downloaded the software, his/her employer (which must be your employer) and
+     13          |  Texas Instruments Incorporated (the "License"). You may not use this Software
+     14          |  unless you agree to abide by the terms of the License. The License limits
+     15          |  your use, and you acknowledge, that the Software may not be modified, copied
+     16          |  or distributed unless embedded on a Texas Instruments microcontroller or used
+     17          |  solely and exclusively in conjunction with a Texas Instruments radio
+     18          |  frequency transceiver, which is integrated into your product. Other than for
+     19          |  the foregoing purpose, you may not use, reproduce, copy, prepare derivative
+     20          |  works of, modify, distribute, perform, display or sell this Software and/or
+     21          |  its documentation for any purpose.
+     22          |
+     23          |  YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
+     24          |  PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+     25          |  INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
+     26          |  NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
+     27          |  TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
+     28          |  NEGLIGENCE, STRICT LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER
+     29          |  LEGAL EQUITABLE THEORY ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES INCLUDING
+     30          |  BUT NOT LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT, PUNITIVE OR
+     31          |  CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF PROCUREMENT OF
+     32          |  SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
+     33          |  (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF), OR OTHER SIMILAR COSTS.
+     34          |
+     35          |  Should you have any questions regarding your right to use this Software,
+     36          |  contact Texas Instruments Incorporated at www.TI.com.
+     37          |
+     38          +------------------------------------------------------------------------------
+     39          | Purpose:    Power and clock management
+     40          +------------------------------------------------------------------------------
+     41          | Decription: In this file the handlers for power and clock management are placed
+     42          |             These functions are used to set power-mode, clock source and clock speed.
+     43          +----------------------------------------------------------------------------*/
+     44          
+     45          /*==== DECLARATION CONTROL ==================================================*/
+     46          
+     47          /*==== INCLUDES ==============================================================*/
+     48          
+     49          #include "hal_power_clk_mgmt.h"
+
+   \                                 In  segment SFR_AN, at 0xbe
+   \   unsigned char volatile __sfr SLEEP
+   \                     SLEEP:
+   \   000000                DS 1
+
+   \                                 In  segment SFR_AN, at 0xc6
+   \   unsigned char volatile __sfr CLKCON
+   \                     CLKCON:
+   \   000000                DS 1
+     50          
+     51          /*==== MACROS ================================================================*/
+     52          /*==== CONSTS ================================================================*/
+     53          /*==== TYPES =================================================================*/
+     54          /*==== LOCALS ================================================================*/
+     55          /*==== PRIVATE FUNCTIONS =====================================================*/
+     56          /*==== PUBLIC FUNCTIONS ======================================================*/
+     57          
+     58          extern void halWait(BYTE wait);
+     59          /*----------------------------------------------------------------------------*/
+     60          /* See hal_power_clk_mgmt.h for a description of this function.               */
+     61          /*----------------------------------------------------------------------------*/
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     62          void halPowerClkMgmtSetMainClkSrc(UINT8 source)
+   \                     halPowerClkMgmtSetMainClkSrc:
+     63          {
+   \   000000   EE           MOV     A,R6
+   \   000001   C0E0         PUSH    A
+   \   000003                ; Saved register size: 1
+   \   000003                ; Auto size: 0
+     64            BYTE counter = 127;
+   \   000003   7E7F         MOV     R6,#0x7f
+     65              // source can have the following values:
+     66              // CRYSTAL 0x00  /*  High speed Crystal Oscillator Control */
+     67              // RC      0x01  /*  Low power RC Oscillator */
+     68          
+     69              if(source) {
+   \   000005   E9           MOV     A,R1
+   \   000006   6016         JZ      ??halPowerClkMgmtSetMainClkSrc_0
+     70                CLKCON |= OSC_BIT;                    // starting the RC Oscillator
+   \   000008   43C640       ORL     0xc6,#0x40
+   \   00000B   8005         SJMP    ??halPowerClkMgmtSetMainClkSrc_1
+     71                while(!HIGH_FREQUENCY_RC_OSC_STABLE && counter-- ) halWait(2); // waiting until the oscillator is stable
+   \                     ??halPowerClkMgmtSetMainClkSrc_2:
+   \   00000D                ; Setup parameters for call to function halWait
+   \   00000D   7902         MOV     R1,#0x2
+   \   00000F   12....       LCALL   halWait
+   \                     ??halPowerClkMgmtSetMainClkSrc_1:
+   \   000012   E5BE         MOV     A,0xbe
+   \   000014   A2E5         MOV     C,0xE0 /* A   */.5
+   \   000016   4020         JC      ??halPowerClkMgmtSetMainClkSrc_3
+   \   000018   EE           MOV     A,R6
+   \   000019   1E           DEC     R6
+   \   00001A   70F1         JNZ     ??halPowerClkMgmtSetMainClkSrc_2
+     72                SLEEP |= OSC_PD_BIT;                  // powering down the unused oscillator
+   \   00001C   801A         SJMP    ??halPowerClkMgmtSetMainClkSrc_3
+     73              }
+     74              else {
+     75                SLEEP &= ~OSC_PD_BIT;     // powering down all oscillators
+   \                     ??halPowerClkMgmtSetMainClkSrc_0:
+   \   00001E   53BEFB       ANL     0xbe,#0xfb
+   \   000021   8005         SJMP    ??halPowerClkMgmtSetMainClkSrc_4
+     76                while(!XOSC_STABLE && counter-- ) halWait(2);      // waiting until the oscillator is stable
+   \                     ??halPowerClkMgmtSetMainClkSrc_5:
+   \   000023                ; Setup parameters for call to function halWait
+   \   000023   7902         MOV     R1,#0x2
+   \   000025   12....       LCALL   halWait
+   \                     ??halPowerClkMgmtSetMainClkSrc_4:
+   \   000028   E5BE         MOV     A,0xbe
+   \   00002A   A2E6         MOV     C,0xE0 /* A   */.6
+   \   00002C   4004         JC      ??halPowerClkMgmtSetMainClkSrc_6
+   \   00002E   EE           MOV     A,R6
+   \   00002F   1E           DEC     R6
+   \   000030   70F1         JNZ     ??halPowerClkMgmtSetMainClkSrc_5
+     77                asm("NOP");
+   \                     ??halPowerClkMgmtSetMainClkSrc_6:
+   \   000032   00           NOP
+     78                CLKCON &= ~MAIN_OSC_BITS; // starting the Crystal Oscillator
+   \   000033   53C680       ANL     0xc6,#0x80
+   \   000036   E5C6         MOV     A,0xc6
+     79                SLEEP |= OSC_PD_BIT;      // powering down the unused oscillator
+   \                     ??halPowerClkMgmtSetMainClkSrc_3:
+   \   000038   43BE04       ORL     0xbe,#0x4
+     80              }
+     81          
+     82          
+     83          }
+   \   00003B   D0E0         POP     A
+   \   00003D   FE           MOV     R6,A
+   \   00003E   22           RET
+   \   00003F                REQUIRE SLEEP
+   \   00003F                REQUIRE CLKCON
+     84          
+     85          /*==== END OF FILE ==========================================================*/
+
+   Maximum stack usage in bytes:
+
+     Function                     ISTACK PSTACK XSTACK
+     --------                     ------ ------ ------
+     halPowerClkMgmtSetMainClkSrc     1      0      0
+       -> halWait                     2      0      0
+       -> halWait                     2      0      0
+
+
+   Segment part sizes:
+
+     Function/Label               Bytes
+     --------------               -----
+     SLEEP                           1
+     CLKCON                          1
+     halPowerClkMgmtSetMainClkSrc   63
+
+ 
+ 63 bytes in segment NEAR_CODE
+  2 bytes in segment SFR_AN
+ 
+ 63 bytes of CODE memory
+  0 bytes of DATA memory (+ 2 bytes shared)
+
+Errors: none
+Warnings: none

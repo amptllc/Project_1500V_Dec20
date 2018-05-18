@@ -1,0 +1,803 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project>
+  <fileVersion>2</fileVersion>
+  <fileChecksum>2017297493</fileChecksum>
+  <configuration>
+    <name>Build .hex for CC1110</name>
+    <outputs/>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+    <forcedrebuild>
+      <name>[REBUILD_ALL]</name>
+    </forcedrebuild>
+  </configuration>
+  <configuration>
+    <name>Build .hex for CC2510</name>
+    <outputs>
+      <file>$PROJ_DIR$\..\code\AndStackED\include\main.h</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_float.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_compare.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\and-stack-ed-15k.pbd</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_io_mgmt.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\radio.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\hal_wait.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_stack_parameter.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\main.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\hal_wait.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\cmain.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\aes.pbi</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\List\radio.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_move_long.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\utils.pbi</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\aes.c</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_long.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_ieee_float.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_char.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\dma.r51</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\dma.c</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\main.c</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\radio.c</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_stack.r51</file>
+      <file>$TOOLKIT_DIR$\inc\ioCC2510.h</file>
+      <file>$PROJ_DIR$\..\hex\and-stack-ed-g-15k.hex</file>
+      <file>$PROJ_DIR$\..\hex\and-stack-ed-v9-15k.hex</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_stack_enter_leave.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_compare.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_ieee_float.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_interrupt_mgmt.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\radio.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_check_symbols.h</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_switch.h</file>
+      <file>$TOOLKIT_DIR$\config\lnk_base.xcl</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\utils.r51</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\utils.c</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_stack_enter_leave_dptr.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_switch.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_float.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\List\hop.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\List\hal_wait.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\dma.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_common.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_long.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\hop.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_stack.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_stack_enter_leave.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_switch.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_short.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\hal_power_clk_mgmt.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\hal_power_clk_mgmt.c</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_main.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\hal_wait.c</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_stack_parameter.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_cfi.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\flash.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_adc_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_defines.h</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_short.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\main.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\List\dma.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\hal_power_clk_mgmt.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_power_clk_mgmt.h</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\List\main.s51</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\include\dma.h</file>
+      <file>$PROJ_DIR$\lnk51ew_cc2510-15k.xcl</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\cstartup.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\aes.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\List\utils.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\List\aes.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_move_long.s51</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\flash.c</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\hop.c</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\hop.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\List\hal_power_clk_mgmt.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\iar_stack_enter_leave_dptr.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\List\flash.s51</file>
+      <file>$PROJ_DIR$\..\code\Library\clib\iar_char.s51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\flash.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\cstartup.r51</file>
+      <file>$PROJ_DIR$\Build .hex for CC2510\Obj\cmain.r51</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_float.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 39</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_compare.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 28</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Build .hex for CC2510\Obj\and-stack-ed-15k.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 11 42 56 50 6 45 8 31 14</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\cmain.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 81</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\aes.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 68 70</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 11</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 52 58 4 63 30 57 24</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 58 4 63 30 57 24</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_long.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 44</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_ieee_float.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 29</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\dma.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 19 61</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 42</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 52 58 4 63 30 57 24 65 0</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 58 4 63 30 57 24 65 0</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\main.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 60 64</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 8</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 52 58 4 63 30 57 24 0 65</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 58 4 63 30 57 24 0 65</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\radio.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 5 12</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 31</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 52 58 4 63 30 57 24 0 65</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 58 4 63 30 57 24 0 65</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\hex\and-stack-ed-g-15k.hex</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 66 34 68 81 80 19 79 62 9 74 18 28 39 29 44 13 49 23 27 76 7 38 60 5 35</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\hex\and-stack-ed-v9-15k.hex</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 66 34 68 81 80 19 79 62 9 74 18 28 39 29 44 13 49 23 27 76 7 38 60 5 35</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\utils.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 35 69</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 14</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 52 58 4 63 30 57 24</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 58 4 63 30 57 24</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_stack_enter_leave_dptr.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 76</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_stack.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 23</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_stack_enter_leave.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 27</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_switch.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 38</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55 33</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\hal_power_clk_mgmt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 62 75</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 50</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 63 52 58 4 30 57 24</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 63 52 58 4 30 57 24</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\hal_wait.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 9 41</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 6</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 52 58 4 63 30 57 24</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 58 4 63 30 57 24</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_stack_parameter.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 7</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_short.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 49</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\cstartup.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 80</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55 24</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_move_long.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 13</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\flash.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 79 77</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 56</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 24 52 58 4 63 30 57 0 65</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 24 52 58 4 63 30 57 0 65</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\hop.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 74 40</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 45</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 52 58 4 63 30 57 24</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 52 58 4 63 30 57 24</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 25</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\clib\iar_char.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 18</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A8051</name>
+          <file> 43 32 55</file>
+        </tool>
+      </inputs>
+    </file>
+  </configuration>
+  <configuration>
+    <name>Debug on CC1110</name>
+    <outputs>
+      <file>$PROJ_DIR$\..\code\AndStackED\include\main.h</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\flashDmaTrigger.s51</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\aes.r51</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_io_mgmt.h</file>
+      <file>$TOOLKIT_DIR$\inc\clib\string.h</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\aes.c</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdio.h</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\hop.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Exe\and-stack-ed-4.hex</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\dma.c</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\main.c</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\radio.c</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\radio.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\ioCC2510.h</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\hal_power_clk_mgmt.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_interrupt_mgmt.h</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\main.r51</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\flash.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\radio.r51</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\hal_wait.pbi</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\and-stack-ed-15k.pbd</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\hop.r51</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\dma.r51</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\flashDmaTrigger.r51</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdarg.h</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\hal_wait.r51</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\aes.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\clib\stdlib.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\hal_power_clk_mgmt.c</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_main.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\source\hal_wait.c</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\dma.pbi</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_adc_mgmt.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_defines.h</file>
+      <file>$PROJ_DIR$\..\code\Library\HAL\include\hal_power_clk_mgmt.h</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\hal_power_clk_mgmt.r51</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\include\dma.h</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\main.pbi</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\flash.c</file>
+      <file>$PROJ_DIR$\..\code\AndStackED\source\hop.c</file>
+      <file>$TOOLKIT_DIR$\inc\clib\sysmac.h</file>
+      <file>$PROJ_DIR$\Debug on CC1110\Obj\flash.r51</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\flashDmaTrigger.s51</name>
+      <outputs>
+        <tool>
+          <name>A8051</name>
+          <file> 23</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\aes.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 2</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 26</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 29 33 3 34 15 32 13</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\dma.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 22</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 31</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 29 33 3 34 15 32 13 36 0</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\main.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 16</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 37</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 29 33 3 34 15 32 13 0 36 6 24 40 27 4</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\radio.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 18</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 12</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 4 40 29 33 3 34 15 32 13 0 36</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug on CC1110\Obj\and-stack-ed-15k.pbd</name>
+      <inputs>
+        <tool>
+          <name>BILINK</name>
+          <file> 26 31 17 14 19 7 37 12</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\hal_power_clk_mgmt.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 35</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 14</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 34 29 33 3 15 32 13</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\Library\HAL\source\hal_wait.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 25</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 19</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 29 33 3 34 15 32 13</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\flash.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 41</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 17</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 29 33 3 34 15 32 13 0 36 4 40</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\code\AndStackED\source\hop.c</name>
+      <outputs>
+        <tool>
+          <name>ICC8051</name>
+          <file> 21</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 7</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 29 33 3 34 15 32 13 27 40</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 8</file>
+        </tool>
+      </outputs>
+    </file>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+    <forcedrebuild>
+      <name>[REBUILD_ALL]</name>
+    </forcedrebuild>
+  </configuration>
+  <configuration>
+    <name>Debug on CC2510</name>
+    <outputs/>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+    <forcedrebuild>
+      <name>[REBUILD_ALL]</name>
+    </forcedrebuild>
+  </configuration>
+</project>
+
+

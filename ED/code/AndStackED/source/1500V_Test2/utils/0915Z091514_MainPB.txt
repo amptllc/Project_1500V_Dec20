@@ -1,0 +1,40 @@
+MAC  Converted on Mon Sep 14 09:01:40 2015
+ to version 0 from version 33
+Key is 0E84F807B678F025CF0877D20F21677111
+
+IV  is 8D06EB3F19864B02D89806EA78252836F9
+
+
+boot ../ED/hex/ny-boot.hex low ../ED/hex/ampt-ms-i-full-low+ret+crc.hex high ../ED/hex/ampt-ms-i-uhigh.hex
+serial number:0915Z091514
+Bunch 0 id 0 stringId ffff, MAC 247e4001657a
+dFk -0.000693 0.0556 0.613 -280
+vrefPolynom 2496 4e-07 73
+Vout 27.664 -3575 
+Vin1 25.083 0
+Iout 7.767 -573
+Vin2 24.767 0
+Text 0.435 625
+Iin1 7.857 -592
+Iin2 8.037 -545
+VinTurnOn 0 
+VinSwitchOff 0
+VinDisableRadio 0
+VinLimit 0
+tkCurrent 2e-05
+tkPower 5e-05
+fetFailCount 4800
+fetCurrentThreshold 500
+fetDeltaCurrent 100
+Oscillation Params: oscLowCurrentLimit 0 oscDeltaV 30000 oscOVStartupDelay 240
+oscAfterStartupDelay 1200 oscLowCurrentOnlyDelay 32760
+defaults: OV 200 OV_Startup 140 OV_Step 10 OC 190 MPP ON Module ON channel 2
+Temp Protection: TSuperHot 110 THot 100 TCold 90 OCStep 10 FallbackTime 10 OC Protection 60
+Current Noise: -1000 OV Volt K 255 OC Cur K 255 
+Repeater NO Slave NO Searching NO 12kbod YES FEC NO Hopping YES 250_kbod YES
+Radio Power 0xFF 
+Repeater channel 2 R/S Power 0xFF Start R/S Channel 2 StartAddr 0x83F RepStep 25
+Critical R/S -92   Critical Direct -102     Cycles to R/S 40    Cycles to Direct 30 
+Cycles to Step R/S channel 3 Cycles to step Direct channel 4 Cycles to Soft Kick 8  Cycles to Hard Kick 80 
+edAddr: 2 gwAddr 1
+wiggle: 0 shunt 20 max-off 1 syncword 0xf0f0 

@@ -1,0 +1,113 @@
+    UINT16 barrier;                                                                                         // 2            *       0
+    BYTE   netId, myBunch;                                                                                  // 2                    2
+    UINT16 groupId;                                                                                         // 2                    4
+    BYTE   myMac[6];                                                                                        // 6            *       6
+    float dFk[4];                                                                                          // 16                    12
+    float vrefPolynom[3];                                                                                  // 12                    28
+    float linearK [6][2];                                                                                  // 48                    40
+    INT32  theDelta;                                                                                        // 4            -?      88
+    INT32  dF_Tolerance; // 16 in the offset register                                                       // 4            -       92
+    char curKey[ AES_SIZE ];                                                                                // 16           *       96
+    char curIV [ AES_SIZE ];                                                                                // 16           *
+    struct { 
+      BYTE   testNumber; 
+      UINT32 testDate;   
+    }tests[4];                                                                                              // 20           -       128
+    
+    UINT32 installDate;                                                                                     // 4            -       148
+    BYTE   azimuth, positionInString;                                                                       // 2                    152
+    UINT16 string, elevation, latitude, longitude, altitude;                                                // 10                   154
+    BYTE channel;                                                                                           // 1                    164
+    float VinTurnOn, VinShutOff, VinDisableRadio, tkCurrent, tkPower;                                       // 20                   165
+    BOOL    mpp, module;                                                                                    // 2                    185
+    BYTE    ov,  oc;                                                                                        // 2                    187
+    BYTE    radioPower, edAddr, gwAddr, repeaterChannel, repeaterPower;                                     // 5                    189
+    BOOL
+            production          :   1, 
+            ensureWDReset       :   1, 
+            use10kbod           :   1, 
+            useFEC              :   1, 
+            hoppingAllowed      :   1,
+            isRelay             :   1, 
+            is500Always         :   1, 
+            searchCommunication :   1;                                                                      // 1                    194
+                    
+    BYTE    showState;                                                                                      // 1                    195
+    signed char CriticalLevel500, CriticalLevel10;                                                          // 2                    196
+    UINT16  version;                                                                                        // 2            -       198
+    
+    UINT16  defCyclesTo500, defCyclesTo10, defCyclesToStep500Channel, defCyclesToStep10Channel,             // 12                   200
+            defCycles2SoftKick, defCycles2HardKick;
+    UINT16  imageAddr;    // magic number 0x7CD4                                                            // 2                    212
+    UINT16  versionLow, versionHigh;                                                                        // 4                    214
+    BYTE    starting500Channel;                                                                             // 1                    216
+    BOOL    tryOtherImageFirst : 1,                                                                         // 1                    217
+            use250kbod         : 1,
+            speculative_report : 1,
+            theRest            : 5;
+    UINT16  prepAddr;                                                                                       // 2                    220
+    BYTE    repStep, ov_startup, t_mod_off, toff_fallback, ton_fallback, fallback_time,                     // 9                    222
+            network_cnst_1, network_cnst_2, temp_decrease_speed;                                                                    231
+
+
+
+    UINT16 barrier0;
+    char curKey[ AES_SIZE ];                                                                                // 16           *
+    char curIV [ AES_SIZE ];                                                                                // 16           *
+    BYTE   myMac[6];                                                                                        // 6            *
+    
+    UINT16 barrier;                                                                                         // 2                    
+    BYTE   netId, myBunch;                                                                                  // 2                40
+    UINT16 groupId;                                                                                         // 2
+    float dFk[4];                                                                                          // 16                44
+    float vrefPolynom[3];                                                                                  // 12
+    float linearK [6][2];                                                                                  // 48    
+
+    BYTE   azimuth, positionInString;                                                                       // 2                44+76=120
+    UINT16 string, elevation, latitude, longitude, altitude;                                                // 10
+    BYTE channel;                                                                                           // 1
+    float VinTurnOn, VinShutOff, VinDisableRadio, tkCurrent, tkPower;                                       // 20
+    BOOL    mpp, module;                                                                                    // 2
+    BYTE    ov,  oc;                                                                                        // 2
+    BYTE    radioPower, edAddr, gwAddr, repeaterChannel, repeaterPower;                                     // 5
+    BOOL
+            production          :   1, 
+            ensureWDReset       :   1, 
+            use10kbod           :   1, 
+            useFEC              :   1, 
+            hoppingAllowed      :   1,
+            isRelay             :   1, 
+            is500Always         :   1, 
+            searchCommunication :   1;                                                                      // 1
+            
+    BYTE    showState;                                                                                      // 1
+    signed char CriticalLevel500, CriticalLevel10;                                                          // 2
+    
+    UINT16  defCyclesTo500, defCyclesTo10, defCyclesToStep500Channel, defCyclesToStep10Channel,             // 12
+            defCycles2SoftKick, defCycles2HardKick;
+    UINT16  imageAddr;    // magic number 0x7CD4                                                            // 2
+    UINT16  versionLow, versionHigh;                                                                        // 4
+    BYTE    starting500Channel;                                                                             // 1
+    BOOL    tryOtherImageFirst : 1,
+            use250kbod         : 1,
+            speculative_report : 1,
+            theRest            : 5;
+    UINT16  prepAddr;                                                                                       // 2
+    BYTE    repStep, ov_startup, t_mod_off, toff_fallback, ton_fallback, fallback_time,                     // 9
+            network_cnst_1, network_cnst_2, temp_decrease_speed;
+
+
+
+
+
+E=>F
+
+page.barrier = page.barrier0 = 0x5555;
+pbf = (BYTE *)&page + 2
+pbe = (BYTE *)0x7C00;
+mymemcpy( pbf,      pbe+96, 32 );
+mymemcpy( pbf+32,   pbe+6,  6  );
+mymemcpy( pbf+40,   pbe+2,  4  );
+mymemcpy( pbf+44,   pbe+12, 16+12+48 );
+mymemcpy( pbf+120,  pbe+152, 2+10+1+20+2+2+5+1+1+2 );
+mymemcpy( pbf+166,  pbe+200, 12+2+4+1+1+2+9 );

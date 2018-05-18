@@ -1,0 +1,782 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+// IAR 8051 C/C++ Compiler V7.30B/W32                   30/May/2013  09:25:53 /
+// Copyright 2004-2007 IAR Systems. All rights reserved.                      /
+//                                                                            /
+//    Core               =  plain                                             /
+//    Code model         =  near                                              /
+//    Data model         =  large                                             /
+//    Calling convention =  xdata reentrant                                   /
+//    Constant location  =  data                                              /
+//    Dptr setup         =  1,16                                              /
+//    Source file        =  E:\ProjectsE\ED\code\AndStackED\source\radio_G.c  /
+//    Command line       =  E:\ProjectsE\ED\code\AndStackED\source\radio_G.c  /
+//                          -D NDEBUG -D chip=2510 -D LOWER_IMAGE -D          /
+//                          MidString -lA "E:\ProjectsE\ED\iar\Build .hex     /
+//                          for CC2510\List\" -o "E:\ProjectsE\ED\iar\Build   /
+//                          .hex for CC2510\Obj\" -e -z9 --core=plain         /
+//                          --dptr=16,1 --data_model=large --code_model=near  /
+//                          --calling_convention=xdata_reentrant              /
+//                          --place_constants=data --nr_virtual_regs 32 -I    /
+//                          E:\ProjectsE\ED\iar\..\CODE\AndStackED\INCLUDE\   /
+//                          -I E:\ProjectsE\ED\iar\..\CODE\LIBRARY\HAL\INCLUD /
+//                          E\ -I E:\ProjectsE\ED\iar\..\CODE\LIBRARY\HAL_BUI /
+//                          \INCLUDE\ -I C:\IARSystems-CD-730B\8051\INC\      /
+//    List file          =  E:\ProjectsE\ED\iar\Build .hex for                /
+//                          CC2510\List\radio_G.s51                           /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME radio_G
+
+        RTMODEL "__calling_convention", "xdata_reentrant"
+        RTMODEL "__code_model", "near"
+        RTMODEL "__core", "plain"
+        RTMODEL "__data_model", "large"
+        RTMODEL "__dptr_size", "16"
+        RTMODEL "__extended_stack", "disabled"
+        RTMODEL "__location_for_constants", "data"
+        RTMODEL "__number_of_dptrs", "1"
+        RTMODEL "__rt_version", "1"
+
+        RSEG DOVERLAY:DATA:NOROOT(0)
+        RSEG IOVERLAY:IDATA:NOROOT(0)
+        RSEG ISTACK:IDATA:NOROOT(0)
+        RSEG PSTACK:XDATA:NOROOT(0)
+        RSEG XSTACK:XDATA:NOROOT(0)
+
+        EXTERN ?FUNC_ENTER_XDATA
+        EXTERN ?FUNC_LEAVE_XDATA
+        EXTERN ?UC_SWITCH_SPARSE
+        EXTERN __INIT_XDATA_I
+        EXTERN __INIT_XDATA_Z
+
+        PUBLIC perRssiOffset
+        PUBLIC radioConfigure
+        FUNCTION radioConfigure,0a1203H
+        ARGFRAME XSTACK, 0, STACK
+        LOCFRAME XSTACK, 8, STACK
+        
+        CFI Names cfiNames0
+        CFI StackFrame CFA_SP SP DATA
+        CFI StackFrame CFA_PSP16 PSP16 XDATA
+        CFI StackFrame CFA_XSP16 XSP16 XDATA
+        CFI StaticOverlayFrame CFA_IOVERLAY IOVERLAY
+        CFI StaticOverlayFrame CFA_DOVERLAY DOVERLAY
+        CFI Resource `PSW.CY`:1, `B.BR0`:1, `B.BR1`:1, `B.BR2`:1, `B.BR3`:1
+        CFI Resource `B.BR4`:1, `B.BR5`:1, `B.BR6`:1, `B.BR7`:1, `VB.BR8`:1
+        CFI Resource `VB.BR9`:1, `VB.BR10`:1, `VB.BR11`:1, `VB.BR12`:1
+        CFI Resource `VB.BR13`:1, `VB.BR14`:1, `VB.BR15`:1, VB:8, B:8, A:8
+        CFI Resource PSW:8, DPL0:8, DPH0:8, R0:8, R1:8, R2:8, R3:8, R4:8, R5:8
+        CFI Resource R6:8, R7:8, V0:8, V1:8, V2:8, V3:8, V4:8, V5:8, V6:8, V7:8
+        CFI Resource V8:8, V9:8, V10:8, V11:8, V12:8, V13:8, V14:8, V15:8
+        CFI Resource V16:8, V17:8, V18:8, V19:8, V20:8, V21:8, V22:8, V23:8
+        CFI Resource V24:8, V25:8, V26:8, V27:8, V28:8, V29:8, V30:8, V31:8
+        CFI Resource SP:8, PSPH:8, PSPL:8, PSP16:16, XSPH:8, XSPL:8, XSP16:16
+        CFI VirtualResource ?RET:16, ?RET_HIGH:8, ?RET_LOW:8
+        CFI ResourceParts PSP16 PSPH, PSPL
+        CFI ResourceParts XSP16 XSPH, XSPL
+        CFI ResourceParts ?RET ?RET_HIGH, ?RET_LOW
+        CFI EndNames cfiNames0
+        
+        CFI Common cfiCommon0 Using cfiNames0
+        CFI CodeAlign 1
+        CFI DataAlign -1
+        CFI ReturnAddress ?RET CODE
+        CFI CFA_DOVERLAY Used
+        CFI CFA_IOVERLAY Used
+        CFI CFA_SP SP+-2
+        CFI CFA_PSP16 PSP16+0
+        CFI CFA_XSP16 XSP16+0
+        CFI `PSW.CY` SameValue
+        CFI `B.BR0` SameValue
+        CFI `B.BR1` SameValue
+        CFI `B.BR2` SameValue
+        CFI `B.BR3` SameValue
+        CFI `B.BR4` SameValue
+        CFI `B.BR5` SameValue
+        CFI `B.BR6` SameValue
+        CFI `B.BR7` SameValue
+        CFI `VB.BR8` SameValue
+        CFI `VB.BR9` SameValue
+        CFI `VB.BR10` SameValue
+        CFI `VB.BR11` SameValue
+        CFI `VB.BR12` SameValue
+        CFI `VB.BR13` SameValue
+        CFI `VB.BR14` SameValue
+        CFI `VB.BR15` SameValue
+        CFI VB SameValue
+        CFI B Undefined
+        CFI A Undefined
+        CFI PSW SameValue
+        CFI DPL0 SameValue
+        CFI DPH0 SameValue
+        CFI R0 Undefined
+        CFI R1 Undefined
+        CFI R2 Undefined
+        CFI R3 Undefined
+        CFI R4 Undefined
+        CFI R5 Undefined
+        CFI R6 SameValue
+        CFI R7 SameValue
+        CFI V0 SameValue
+        CFI V1 SameValue
+        CFI V2 SameValue
+        CFI V3 SameValue
+        CFI V4 SameValue
+        CFI V5 SameValue
+        CFI V6 SameValue
+        CFI V7 SameValue
+        CFI V8 SameValue
+        CFI V9 SameValue
+        CFI V10 SameValue
+        CFI V11 SameValue
+        CFI V12 SameValue
+        CFI V13 SameValue
+        CFI V14 SameValue
+        CFI V15 SameValue
+        CFI V16 SameValue
+        CFI V17 SameValue
+        CFI V18 SameValue
+        CFI V19 SameValue
+        CFI V20 SameValue
+        CFI V21 SameValue
+        CFI V22 SameValue
+        CFI V23 SameValue
+        CFI V24 SameValue
+        CFI V25 SameValue
+        CFI V26 SameValue
+        CFI V27 SameValue
+        CFI V28 SameValue
+        CFI V29 SameValue
+        CFI V30 SameValue
+        CFI V31 SameValue
+        CFI PSPH Undefined
+        CFI PSPL Undefined
+        CFI XSPH Undefined
+        CFI XSPL Undefined
+        CFI ?RET Concat
+        CFI ?RET_HIGH Frame(CFA_SP, 2)
+        CFI ?RET_LOW Frame(CFA_SP, 1)
+        CFI EndCommon cfiCommon0
+        
+        EXTERN mymemcpy
+        FUNCTION mymemcpy,0202H
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        EXTERN zerofill
+        FUNCTION zerofill,0202H
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+
+// E:\ProjectsE\ED\code\AndStackED\source\radio_G.c
+//    1 /*
+//    2 +------------------------------------------------------------------------------
+//    3 | Purpose:    Functions for radio and packet handling
+//    4 +------------------------------------------------------------------------------
+//    5 | Decription: All functions related to radio configuration and packet
+//    6 |             handling for the packet error rate test application.
+//    7 +----------------------------------------------------------------------------*/
+//    8 
+//    9 /*==== DECLARATION CONTROL ===================================================*/
+//   10 /*==== INCLUDES ==============================================================*/
+//   11 //#include <string.h>
+//   12 #include "hal_main.h"
+//   13 #include "main.h"
+//   14 
+//   15 #define FOC_MODERATE_10K        0x16
+//   16 #define FOC_CONSTUPEDIC_10K     0x05
+//   17 #define FOC_RELAXED_10K         0x1B
+//   18 #define FOC_CONFIG_10K          FOC_MODERATE_10K
+//   19 
+//   20 #define DEVIATN_CONSTUPEDIC_10K 0x1
+//   21 #define DEVIATN_RELAXED_10K     0x7
+//   22 #define DEVIATN_MODERATE_10K    0x5
+//   23 #define DEVIATN_CONFIG_10K      0x4
+//   24 
+//   25 /*==== GLOBAL VARS ===========================================================*/
+
+        RSEG XDATA_Z:XDATA:NOROOT(0)
+//   26 INT16 perRssiOffset;             // RSSI offset for receiver, depends on chip model and data rate
+perRssiOffset:
+        DS 2
+        REQUIRE __INIT_XDATA_Z
+//   27 /*==== PUBLIC FUNCTIONS ======================================================*/
+//   28 /******************************************************************************
+//   29 * @fn  radioConfigure
+//   30 * @brief
+//   31 *        Configures the radio, either CC1110 or CC2510, supporting a set
+//   32 *        of preset data rates and frequency options. Also, the transmitter's
+//   33 *        transmit power level and receiver's RSSI offset is set.
+//   34 * Parameters:
+//   35 * @param  UINT32 dataRate            Data rate in bits per second (bps)
+//   36 * @param  UINT32 frequency           RX/TX radio frequency to use (kHz)
+//   37 * @return void
+//   38 ******************************************************************************/
+
+        RSEG XDATA_I:XDATA:NOROOT(0)
+        DATA
+//   39 static const BYTE mdm_rate12[3]               = { 0x1D, 0x55, 0x73};
+mdm_rate12:
+        DS 3
+        REQUIRE `?<Initializer for mdm_rate12>`
+        REQUIRE __INIT_XDATA_I
+
+        RSEG XDATA_I:XDATA:NOROOT(0)
+        DATA
+//   40 static const BYTE mdm_rate3[3]                = { 0x69, 0x7, 0x02 };   
+mdm_rate3:
+        DS 3
+        REQUIRE `?<Initializer for mdm_rate3>`
+        REQUIRE __INIT_XDATA_I
+
+        RSEG XDATA_I:XDATA:NOROOT(0)
+        DATA
+//   41 static const BYTE mdm_rate4[3]                = { 0x6A, 0x48, 0x13 };   
+mdm_rate4:
+        DS 3
+        REQUIRE `?<Initializer for mdm_rate4>`
+        REQUIRE __INIT_XDATA_I
+
+        RSEG XDATA_I:XDATA:NOROOT(0)
+        DATA
+//   42 static const BYTE foc_bs_agc_rate4[5]         = { 0x1D, 0x1C, 0xC7, 0x00, 0xB2 };
+foc_bs_agc_rate4:
+        DS 5
+        REQUIRE `?<Initializer for foc_bs_agc_rate4>`
+        REQUIRE __INIT_XDATA_I
+
+        RSEG XDATA_I:XDATA:NOROOT(0)
+        DATA
+//   43 static const BYTE mcsm_defvals[3]             = { 0x7,  0x30, /*0x32,*/ 0x14 };
+mcsm_defvals:
+        DS 3
+        REQUIRE `?<Initializer for mcsm_defvals>`
+        REQUIRE __INIT_XDATA_I
+
+        RSEG XDATA_I:XDATA:NOROOT(0)
+        DATA
+//   44 static const BYTE agc_frend_fscal_defvals[9]  = { 0x43, 0x40, 0x91, 0xB6, 0x10, 0xA9, 0x0A, 0x00, 0x11 };
+agc_frend_fscal_defvals:
+        DS 9
+        REQUIRE `?<Initializer for agc_frend_fscal_defvals>`
+        REQUIRE __INIT_XDATA_I
+
+        RSEG XDATA_I:XDATA:NOROOT(0)
+        DATA
+//   45 static const BYTE foc_bs_agc_rate12[5]        = { 0x1D, 0x1C, 0xC7, 0x40, 0xB2 };
+foc_bs_agc_rate12:
+        DS 5
+        REQUIRE `?<Initializer for foc_bs_agc_rate12>`
+        REQUIRE __INIT_XDATA_I
+
+        RSEG XDATA_I:XDATA:NOROOT(0)
+        DATA
+//   46 static const BYTE tst210_defvals[3]           = { 0x81, 0x35, 0x09 }; 
+tst210_defvals:
+        DS 3
+        REQUIRE `?<Initializer for tst210_defvals>`
+        REQUIRE __INIT_XDATA_I
+
+        RSEG XDATA_I:XDATA:NOROOT(0)
+        DATA
+//   47 static const BYTE pkt_defvals[3]              = { PACKET_LENGTH_ED, 0x85, 0x45 }; 
+pkt_defvals:
+        DS 3
+        REQUIRE `?<Initializer for pkt_defvals>`
+        REQUIRE __INIT_XDATA_I
+//   48 
+
+        RSEG NEAR_CODE:CODE:NOROOT(0)
+//   49 void radioConfigure(BYTE dataRate/*, UINT32 frequency*/) {
+radioConfigure:
+        CFI Block cfiBlock0 Using cfiCommon0
+        CFI Function radioConfigure
+        FUNCALL radioConfigure, mymemcpy
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 8, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL radioConfigure, mymemcpy
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 8, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL radioConfigure, mymemcpy
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 8, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL radioConfigure, mymemcpy
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 8, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL radioConfigure, mymemcpy
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 8, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL radioConfigure, mymemcpy
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 8, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL radioConfigure, mymemcpy
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 8, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL radioConfigure, mymemcpy
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 8, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL radioConfigure, zerofill
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 8, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL radioConfigure, mymemcpy
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 8, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 8, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        MOV     A,#-0x8
+        LCALL   ?FUNC_ENTER_XDATA
+        CFI DPH0 load(1, XDATA, add(CFA_XSP16, literal(-1)))
+        CFI DPL0 load(1, XDATA, add(CFA_XSP16, literal(-2)))
+        CFI ?RET_HIGH load(1, XDATA, add(CFA_XSP16, literal(-3)))
+        CFI ?RET_LOW load(1, XDATA, add(CFA_XSP16, literal(-4)))
+        CFI R7 load(1, XDATA, add(CFA_XSP16, literal(-5)))
+        CFI V0 load(1, XDATA, add(CFA_XSP16, literal(-6)))
+        CFI VB load(1, XDATA, add(CFA_XSP16, literal(-7)))
+        CFI R6 load(1, XDATA, add(CFA_XSP16, literal(-8)))
+        CFI CFA_SP SP+0
+        CFI CFA_XSP16 add(XSP16, 8)
+        ; Saved register size: 8
+        ; Auto size: 0
+        MOV     A,R1
+        MOV     R6,A
+//   50 
+//   51     /* NOTE: The register settings are hard-coded for the predefined set of data
+//   52      * rates and frequencies. To enable other data rates or frequencies these
+//   53      * register settings should be adjusted accordingly (use SmartRF(R) Studio).
+//   54      */
+//   55     // Configure the radio frequency to use
+//   56     //FREQ2 = 0x64;  FREQ1 = 0x6A; FREQ0 = 0xAA; // always FCC
+//   57     /*
+//   58     switch (frequency) {
+//   59         case FREQUENCY_A_CC2511:    FREQ1 = 0x15; FREQ0 = 0x55;  break; // 2402 MHz 
+//   60         case FREQUENCY_FCC_CC2511:  FREQ1 = 0x6A; FREQ0 = 0xAA;  break; // 2410 MHz FCC
+//   61     }
+//   62     */
+//   63     // Set modulation and other radio parameters
+//   64     MDMCFG1 = 0x23; //   Channel spacing (exponent) -> CHANSPC_E, 23 - wo FEC, 4 bytes of preamble is transmitted
+        MOV     A,#0x23
+        MOV     DPTR,#-0x20f1
+        MOVX    @DPTR,A
+//   65     MDMCFG0 = 0x59; //   Channel spacing (mantissa) -> CHANSPC_M, 252.6 channel spacing
+        MOV     A,#0x59
+        MOV     DPTR,#-0x20f0
+        MOVX    @DPTR,A
+//   66 
+//   67     //AGCCTRL2 = 0x43; AGCCTRL1 = 0x40;  AGCCTRL0 = 0x91;
+//   68     //FREND1 = 0xB6;   FREND0   = 0x10;   
+//   69     //FSCAL3   = 0xA9; FSCAL2 = 0x0A;  FSCAL1 = 0x00;  FSCAL0 = 0x11;
+//   70     mymemcpy( (BYTE *)0xDF17, (BYTE *)agc_frend_fscal_defvals, 9 );
+        ; Setup parameters for call to function mymemcpy
+        MOV     R1,#0x9
+        MOV     R4,#(agc_frend_fscal_defvals & 0xff)
+        MOV     R5,#((agc_frend_fscal_defvals >> 8) & 0xff)
+        MOV     R2,#0x17
+        MOV     R3,#-0x21
+        LCALL   mymemcpy
+//   71     //TEST2    = 0x81;   TEST1  = 0x35;     TEST0    = 0x09;
+//   72     mymemcpy( (BYTE *)0xDF23, (BYTE *)tst210_defvals, 3 );
+        ; Setup parameters for call to function mymemcpy
+        MOV     R1,#0x3
+        MOV     R4,#(tst210_defvals & 0xff)
+        MOV     R5,#((tst210_defvals >> 8) & 0xff)
+        MOV     R2,#0x23
+        MOV     R3,#-0x21
+        LCALL   mymemcpy
+//   73     
+//   74     DEVIATN  = 0x45; //   Frequency dev. (exponent) -> DEVIATN_E   Frequency dev. (mantissa) -> DEVIATN_M
+        MOV     A,#0x45
+        MOV     DPTR,#-0x20ef
+        MOVX    @DPTR,A
+//   75     FSCTRL1  = 0x0A;
+        MOV     A,#0xa
+        MOV     DPTR,#-0x20f9
+        MOVX    @DPTR,A
+//   76     perRssiOffset = 71;
+        MOV     DPTR,#perRssiOffset
+        MOV     A,#0x47
+        MOVX    @DPTR,A
+        INC     DPTR
+        CLR     A
+        MOVX    @DPTR,A
+//   77     
+//   78     switch (dataRate) {
+        MOV     A,R6
+        LCALL   ?UC_SWITCH_SPARSE
+`?<Jumptable for radioConfigure>_0`:
+        DATA
+        DB        0
+        DB        4
+        DB        2
+        DW        ??radioConfigure_0
+        DB        12
+        DW        ??radioConfigure_1
+        DB        25
+        DW        ??radioConfigure_2
+        DB        50
+        DW        ??radioConfigure_2
+        DW        ??radioConfigure_3
+        CODE
+//   79         case DATA_RATE_2_CC2511:  case DATA_RATE_1_CC2511:
+//   80             //MDMCFG4  = 0x1D; //   Data rate (exponent) -> DRATE_E, Channel bandwidth (exponent) -> CHANBW_E,  Channel bandwidth (mantissa) -> CHANBW_M
+//   81             //MDMCFG3  = 0x55; //   Data rate (mantissa) -> DRATE_M
+//   82             //MDMCFG2  = 0x73; //   Modulation -> MOD_FORMAT[2:0],  Manchester enable -> MANCHESTER_EN,   Optimization -> -
+//   83             mymemcpy( (BYTE *) 0xDF0C, (BYTE *) mdm_rate12, 3 );
+??radioConfigure_2:
+        ; Setup parameters for call to function mymemcpy
+        MOV     R1,#0x3
+        MOV     R4,#(mdm_rate12 & 0xff)
+        MOV     R5,#((mdm_rate12 >> 8) & 0xff)
+        MOV     R2,#0xc
+        MOV     R3,#-0x21
+        LCALL   mymemcpy
+//   84             if( dataRate == DATA_RATE_2_CC2511 ){
+        MOV     A,#0x19
+        XRL     A,R6
+        JZ      ??radioConfigure_4
+//   85                 // Settings from SmartRFStudio for CC2511, VERSION == 0x04
+//   86                 // 250 kbod, MSK modulation, 600 kHz filter bandwith
+//   87                 //FSCTRL1  = 0x0A; //   IF Frequency -> FREQ_IF[4:0] => 234.38 kHz
+//   88                 //perRssiOffset = 71;// Set proper RSSI offset for receiver
+//   89             }else{
+//   90                 // Settings from SmartRFStudio for CC2511, VERSION == 0x04
+//   91                 // 500 kBaud, MSK modulation, 812 kHz RX filter bandwidth.
+//   92                 FSCTRL1  = 0x10;   // Frequency synthesizer control.
+        MOV     A,#0x10
+        MOV     DPTR,#-0x20f9
+        MOVX    @DPTR,A
+//   93                 MDMCFG4  = 0x0E;   
+        MOV     A,#0xe
+        MOV     DPTR,#-0x20f4
+        MOVX    @DPTR,A
+//   94                 MDMCFG1  = 0x43; // 8 bytes of preamble instead of 4 
+        MOV     A,#0x43
+        MOV     DPTR,#-0x20f1
+        MOVX    @DPTR,A
+//   95                 FSCAL3   = 0xEA;   
+        MOV     A,#-0x16
+        MOV     DPTR,#-0x20e4
+        MOVX    @DPTR,A
+//   96                 perRssiOffset = 72;// Set proper RSSI offset for receiver
+        MOV     DPTR,#perRssiOffset
+        MOV     A,#0x48
+        MOVX    @DPTR,A
+        INC     DPTR
+        CLR     A
+        MOVX    @DPTR,A
+//   97             }
+//   98             DEVIATN  = 0x00;   // Modem deviation setting (when FSK modulation is enabled).
+??radioConfigure_4:
+        CLR     A
+        MOV     DPTR,#-0x20ef
+        MOVX    @DPTR,A
+//   99             //FREND1   = 0x56;
+//  100             TEST2    = 0x88;  TEST1 = 0x31;    
+        MOV     A,#-0x78
+        MOV     DPTR,#-0x20dd
+        MOVX    @DPTR,A
+        MOV     A,#0x31
+        MOV     DPTR,#-0x20dc
+        MOVX    @DPTR,A
+//  101             //FOCCFG   = 0x1D;  BSCFG = 0x1C;    AGCCTRL2 = 0xC7;  AGCCTRL0 = 0xB2;
+//  102             mymemcpy( (BYTE *)0xDF15, (BYTE *)foc_bs_agc_rate12, 5 );
+        ; Setup parameters for call to function mymemcpy
+        MOV     R1,#0x5
+        MOV     R4,#(foc_bs_agc_rate12 & 0xff)
+        MOV     R5,#((foc_bs_agc_rate12 >> 8) & 0xff)
+        MOV     R2,#0x15
+        MOV     R3,#-0x21
+        LCALL   mymemcpy
+        SJMP    ??radioConfigure_3
+//  103         break;
+//  104 
+//  105         case DATA_RATE_3_CC2511:
+//  106             // Settings from SmartRFStudio for CC2511, VERSION == 0x04
+//  107             // 10 kBaud, 2-FSK modulation, 232 kHz RX filter bandwidth.
+//  108             FSCTRL1  = 0x08;   // Frequency synthesizer control.
+??radioConfigure_1:
+        MOV     A,#0x8
+        MOV     DPTR,#-0x20f9
+        MOVX    @DPTR,A
+//  109             
+//  110             // MDMCFG4  = 0x68;   MDMCFG3  = 0xB5;   // 10 kbod Modem configuration. - 2 byte sync word
+//  111 
+//  112             //MDMCFG4  = 0x69;   
+//  113             //MDMCFG3  = 0x7;       // 12 kbod Modem configuration. - 2 byte sync word
+//  114             //MDMCFG2  = 0x02;   
+//  115             mymemcpy( (BYTE *)0xDF0C, (BYTE *)mdm_rate3, 3 );
+        ; Setup parameters for call to function mymemcpy
+        MOV     R1,#0x3
+        MOV     R4,#(mdm_rate3 & 0xff)
+        MOV     R5,#((mdm_rate3 >> 8) & 0xff)
+        MOV     R2,#0xc
+        MOV     R3,#-0x21
+        LCALL   mymemcpy
+//  116 
+//  117             FREND1   = 0x56;  // Front end RX configuration.
+        MOV     A,#0x56
+        MOV     DPTR,#-0x20e6
+        MOVX    @DPTR,A
+//  118             FOCCFG   = 0x16;   // Frequency Offset Compensation Configuration.
+        MOV     A,#0x16
+        MOV     DPTR,#-0x20eb
+        MOVX    @DPTR,A
+//  119             BSCFG    = 0x6C; //0x61;   // Bit synchronization Configuration.
+        MOV     A,#0x6c
+        MOV     DPTR,#-0x20ea
+        MOVX    @DPTR,A
+//  120              // AGC control.
+//  121             perRssiOffset = 74;// Set proper RSSI offset for receiver
+        MOV     DPTR,#perRssiOffset
+        MOV     A,#0x4a
+        MOVX    @DPTR,A
+        INC     DPTR
+        CLR     A
+        SJMP    ??radioConfigure_5
+//  122         break;
+//  123         
+//  124         case DATA_RATE_4_CC2511:
+//  125             // Settings from SmartRFStudio for CC2511, VERSION == 0x04
+//  126             // 30 kBaud, 2-FSK modulation, 300 kHz RX filter bandwidth, 252.6 channel spacing
+//  127             //FSCTRL1  = 0x0A;//               IF Frequency -> FREQ_IF[4:0] => 234.38 kHz
+//  128           
+//  129             //MDMCFG4  = 0x6A;    // Data rate (exponent) -> DRATE_E, Channel bandwidth (exponent) -> CHANBW_E, Channel bandwidth (mantissa) -> CHANBW_M
+//  130             //MDMCFG3  = 0x48; //   Data rate (mantissa) -> DRATE_M
+//  131             //MDMCFG2  = 0x13;//
+//  132             mymemcpy( (BYTE *)0xDF0C, (BYTE *)mdm_rate4, 3 );
+??radioConfigure_0:
+        ; Setup parameters for call to function mymemcpy
+        MOV     R1,#0x3
+        MOV     R4,#(mdm_rate4 & 0xff)
+        MOV     R5,#((mdm_rate4 >> 8) & 0xff)
+        MOV     R2,#0xc
+        MOV     R3,#-0x21
+        LCALL   mymemcpy
+//  133             //FOCCFG   = 0x1D;            BSCFG    = 0x1C;
+//  134             //AGCCTRL2 = 0xC7;            AGCCTRL1 = 0x00;            AGCCTRL0 = 0xB2;
+//  135             mymemcpy( (BYTE *)0xDF15, (BYTE *)foc_bs_agc_rate4, 5 );
+        ; Setup parameters for call to function mymemcpy
+        MOV     R1,#0x5
+        MOV     R4,#(foc_bs_agc_rate4 & 0xff)
+        MOV     R5,#((foc_bs_agc_rate4 >> 8) & 0xff)
+        MOV     R2,#0x15
+        MOV     R3,#-0x21
+        LCALL   mymemcpy
+//  136             FSCAL3 = 0xEA; 
+        MOV     A,#-0x16
+        MOV     DPTR,#-0x20e4
+??radioConfigure_5:
+        MOVX    @DPTR,A
+//  137             //perRssiOffset = 71;// Set proper RSSI offset for receiver
+//  138         break;            
+//  139     }
+//  140     //MCSM2 = 0x7; MCSM1 = 0x32; MCSM0 = 0x14;  // Main Radio Control State Machine configuration. 2 means "Stay in TX"
+//  141     mymemcpy( (BYTE *)0xDF12, (BYTE *)mcsm_defvals, 3 );
+??radioConfigure_3:
+        ; Setup parameters for call to function mymemcpy
+        MOV     R1,#0x3
+        MOV     R4,#(mcsm_defvals & 0xff)
+        MOV     R5,#((mcsm_defvals >> 8) & 0xff)
+        MOV     R2,#0x12
+        MOV     R3,#-0x21
+        LCALL   mymemcpy
+//  142     
+//  143     // We use P1_6, P1_7 for our timers, we do not have radio amplifiers 
+//  144     //IOCFG2 = 0;    IOCFG1 = 0;     IOCFG0 = 0;
+//  145     zerofill( (BYTE *)0xDF2F, 3 );
+        ; Setup parameters for call to function zerofill
+        MOV     R1,#0x3
+        MOV     R2,#0x2f
+        MOV     R3,#-0x21
+        LCALL   zerofill
+//  146     
+//  147     //PKTLEN   = PACKET_LENGTH_ED;   // Packet length.
+//  148     //PKTCTRL1 = 0x85;// 0x04;    // Packet automation control. - add status and check addr, 16 bit of preamble should match ...
+//  149     //PKTCTRL0 = 0x45;            // Packet automation control. Data whitening on. Variable packet length
+//  150     
+//  151     mymemcpy( (BYTE *)0xDF02, (BYTE *)pkt_defvals, 3 );
+        ; Setup parameters for call to function mymemcpy
+        MOV     R1,#0x3
+        MOV     R4,#(pkt_defvals & 0xff)
+        MOV     R5,#((pkt_defvals >> 8) & 0xff)
+        MOV     R2,#0x2
+        MOV     R3,#-0x21
+        LCALL   mymemcpy
+//  152     
+//  153     //ADDR     = 0x02;            // Device address. 
+//  154     //PA_TABLE0 = 0xFF; 
+//  155     //SYNC0 = 0xF0;    SYNC1 = 0xF0;
+//  156     return;
+        MOV     R7,#0x1
+        LJMP    ?FUNC_LEAVE_XDATA
+        CFI EndBlock cfiBlock0
+//  157 }
+
+        RSEG XDATA_ID:CODE:NOROOT(0)
+        DATA
+`?<Initializer for mdm_rate12>`:
+        DB 29, 85, 115
+
+        RSEG XDATA_ID:CODE:NOROOT(0)
+        DATA
+`?<Initializer for mdm_rate3>`:
+        DB 105, 7, 2
+
+        RSEG XDATA_ID:CODE:NOROOT(0)
+        DATA
+`?<Initializer for mdm_rate4>`:
+        DB 106, 72, 19
+
+        RSEG XDATA_ID:CODE:NOROOT(0)
+        DATA
+`?<Initializer for foc_bs_agc_rate4>`:
+        DB 29, 28, 199, 0, 178
+
+        RSEG XDATA_ID:CODE:NOROOT(0)
+        DATA
+`?<Initializer for mcsm_defvals>`:
+        DB 7, 48, 20
+
+        RSEG XDATA_ID:CODE:NOROOT(0)
+        DATA
+`?<Initializer for agc_frend_fscal_defvals>`:
+        DB 67, 64, 145, 182, 16, 169, 10, 0, 17
+
+        RSEG XDATA_ID:CODE:NOROOT(0)
+        DATA
+`?<Initializer for foc_bs_agc_rate12>`:
+        DB 29, 28, 199, 64, 178
+
+        RSEG XDATA_ID:CODE:NOROOT(0)
+        DATA
+`?<Initializer for tst210_defvals>`:
+        DB 129, 53, 9
+
+        RSEG XDATA_ID:CODE:NOROOT(0)
+        DATA
+`?<Initializer for pkt_defvals>`:
+        DB 34, 133, 69
+
+        END
+//  158 /******************************************************************************
+//  159 * @fn  convertRssiByte
+//  160 *
+//  161 * @brief
+//  162 *      Converts the RSSI (received signal strength indicator) value,
+//  163 *      given as a 2's complement number, to dBm value. This requires that a
+//  164 *      proper RSSI offset value is specified in global variable perRssiOffset
+//  165 *      before use.
+//  166 * Parameters:
+//  167 * @param  BYTE rssiComp The RSSI value received from the radio as a 2's complement number
+//  168 * @return INT16           The RSSI value in dBm
+//  169 ******************************************************************************/
+//  170 /*
+//  171 INT16 convertRssiByte(BYTE rssiComp){
+//  172     // Convert RSSI value from 2's complement to decimal value.
+//  173     //INT16 rssiDec = (INT16) rssiComp;
+//  174     // Convert to absolute value (RSSI value from radio has resolution of
+//  175     // 0.5 dBm) and subtract the radio's appropriate RSSI offset.
+//  176     if(rssiComp < 128)   return (rssiComp >> 1) - perRssiOffset;
+//  177     else                 return (((UINT16)rssiComp - 256) >> 1) - perRssiOffset;
+//  178     
+//  179     //if( rssiComp >= 128 ) rssiDec -= 256; //else rssiDec = (INT16)rssiComp;
+//  180     //return rssiDec>>1 - perRssiOffset;
+//  181 }
+//  182 */
+//  183 /*==== END OF FILE ==========================================================*/
+// 
+// 288 bytes in segment NEAR_CODE
+//  37 bytes in segment XDATA_I
+//  37 bytes in segment XDATA_ID
+//   2 bytes in segment XDATA_Z
+// 
+// 325 bytes of CODE  memory
+//  39 bytes of XDATA memory
+//
+//Errors: none
+//Warnings: none

@@ -1,0 +1,1412 @@
+;-----------------------------------------------------------------------------
+;
+;	File:		iar_compare.s51
+;
+;	Description:	
+;
+;       REVISON INFORMATION
+;
+;       $Revision: 1.13 $
+;
+;       Log information is available at the end of this file
+;
+;-----------------------------------------------------------------------------
+
+#include "iar_common.h"
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Long compare equal
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_EQ
+;
+;	Description: Checks if two objects in IDATA are equal.
+;
+;	Register input:
+;		R0 Points to LSB in object #1
+;		R1 Points to LSB in object #2
+;
+;	Register output:
+;		A    Is zero if equal.
+;		R0   Is undefined
+;		R1   Is undefined
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_EQ
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_EQ
+	PUBLIC	?L_EQ_REW
+
+        CFI BLOCK ?L_EQ_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?L_EQ_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?L_EQ_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_EQ USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?L_EQ:
+	MOV	A,@R1
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	XRL	A,@R0
+noz:	RET
+	CFI ENDBLOCK ?L_EQ
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_EQ_PX
+;
+;	Description: Checks if an object in IDATA is equal to an
+;		     object in PDATA.
+;
+;	Register input:
+;		R0 Points to LSB in object #1 (IDATA)
+;		R1 Points to LSB in object #2 (PDATA)
+;
+;	Register output:
+;		A    Is zero if equal.
+;		R0   Is undefined
+;		R1   Is undefined
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_EQ_PX
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_EQ_PX
+	PUBLIC	?L_EQ_PX_REW
+        CFI BLOCK ?L_EQ_PX_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?L_EQ_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?L_EQ_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_EQ_PX USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+x:
+?L_EQ_PX:
+	MOVX	A,@R1
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	XRL	A,@R0
+noz:	RET
+	CFI ENDBLOCK ?L_EQ_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_EQ_X
+;
+;	Description: Checks if an object in IDATA is equal to an
+;		     object in XDATA.
+;
+;	Register input:
+;		R0   Points to LSB in object #1 (IDATA)
+;		DPTR Points to LSB in object #2 (XDATA)
+;
+;	Register output:
+;		A    Is zero if equal.
+;		R0   Is undefined
+;		DPTR Is undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_EQ_X
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_EQ_X
+	PUBLIC	?L_EQ_X_REW
+        CFI BLOCK ?L_EQ_X_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?L_EQ_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?L_EQ_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_EQ_X USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?L_EQ_X:
+	MOVX	A,@DPTR
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	XRL	A,@R0
+noz:	RET
+	CFI ENDBLOCK ?L_EQ_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_EQ_C
+;
+;	Description: Checks if an object in IDATA is equal to an
+;		     object in CODE.
+;
+;	Register input:
+;		R0   Points to LSB in object #1 (IDATA)
+;		DPTR Points to LSB in object #2 (CODE)
+;
+;	Register output:
+;		A    Is zero if equal.
+;		R0   Is undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_EQ_C
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_EQ_C
+	PUBLIC	?L_EQ_C_REW
+        CFI BLOCK ?L_EQ_C_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?L_EQ_C_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	CFI ENDBLOCK ?L_EQ_C_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_EQ_C USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?L_EQ_C:
+	CLR	A
+	MOVC	A,@A+DPTR
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	MOV	A,#1
+	MOVC	A,@A+DPTR
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	MOV	A,#2
+	MOVC	A,@A+DPTR
+	XRL	A,@R0
+	JNZ	noz
+
+	INC	R0
+	MOV	A,#3
+	MOVC	A,@A+DPTR
+	XRL	A,@R0
+noz:	RET
+	CFI ENDBLOCK ?L_EQ_C
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_EQ8
+;
+;	Description: Checks if a long object in IDATA is equal to an
+;		     unsigned char object.
+;
+;	Register input:
+;		R0   Points to LSB in object #1 (IDATA)
+;		A    Is the object #2 (unsigned char)
+;
+;	Register output:
+;		A    Is zero if equal.
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_EQ8
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_EQ8
+	PUBLIC	?L_EQ8_REW
+
+        CFI BLOCK ?L_EQ8_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?L_EQ8_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?L_EQ8_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_EQ8 USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?L_EQ8:
+	XRL	A,@R0
+	INC	R0
+	ORL	A,@R0
+	INC	R0
+	ORL	A,@R0
+	INC	R0
+	ORL	A,@R0
+	RET
+	CFI ENDBLOCK ?L_EQ8
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Signed long compare greater than
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?SL_GT
+;
+;	Description: Compares two objects in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in object #1
+;		R1 Points to LSB in object #2
+;
+;	Register output:
+;		A    Is undefined
+;		CY = 1 if @R0 >  @R1
+; 		CY = 0 if @R0 <= @R1
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SL_GT
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SL_GT
+	PUBLIC	?SL_GT_REW
+        CFI BLOCK ?SL_GT_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?SL_GT_REW:
+	
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?SL_GT_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?SL_GT USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?SL_GT:
+	
+	CLR	C
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	MOV	C,OV
+	XRL	A,PSW
+	RLC	A
+	RET
+	CFI ENDBLOCK ?SL_GT
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SL_GT_PX
+;
+;	Description: Compares an IDATA object with a PDATA object
+;
+;	Register input:
+;		R0 Points to LSB in object #1 (IDATA)
+;		R1 Points to LSB in object #2 (PDATA)
+;
+;	Register output:
+;		A    Is undefined
+;		CY = 1 if @R0 >  @R1
+; 		CY = 0 if @R0 <= @R1
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SL_GT_PX
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SL_GT_PX
+	PUBLIC	?SL_GT_PX_REW
+        CFI BLOCK ?SL_GT_PX_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?SL_GT_PX_REW:
+	
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?SL_GT_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?SL_GT_PX USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?SL_GT_PX:
+	
+	CLR	C
+	MOVX	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	SUBB	A,@R0
+	MOV	C,OV
+	XRL	A,PSW
+	RLC	A
+	RET
+	CFI ENDBLOCK ?SL_GT_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SL_GT_X
+;
+;	Description: Compares an IDATA object with a XDATA object
+;
+;	Register input:
+;		R0   Points to LSB in object #1 (IDATA)
+;		DPTR Points to LSB in object #2 (XDATA)
+;
+;	Register output:
+;		A      Is undefined
+;		CY   = 1 if @R0 >  @DPTR
+; 		CY   = 0 if @R0 <= @DPTR
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SL_GT_X
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SL_GT_X
+	PUBLIC	?SL_GT_X_REW
+        CFI BLOCK ?SL_GT_X_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?SL_GT_X_REW:
+	
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?SL_GT_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?SL_GT_X USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?SL_GT_X:
+	
+	CLR	C
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	MOV	C,OV
+	XRL	A,PSW
+	RLC	A
+	RET
+	CFI ENDBLOCK ?SL_GT_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SL_GT_C
+;
+;	Description: Compares an IDATA object with a CODE object
+;
+;	Register input:
+;		R0   Points to LSB in object #1 (IDATA)
+;		DPTR Points to LSB in object #2 (CODE)
+;
+;	Register output:
+;		A      Is undefined
+;		CY   = 1 if @R0 >  @DPTR
+; 		CY   = 0 if @R0 <= @DPTR
+;		R0   = R0+3
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SL_GT_C
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SL_GT_C
+	PUBLIC	?SL_GT_C_REW
+        CFI BLOCK ?SL_GT_C_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+	
+?SL_GT_C_REW:
+	
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?SL_GT_C_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?SL_GT_C USING cfi_common
+        CFI NOFUNCTION	
+	
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?SL_GT_C:
+	
+	CLR	C
+	CLR	A
+	MOVC	A,@A+DPTR
+	SUBB	A,@R0
+	INC	R0
+	MOV	A,#1
+	MOVC	A,@A+DPTR
+	SUBB	A,@R0
+	INC	R0
+	MOV	A,#2
+	MOVC	A,@A+DPTR
+	SUBB	A,@R0
+	INC	R0
+	MOV	A,#3
+	MOVC	A,@A+DPTR
+	SUBB	A,@R0
+	MOV	C,OV
+	XRL	A,PSW
+	RLC	A
+	RET
+	CFI ENDBLOCK ?SL_GT_C
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SL_GT8
+;
+;	Description: Compares a signed long object in IDATA with an
+;		     unsigned character.
+;
+;	Register input:
+;		R0 Points to LSB in object #1
+;		A  Is the object #2 (unsigned char)
+;
+;	Register output:
+;		A    Is undefined
+;		CY = 1 if @R0 >  A
+; 		CY = 0 if @R0 <= A
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SL_GT8
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SL_GT8
+	PUBLIC	?SL_GT8_REW
+        CFI BLOCK ?SL_GT8_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?SL_GT8_REW:
+	
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?SL_GT8_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?SL_GT8 USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?SL_GT8:
+	
+	CLR	C
+	SUBB	A,@R0
+	INC	R0
+	CLR	A
+	SUBB	A,@R0
+	INC	R0
+	CLR	A
+	SUBB	A,@R0
+	INC	R0
+	CLR	A
+	SUBB	A,@R0
+	MOV	C,OV
+	XRL	A,PSW
+	RLC	A
+	RET
+	CFI ENDBLOCK ?SL_GT8
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Unsigned long compare greater than
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?UL_GT
+;
+;	Description: Compares two objects in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in object #1
+;		R1 Points to LSB in object #2
+;
+;	Register output:
+;		A    Is undefined
+;		CY = 1 if @R0 >  @R1
+; 		CY = 0 if @R0 <= @R1
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UL_GT
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?UL_GT
+	PUBLIC	?UL_GT_REW
+        CFI BLOCK ?UL_GT_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?UL_GT_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?UL_GT_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?UL_GT USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?UL_GT:
+	
+	CLR	C
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	RET
+	CFI ENDBLOCK ?UL_GT
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?UL_GT_PX
+;
+;	Description: Compares an IDATA object with a PDATA object
+;
+;	Register input:
+;		R0 Points to LSB in object #1 (IDATA)
+;		R1 Points to LSB in object #2 (PDATA)
+;
+;	Register output:
+;		A    Is undefined
+;		CY = 1 if @R0 >  @R1
+; 		CY = 0 if @R0 <= @R1
+;		R0 = R0+3
+;		R1 = R1+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UL_GT_PX
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?UL_GT_PX
+	PUBLIC	?UL_GT_PX_REW
+        CFI BLOCK ?UL_GT_PX_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?UL_GT_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?UL_GT_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?UL_GT_PX USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI R1 undefined
+
+x:
+?UL_GT_PX:
+	
+	CLR	C
+	MOVX	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOVX	A,@R1
+	SUBB	A,@R0
+	RET
+	CFI ENDBLOCK ?UL_GT_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?UL_GT_X
+;
+;	Description: Compares an IDATA object with a XDATA object
+;
+;	Register input:
+;		R0   Points to LSB in object #1 (IDATA)
+;		DPTR Points to LSB in object #2 (XDATA)
+;
+;	Register output:
+;		A      Is undefined
+;		CY   = 1 if @R0 >  @DPTR
+; 		CY   = 0 if @R0 <= @DPTR
+;		R0   = R0+3
+;		DPTR = DPTR+3
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UL_GT_X
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?UL_GT_X
+	PUBLIC	?UL_GT_X_REW
+        CFI BLOCK ?UL_GT_X_REW USING cfi_common
+        CFI NOFUNCTION
+
+	CFI R0 undefined
+
+?UL_GT_X_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?UL_GT_X_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?UL_GT_X USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+	CFI DPTR0 undefined
+
+x:
+?UL_GT_X:
+	
+	CLR	C
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	INC	R0
+	INC	DPTR
+	MOVX	A,@DPTR
+	SUBB	A,@R0
+	RET
+	CFI ENDBLOCK ?UL_GT_X
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?UL_GT_C
+;
+;	Description: Compares an IDATA object with a CODE object
+;
+;	Register input:
+;		R0   Points to LSB in object #1 (IDATA)
+;		DPTR Points to LSB in object #2 (CODE)
+;
+;	Register output:
+;		A      Is undefined
+;		CY   = 1 if @R0 >  @DPTR
+; 		CY   = 0 if @R0 <= @DPTR
+;		R0   = R0+3
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UL_GT_C
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?UL_GT_C
+	PUBLIC	?UL_GT_C_REW
+        CFI BLOCK ?UL_GT_C_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?UL_GT_C_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?UL_GT_C_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?UL_GT_C USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?UL_GT_C:
+	
+	CLR	C
+	CLR	A
+	MOVC	A,@A+DPTR
+	SUBB	A,@R0
+	INC	R0
+	MOV	A,#1
+	MOVC	A,@A+DPTR
+	SUBB	A,@R0
+	INC	R0
+	MOV	A,#2
+	MOVC	A,@A+DPTR
+	SUBB	A,@R0
+	INC	R0
+	MOV	A,#3
+	MOVC	A,@A+DPTR
+	SUBB	A,@R0
+	RET
+	CFI ENDBLOCK ?UL_GT_C
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?UL_GT8
+;
+;	Description: Compares an unsigned long object in IDATA with an
+;		     unsigned character.
+;
+;	Register input:
+;		R0 Points to LSB in object #1
+;		A  Is the object #2 (unsigned char)
+;
+;	Register output:
+;		A    Is undefined
+;		CY = 1 if @R0 >  A
+; 		CY = 0 if @R0 <= A
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UL_GT8
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?UL_GT8
+	PUBLIC	?UL_GT8_REW
+        CFI BLOCK ?UL_GT8_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?UL_GT8_REW:
+	
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?UL_GT8_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?UL_GT8 USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?UL_GT8:
+	
+	CLR	C
+	SUBB	A,@R0
+	INC	R0
+	CLR	A
+	SUBB	A,@R0
+	INC	R0
+	CLR	A
+	SUBB	A,@R0
+	INC	R0
+	CLR	A
+	SUBB	A,@R0
+	RET
+	CFI ENDBLOCK ?UL_GT8
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)signed long test if zero
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_TEST_ZERO
+;
+;	Description: Test if an object in IDATA is zero
+;
+;	Register input:
+;		R0 Points to LSB in the object
+;
+;	Register output:
+;		A    Is zero if the object is zero else undefined
+;		R0 = R0+3
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_TEST_ZERO
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_TEST_ZERO
+	PUBLIC	?L_TEST_ZERO_REW
+        CFI BLOCK ?L_TEST_ZERO_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?L_TEST_ZERO_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?L_TEST_ZERO_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_TEST_ZERO USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?L_TEST_ZERO:
+	
+	MOV	A,@R0
+	INC	R0
+	ORL	A,@R0
+	INC	R0
+	ORL	A,@R0
+	INC	R0
+	ORL	A,@R0
+	RET
+	CFI ENDBLOCK ?L_TEST_ZERO
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_TEST_ZERO_PX
+;
+;	Description: Test if an object in PDATA is zero
+;
+;	Register input:
+;		R0 Points to LSB in the object
+;
+;	Register output:
+;		A    Is zero if the object is zero else undefined
+;		R0 = R0 + 3 if A is zero else undefined
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_TEST_ZERO_PX
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_TEST_ZERO_PX
+	PUBLIC	?L_TEST_ZERO_PX_REW
+        CFI BLOCK ?L_TEST_ZERO_PX_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?L_TEST_ZERO_PX_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+	CFI ENDBLOCK ?L_TEST_ZERO_PX_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_TEST_ZERO_PX USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+?L_TEST_ZERO_PX:
+	
+	MOVX	A,@R0
+	JNZ	nz
+	INC	R0
+	MOVX	A,@R0
+	JNZ	nz
+	INC	R0
+	MOVX	A,@R0
+	JNZ	nz
+	INC	R0
+	MOVX	A,@R0
+nz:	RET
+	CFI ENDBLOCK ?L_TEST_ZERO_PX
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?L_TEST_ZERO_X
+;
+;	Description: Test if an object in XDATA is zero
+;
+;	Register input:
+;		DPTR Points to LSB in the object
+;
+;	Register output:
+;		A    Is zero if the object is zero else undefined
+;		DPTR = DPTR + 3 if A is zero else undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_TEST_ZERO_X
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?L_TEST_ZERO_X
+	PUBLIC	?L_TEST_ZERO_X_REW
+        CFI BLOCK ?L_TEST_ZERO_X_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI DPTR0 undefined
+
+?L_TEST_ZERO_X_REW:
+
+	MOV	A,DPL
+	ADD	A,#0FDH
+	MOV	DPL,A
+	JC	?L_TEST_ZERO_X
+#ifdef __EXTENDED_DPTR__
+    	EXTERN  ?DPX
+    	MOV 	A,DPH
+    	SUBB 	A,#0
+    	MOV 	DPH,A
+    	JC 	?L_TEST_ZERO_X
+    	DEC 	?DPX
+#else
+    	DEC	DPH
+#endif
+
+	CFI ENDBLOCK ?L_TEST_ZERO_X_REW
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?L_TEST_ZERO_X USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI DPTR0 undefined
+
+?L_TEST_ZERO_X:
+	
+	MOVX	A,@DPTR
+	JNZ	nz
+	INC	DPTR
+	MOVX	A,@DPTR
+	JNZ	nz
+	INC	DPTR
+	MOVX	A,@DPTR
+	JNZ	nz
+	INC	DPTR
+	MOVX	A,@DPTR
+nz:	RET
+	CFI ENDBLOCK ?L_TEST_ZERO_X
+	ENDMOD
+
+
+
+;-----------------------------------------------------------------------------
+;
+;	GENERIC POINTER COMPARE
+;
+;-----------------------------------------------------------------------------
+
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?G_EQ
+;
+;	Description: Checks if two 3-byte objects are equal
+;
+;	Register input:
+;		R3:R2:R1 object #1
+;		R6:R5:R3 object #2
+;
+;	Register output:
+;		A    Is zero if equal.
+;
+;	Register changed:
+;		A	result
+;
+;	Stack usage: 0
+;
+;-----------------------------------------------------------------------------
+	MODULE	?G_EQ
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?G_EQ
+
+        CFI BLOCK ?G_EQ USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+
+?G_EQ:
+	MOV	A,R1
+	XRL	A,R4
+	JNZ	noz
+
+	MOV	A,R2
+	XRL	A,R5
+	JNZ	noz
+
+	MOV	A,R3
+	XRL	A,R6
+
+noz:	
+	RET
+	CFI ENDBLOCK ?G_EQ
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: generic pointer compare greater than
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?G_GT
+;
+;	Description: Compares two objects in IDATA
+;
+;	Register input:
+;		R3:R2:R1 object #1
+;		R6:R5:R4 object #2
+;
+;	Register output:
+;		A    Is undefined
+;		CY = 1 if object #1 >  object #2
+; 		CY = 0 if object #1 <= object #2
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?G_GT
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?G_GT
+
+        CFI BLOCK ?G_GT USING cfi_common
+        CFI NOFUNCTION
+
+	CFI A undefined
+
+?G_GT:
+	CLR	C
+	MOV	A,R4
+	SUBB	A,R1
+	MOV	A,R5
+	SUBB	A,R2
+	MOV	A,R6
+	SUBB	A,R5
+	RET
+
+	CFI ENDBLOCK ?G_GT
+	END
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  $Id: iar_compare.s51 1.13 2007/06/07 09:21:46Z larssu Exp $
+;  $Log: iar_compare.s51 $
+;  Revision 1.13  2007/06/07 09:21:46Z  larssu
+;  NOROOT'ify RCODE segments
+;  Revision 1.12  2004/11/18 11:32:52Z  owi
+;  Revision 1.11  2004/11/10 16:31:02Z  owi
+;  Revision 1.10  2004/08/02 10:26:48Z  owi
+;  Revision 1.9  2004/03/12 15:59:06Z  owi
+;  Revision 1.8  2003/11/12 12:37:35Z  ola
+;  Revision 1.7  2003/11/12 12:08:51Z  ola
+;  Revision 1.6  2003/09/24 08:46:08Z  ola
+;  Revision 1.5  2003/09/23 15:20:18Z  ola
+;  Revision 1.3  2003/05/26 14:10:03Z  owi
+;  Revision 1.2  2003/03/25 16:27:37Z  owi

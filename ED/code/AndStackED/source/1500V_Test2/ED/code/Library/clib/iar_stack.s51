@@ -1,0 +1,1655 @@
+;-----------------------------------------------------------------------------
+;
+;	File:		iar_stack.s51
+;
+;	Version:	6.10
+;
+;	Created:	12/Mar/02 IANB
+;	Revised:
+;
+;
+;	Description:	This file contain functions to get stackpointers
+;                       with offset, functions to allocate stack.
+;
+;			
+;       REVISON INFORMATION
+;                                                           
+;                                                           
+;       Log information is available at the end of this file
+;-----------------------------------------------------------------------------
+
+#include "iar_common.h"
+
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?ALLOC_EXT_STACK8
+;
+;	Description:
+;		Allocate an area of size 1 to 256 bytes on the extended stack.
+;
+;
+;              3FF
+;               :
+;		+------+
+;		| xxxx | <-- post ESP
+;		+ - - -+
+;		|   :  | - - - - - - - - 
+;		|   :  |                 |
+;		|   :  |                 |
+;		|   :  | <-- pre ESP     |
+;		+ - - -+                 | To be deallocated
+;		| RetX |                 |
+;		+ - - -+                 |
+;		| RetH |                 |
+;		+ - - -+                 |
+;		| RetL | - - - - - - - - 
+;		+------+
+;               :
+;               0
+;
+;
+;	Register input:
+;		A      : Number of bytes to allocate.
+;
+;	Register output:
+;		ESP    = ESP + A
+;		DPTR0  = Ret addr
+;		A      = Undefined.
+;		R0      = Undefined.
+;		CY     = Undefined.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?ALLOC_EXT_STACK8
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?ALLOC_EXT_STACK8
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?ESP
+
+    cfi BLOCK ?ALLOC_EXT_STACK8 USING cfi_common
+    cfi NOFUNCTION
+
+?ALLOC_EXT_STACK8:
+?ALLOC_EXT_STACK8_CFI_INVALID_BEGINS:
+    cfi invalid
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_EXT DPX0
+#elif defined(__EXTENDED_DPTR__)
+        MOV     ?DPX,#0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL             ; DPTR0 = Ret addr
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+
+	ADD	A,SP
+	MOV	R0,0xA8 /* IE */      ; Preserve the Interrupt Enable register
+	CLR	0xA8.7 /* IE.EA */    ; Disable all interrupts for max 8 cycles
+	MOV	SP,A
+	JNC	NoBorrow
+	INC	?ESP
+NoBorrow:
+	MOV	0xA8 /* IE */,R0
+
+	CLR	A
+	JMP	@A+DPTR
+
+?ALLOC_EXT_STACK8_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?ALLOC_EXT_STACK8
+	ENDMOD
+
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?ALLOC_EXT_STACK16
+;
+;	Description:
+;		Allocate an area of size 1 to 0xFFFF bytes on the extended stack.
+;
+;	Register input:
+;		A      : Number of bytes to allocate (Low byte).
+;		R0     : Number of bytes to allocate (High byte).
+;
+;	Register output:
+;		ESP    = ESP + R0:A
+;		DPTR0  = Ret addr
+;		A      = Undefined.
+;		R0     = Undefined.
+;		B      = Undefined.
+;		CY     = Undefined.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?ALLOC_EXT_STACK16
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?ALLOC_EXT_STACK16
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?ESP
+
+    cfi BLOCK ?ALLOC_EXT_STACK16 USING cfi_common
+    cfi NOFUNCTION
+
+?ALLOC_EXT_STACK16:
+?ALLOC_EXT_STACK16_CFI_INVALID_BEGINS:
+    cfi invalid
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_EXT DPX0
+#elif defined(__EXTENDED_DPTR__)
+        MOV ?DPX,#0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL             ; DPTR0 = Ret addr
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+
+	ADD	A,SP
+	MOV	B,0xA8 /* IE */    ; Preserve the Interrupt Enable register
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts
+	MOV     SP,A
+	MOV	A,R0
+	ADDC	A,?ESP
+	MOV	?ESP,A
+	MOV	0xA8 /* IE */,B    ; Enable interrupts
+
+	CLR	A
+	JMP	@A+DPTR
+?ALLOC_EXT_STACK16_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?ALLOC_EXT_STACK16
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?DEALLOC_EXT_STACK8
+;
+;	Description:
+;		Deallocate an area of size 1 to 255 bytes on the extended stack.
+;
+;              3FF
+;               :
+;		+------+
+;		| xxxx | <-- pre ESP
+;		+ - - -+
+;		| RetX |
+;		+ - - -+
+;		| RetH |
+;		+ - - -+
+;		| RetL |
+;		+ - - -+ -
+;		|   :  |  |
+;		|   :  |  | To be deallocated
+;		|   :  |  |
+;		|   :  |  |
+;		+ - - -+ -
+;		| xxxx | <-- post ESP
+;		+------+
+;               :
+;               0
+;
+;	Register input:
+;		A      : -(Number of bytes to allocate)
+;
+;	Register output:
+;		ESP    = ESP - A
+;		DPTR0  = Ret addr
+;		A      = Undefined
+;		R0     = Undefined
+;		B.0    = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?DEALLOC_EXT_STACK8
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?DEALLOC_EXT_STACK8
+	EXTERN	?ESP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?DEALLOC_EXT_STACK8 USING cfi_common
+    cfi NOFUNCTION
+
+?DEALLOC_EXT_STACK8:
+?DEALLOC_EXT_STACK8_CFI_INVALID_BEGINS:
+    cfi invalid
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_EXT DPX0
+#elif defined(__EXTENDED_DPTR__)
+        MOV ?DPX,#0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL             ; DPTR0 = Ret addr
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+
+	MOV	B.0,C              ; Preserve carry flag.
+	MOV     R0,0xA8 /* IE */   ; Preserve the Interrupt Enable register
+	ADD	A,SP
+	CLR	0xA8.7 /* IE.EA */ ; Disable all interrupts for max 8 cycles
+	MOV	SP,A
+	JC	NoBorrow
+	DEC	?ESP
+NoBorrow:
+	MOV	0xA8 /* IE */,R0
+	MOV	C,B.0
+
+	CLR	A
+	JMP	@A+DPTR
+?DEALLOC_EXT_STACK8_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?DEALLOC_EXT_STACK8
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?DEALLOC_EXT_STACK16
+;
+;	Description:
+;		Deallocate an area of size 1 to 0xFFFF bytes on the extended stack.
+;
+;	Register input:
+;		A      : -(Number of bytes to allocate) (Low byte).
+;		R0     : -(Number of bytes to allocate) (High byte).
+;
+;	Register output:
+;		ESP    = ESP - R0:A
+;		DPTR   = Ret addr
+;		A      = Undefined
+;		R0     = Undefined
+;		B      = Undefined
+;
+;       Multiple DPTR:
+;               Shadowed:       Requires DPTR: DPTRx    Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?DEALLOC_EXT_STACK16
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?DEALLOC_EXT_STACK16
+	EXTERN	?ESP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?DEALLOC_EXT_STACK16 USING cfi_common
+    cfi NOFUNCTION
+
+?DEALLOC_EXT_STACK16:
+?DEALLOC_EXT_STACK16_CFI_INVALID_BEGINS:
+    cfi invalid
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_EXT DPX0
+#elif defined(__EXTENDED_DPTR__)
+        MOV     ?DPX,#0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL                  ; DPTR = Ret addr
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+
+        MOV     B,0xA8 /* IE */     ; Preserve the Interrupt Enable register
+	CLR	0xA8.7 /* IE.EA */   ; Disable all interrupts
+	MOV	0xA8.0,C             ; Preserve carry flag.
+	ADD	A,SP
+        MOV     SP,A
+	MOV	A,R0
+	ADDC	A,?ESP
+	MOV	?ESP,A
+	MOV	C,0xA8.0             ; Restore carry flag
+	MOV	0xA8 /* IE */,B     ; Enables interrupt
+
+	CLR	A
+	JMP	@A+DPTR
+?DEALLOC_EXT_STACK16_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?DEALLOC_EXT_STACK16
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: ?EXT_STACK_DISP8
+;
+;	Description:
+;		Get a pointer to a specific object on the stack at offset X.
+;
+;              3FF
+;               :
+;		+------+
+;		| xxxx | <-- ESP
+;		+ - - -+
+;		| RetX | -
+;		+ - - -+  |
+;		| RetH |  |
+;		+ - - -+  |
+;		| RetL |  | Displacement (A)
+;		+ - - -+  |
+;		|   :  |  |
+;		|   :  | -  <-- DPTR
+;		+------+
+;               :
+;               0
+;
+;	Register input:
+;		A     = 8-bit offset from ESP - 3.
+;
+;	Register output:
+;		DPTRx  = EXT_STACK + 0000(A)
+;		A      = DPH
+;
+;       Multiple DPTR:
+;               Shadowed:       Requires DPTR: none     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: DPTRx    Returns  DPS: none
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?EXT_STACK_DISP8
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?ESP
+	PUBLIC	?EXT_STACK_DISP0_8
+#if (__NUMBER_OF_DPTRS__ > 1)
+	PUBLIC	?EXT_STACK_DISP1_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 2)
+	PUBLIC	?EXT_STACK_DISP2_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 3)
+	PUBLIC	?EXT_STACK_DISP3_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 4)
+	PUBLIC	?EXT_STACK_DISP4_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 5)
+	PUBLIC	?EXT_STACK_DISP5_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 6)
+	PUBLIC	?EXT_STACK_DISP6_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 7)
+	PUBLIC	?EXT_STACK_DISP7_8
+#endif
+	RSEG	EXT_STACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?EXT_STACK_DISP8 USING cfi_common
+    cfi NOFUNCTION
+
+#if ( (__NUMBER_OF_DPTRS__ == 1) || ((__NUMBER_OF_DPTRS__ > 1) && (defined ( __DPTR_SHADOWED__ ))))
+?EXT_STACK_DISP0_8:
+?EXT_STACK_DISP1_8:
+?EXT_STACK_DISP2_8:
+?EXT_STACK_DISP3_8:
+?EXT_STACK_DISP4_8:
+?EXT_STACK_DISP5_8:
+?EXT_STACK_DISP6_8:
+?EXT_STACK_DISP7_8:
+	ADD	A,SP
+	MOV	DPL,A
+	CLR	A
+	ADDC	A,?ESP
+	ANL	A,#0x03         ; Maks out relevant ESP bits.
+	ORL     A,#(HIGH(sfb(EXT_STACK)) & 0xFC)
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	MOV     ?DPX,#BYTE3(sfb(EXT_STACK))
+#endif
+	RET
+
+#elif __DPTR_SEPARATE__
+
+?EXT_STACK_DISP0_8:
+	ADD	A,SP
+	MOV	DPL,A
+	CLR	A
+	ADDC	A,?ESP
+	ANL	A,#0x03         ; Maks out relevant ESP bits.
+	ORL     A,#(HIGH(sfb(EXT_STACK)) & 0xFC)
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	MOV     ?DPX,#BYTE3(sfb(EXT_STACK))
+#endif
+	RET
+
+EXT_STACK_DISP8 MACRO nr
+	ADD	A,SP
+	MOV	?DPL\1,A
+	CLR	A
+	ADDC	A,?ESP
+	ANL	A,#0x03         ; Maks out relevant ESP bits.
+	ORL     A,#(HIGH(sfb(EXT_STACK)) & 0xFC)
+	MOV	?DPH\1,A
+#ifdef __EXTENDED_DPTR__
+	MOV     ?DPX\1,#BYTE3(sfb(EXT_STACK))
+#endif
+	RET
+
+        ENDM
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+?EXT_STACK_DISP1_8:
+	EXT_STACK_DISP8 1
+#endif
+#if (__NUMBER_OF_DPTRS__ > 2)
+?EXT_STACK_DISP2_8:
+	EXT_STACK_DISP8 2
+#endif
+#if (__NUMBER_OF_DPTRS__ > 3)
+?EXT_STACK_DISP3_8:
+	EXT_STACK_DISP8 3
+#endif
+#if (__NUMBER_OF_DPTRS__ > 4)
+?EXT_STACK_DISP4_8:
+	EXT_STACK_DISP8 4
+#endif
+#if (__NUMBER_OF_DPTRS__ > 5)
+?EXT_STACK_DISP5_8:
+	EXT_STACK_DISP8 5
+#endif
+#if (__NUMBER_OF_DPTRS__ > 6)
+?EXT_STACK_DISP6_8:
+	EXT_STACK_DISP8 6
+#endif
+#if (__NUMBER_OF_DPTRS__ > 7)
+?EXT_STACK_DISP7_8:
+	EXT_STACK_DISP8 7
+#endif
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+
+    cfi ENDBLOCK ?EXT_STACK_DISP8
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?EXT_STACK_DISP16
+;
+;	Description:
+;		Get a pointer to a specific object on the stack at offset X.
+;
+;              3FF
+;               :
+;		+------+
+;		| xxxx | <-- ESP
+;		+ - - -+
+;		| RetX | -
+;		+ - - -+  |
+;		| RetH |  |
+;		+ - - -+  |
+;		| RetL |  | Displacement (DPTR)
+;		+ - - -+  |
+;		|   :  |  |
+;		|   :  | -  <-- DPTR
+;		+------+
+;               :
+;               0
+;
+;	Register input:
+;		DPTRx = 10-bit offset from ESP - 3
+;
+;	Register output:
+;		DPTRx = ESP - DPTRx
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: DPTRx    Returns  DPS: none
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?EXT_STACK_DISP16
+	RSEG	EXT_STACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?EXT_STACK_DISP0_16
+#if (__NUMBER_OF_DPTRS__ > 1)
+	PUBLIC	?EXT_STACK_DISP1_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 2)
+	PUBLIC	?EXT_STACK_DISP2_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 3)
+	PUBLIC	?EXT_STACK_DISP3_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 4)
+	PUBLIC	?EXT_STACK_DISP4_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 5)
+	PUBLIC	?EXT_STACK_DISP5_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 6)
+	PUBLIC	?EXT_STACK_DISP6_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 7)
+	PUBLIC	?EXT_STACK_DISP7_16
+#endif
+	EXTERN	?ESP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?EXT_STACK_DISP16 USING cfi_common
+    cfi NOFUNCTION
+
+#if ( (__NUMBER_OF_DPTRS__ == 1) || ((__NUMBER_OF_DPTRS__ > 1) && (defined ( __DPTR_SHADOWED__ ))))
+?EXT_STACK_DISP0_16:
+?EXT_STACK_DISP1_16:
+?EXT_STACK_DISP2_16:
+?EXT_STACK_DISP3_16:
+?EXT_STACK_DISP4_16:
+?EXT_STACK_DISP5_16:
+?EXT_STACK_DISP6_16:
+?EXT_STACK_DISP7_16:
+	XCH	A,DPL
+	ADD	A,SP
+	XCH	A,DPL
+	XCH	A,DPH
+	ADDC	A,?ESP
+	ANL	A,#0x03         ; Maks out relevant ESP bits.
+	ORL     A,#(HIGH(sfb(EXT_STACK)) & 0xFC)
+	XCH	A,DPH
+#ifdef __EXTENDED_DPTR__
+	MOV     ?DPX,#BYTE3(sfb(EXT_STACK))
+#endif
+	RET
+
+#elif __DPTR_SEPARATE__
+
+?EXT_STACK_DISP0_16:
+	XCH	A,DPL
+	ADD	A,SP
+	XCH	A,DPL
+	XCH	A,DPH
+	ADDC	A,?ESP
+	ANL	A,#0x03         ; Maks out relevant ESP bits.
+	ORL     A,#(HIGH(sfb(EXT_STACK)) & 0xFC)
+	XCH	A,DPH
+#ifdef __EXTENDED_DPTR__
+	MOV     ?DPX,#BYTE3(sfb(EXT_STACK))
+#endif
+	RET
+
+EXT_STACK_DISP16 MACRO nr
+	XCH	A,?DPL\1
+	ADD	A,SP
+	XCH	A,?DPL\1
+	XCH	A,?DPH\1
+	ADDC	A,?ESP
+	ANL	A,#0x03         ; Maks out relevant ESP bits.
+	ORL     A,#(HIGH(sfb(EXT_STACK)) & 0xFC)
+	XCH	A,?DPH\1
+#ifdef __EXTENDED_DPTR__
+	MOV     ?DPX\1,#BYTE3(sfb(EXT_STACK))
+#endif
+	RET
+        ENDM
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+?EXT_STACK_DISP1_16:
+	EXT_STACK_DISP16 1
+#endif
+#if (__NUMBER_OF_DPTRS__ > 2)
+?EXT_STACK_DISP2_16:
+	EXT_STACK_DISP16 2
+#endif
+#if (__NUMBER_OF_DPTRS__ > 3)
+?EXT_STACK_DISP3_16:
+	EXT_STACK_DISP16 3
+#endif
+#if (__NUMBER_OF_DPTRS__ > 4)
+?EXT_STACK_DISP4_16:
+	EXT_STACK_DISP16 4
+#endif
+#if (__NUMBER_OF_DPTRS__ > 5)
+?EXT_STACK_DISP5_16:
+	EXT_STACK_DISP16 5
+#endif
+#if (__NUMBER_OF_DPTRS__ > 6)
+?EXT_STACK_DISP6_16:
+	EXT_STACK_DISP16 6
+#endif
+#if (__NUMBER_OF_DPTRS__ > 7)
+?EXT_STACK_DISP7_16:
+	EXT_STACK_DISP16 7
+#endif
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+
+    cfi ENDBLOCK ?EXT_STACK_DISP16
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Allocate and de-allocate memory on the XDATA stack
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?ALLOC_XSTACK8
+;
+;	Description:
+;		Allocate an area of size 1 to 256 bytes on the XDATA stack.
+;
+;		+--------+
+;		| -FF(A) |
+;		+--------+ <-- XSTACK
+;
+;
+;	Register input:
+;		A  -(Size of the wanted xstack area)
+;
+;	Register output:
+;		XSTACK = XSTACK + FF(A)
+;		A      = XSP_L
+;		CY       Undefined.
+;
+;	NOTE:
+;		DPTR/DPS: unchanged
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?ALLOC_XSTACK8
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?ALLOC_XSTACK8
+	EXTERN	?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?ALLOC_XSTACK8 USING cfi_common
+    cfi NOFUNCTION
+    cfi CFA_SPX sub(SPX,sub(256,A))
+?ALLOC_XSTACK8
+?ALLOC_XSTACK8_CFI_INVALID_BEGINS:
+    cfi invalid
+	ADD	A,XSP_L
+	PUSH	0xA8 /* IE */		; Preserve the Interrupt Enable register
+    cfi CFA_MACHINE MACHINE_SP - 3
+	CLR	0xA8.7	/* IE.EA */	; Disable all interrupts for max 8 cycles
+	JC	NoBorrow
+	DEC	XSP_H
+
+NoBorrow:
+	MOV	XSP_L,A
+    cfi CFA_SPX SPX
+	POP	0xA8 /* IE */
+    cfi CFA_MACHINE MACHINE_SP - 2
+	RET
+?ALLOC_XSTACK8_CFI_INVALID_ENDS:
+    cfi valid
+
+    cfi ENDBLOCK ?ALLOC_XSTACK8
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?DEALLOC_XSTACK8
+;
+;	Description:
+;		Deallocate an area of size 1 to 255 bytes on the XDATA stack.
+;
+;		+--------+
+;		|  00(A) |
+;		+--------+ <-- XSTACK
+;
+;
+;	Register input:
+;		A  Size of the xstack area to deallocate
+;
+;	Register output:
+;		XSTACK = XSTACK + 00(A)
+;		A      = XSP_L
+;
+;       NOTE:
+;               DPTR/DPS: unchanged
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?DEALLOC_XSTACK8
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?DEALLOC_XSTACK8
+	EXTERN	?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?DEALLOC_XSTACK8 USING cfi_common
+    cfi NOFUNCTION
+
+?DEALLOC_XSTACK8:
+?DEALLOC_XSTACK8_CFI_INVALID_BEGINS:
+    cfi invalid
+	PUSH	PSW                 ; Preserve carry
+    cfi CFA_MACHINE MACHINE_SP - 3
+	ADD	A,XSP_L
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+    cfi CFA_MACHINE MACHINE_SP - 4
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 8 cycles
+	JNC	NoBorrow
+
+	INC	XSP_H
+NoBorrow:
+	MOV	XSP_L,A
+	POP	0xA8 /* IE */
+    cfi CFA_MACHINE MACHINE_SP - 3
+	POP	PSW
+    cfi CFA_MACHINE MACHINE_SP - 2
+
+	RET
+?DEALLOC_XSTACK8_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?DEALLOC_XSTACK8
+	ENDMOD
+
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?ADD_XSTACK_DISP8
+;
+;	Description:
+;              Allocates an area of max 256 bytes and return the tos in DPTR
+;
+;              FFFF
+;               :
+;		+------+
+;		| xxxx | <-- pre XSP
+;		|   :  | -
+;		|   :  |  |
+;		|   :  |  | -A
+;		|   :  |  |
+;		|   :  | -  <-- post XSP, post DPTR
+;		+------+
+;               :
+;               0
+;
+;	Register input:
+;		A      = -(Size of the wanted xstack area)
+;
+;	Register output:
+;		XSTACK = XSP + A (note A is negative)
+;		DPTR   = XSP (new)
+;		A      = XSP_L
+;		CY       Undefined.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: none
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?ADD_XSTACK_DISP8
+        RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?ADD_XSTACK_DISP0_8
+	EXTERN	?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?ADD_XSTACK_DISP8 USING cfi_common
+    cfi NOFUNCTION
+
+?ADD_XSTACK_DISP0_8:
+?ADD_XSTACK_DISP0_8_CFI_INVALID_BEGINS:
+    cfi invalid
+	ADD	A,XSP_L
+	MOV	DPL,A
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+    cfi CFA_MACHINE MACHINE_SP - 3
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 8 cycles
+	JC	NoBorrow
+	DEC	XSP_H
+
+NoBorrow:
+	MOV	XSP_L,A
+	POP	0xA8 /* IE */
+    cfi CFA_MACHINE MACHINE_SP - 2
+	MOV	DPH,XSP_H
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+?ADD_XSTACK_DISP0_8_CFI_INVALID_ENDS:
+    cfi valid
+
+    cfi ENDBLOCK ?ADD_XSTACK_DISP8
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?ADD_XSTACK_DISP16
+;
+;	Description:
+;		Add a 16-bit value to the XDATA stack-pointer.
+;		Can be used for allocating or deallocating stack.
+;
+;		+--------+
+;		|  DPTR  |
+;		+--------+ <-- XSTACK
+;
+;
+;	Register input:
+;		DPTR  Size of the xstack area to allocate/deallocate
+;
+;	Register output:
+;		XSTACK = XSTACK + DPTR
+;		DPTR   = XSTACK
+;		CY       Undefined.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: none
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?ADD_XSTACK_DISP16
+    RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?ADD_XSTACK_DISP0_16
+	EXTERN	?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?ADD_XSTACK_DISP16 Using cfi_common
+    cfi NOFUNCTION
+
+?ADD_XSTACK_DISP0_16
+?ADD_XSTACK_DISP0_16_CFI_INVALID_BEGINS:
+    cfi invalid
+	XCH	A,DPL
+	ADD	A,XSP_L
+	XCH	A,DPL
+	XCH	A,DPH
+	ADDC	A,XSP_H
+	PUSH	0xA8 /* IE */	     ; Preserve the Interrupt Enable register
+    cfi CFA_MACHINE MACHINE_SP - 3
+	CLR	0xA8.7	/* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,A
+	MOV	XSP_L,DPL
+	POP	0xA8 /* IE */
+    cfi CFA_MACHINE MACHINE_SP - 2
+	XCH	A,DPH
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+?ADD_XSTACK_DISP0_16_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?ADD_XSTACK_DISP16
+	ENDMOD
+
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?XSTACK_DISP8
+;
+;	Description:
+;	       Get a pointer to a specific object on the stack at offset X.
+;
+;              FFFF
+;               :
+;		+------+
+;		| xxxx | <-- DPTRnr
+;		|   :  | -
+;		|   :  |  |
+;		|   :  |  | Displacement (A)
+;		|   :  |  |
+;		|   :  | -  <-- XSP
+;		+------+
+;               :
+;               0
+;
+;	Register input:
+;		A     = 8-bit positive offset
+;               DPSEL = DPTRx (where x same as entry nr, only for shadowed)
+;
+;	Register output:
+;		DPTRx = XSP + A
+;               DPSEL  = Same as input
+;		A      = DPH
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: DPTRx    Returns  DPS: none
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?XSTACK_DISP8
+    RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN	?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+	PUBLIC	?XSTACK_DISP0_8
+#if (__NUMBER_OF_DPTRS__ > 1)
+	PUBLIC	?XSTACK_DISP1_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 2)
+	PUBLIC	?XSTACK_DISP2_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 3)
+	PUBLIC	?XSTACK_DISP3_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 4)
+	PUBLIC	?XSTACK_DISP4_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 5)
+	PUBLIC	?XSTACK_DISP5_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 6)
+	PUBLIC	?XSTACK_DISP6_8
+#endif
+#if (__NUMBER_OF_DPTRS__ > 7)
+	PUBLIC	?XSTACK_DISP7_8
+#endif
+    cfi BLOCK ?XSTACK_DISP8 USING cfi_common
+    cfi NOFUNCTION
+
+#if ( (__NUMBER_OF_DPTRS__ == 1) || ((__NUMBER_OF_DPTRS__ > 1) && (defined ( __DPTR_SHADOWED__ ))))
+?XSTACK_DISP0_8:
+?XSTACK_DISP1_8:
+?XSTACK_DISP2_8:
+?XSTACK_DISP3_8:
+?XSTACK_DISP4_8:
+?XSTACK_DISP5_8:
+?XSTACK_DISP6_8:
+?XSTACK_DISP7_8:
+	ADD	A,XSP_L
+	MOV	DPL,A
+	CLR	A
+	ADDC	A,XSP_H
+	MOV	DPH,A
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+
+#elif __DPTR_SEPARATE__
+
+?XSTACK_DISP0_8:
+	ADD	A,XSP_L
+	MOV	DPL,A
+	CLR	A
+	ADDC	A,XSP_H
+	MOV	DPH,A
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+?XSTACK_DISP1_8:
+	ADD	A,XSP_L
+	MOV	?DPL1,A
+	CLR	A
+	ADDC	A,XSP_H
+	MOV	?DPH1,A
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX1,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+?XSTACK_DISP2_8:
+	ADD	A,XSP_L
+	MOV	?DPL2,A
+	CLR	A
+	ADDC	A,XSP_H
+	MOV	?DPH2,A
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX2,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+?XSTACK_DISP3_8:
+	ADD	A,XSP_L
+	MOV	?DPL3,A
+	CLR	A
+	ADDC	A,XSP_H
+	MOV	?DPH3,A
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX3,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+?XSTACK_DISP4_8:
+	ADD	A,XSP_L
+	MOV	?DPL4,A
+	CLR	A
+	ADDC	A,XSP_H
+	MOV	?DPH4,A
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX4,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+?XSTACK_DISP5_8:
+	ADD	A,XSP_L
+	MOV	?DPL5,A
+	CLR	A
+	ADDC	A,XSP_H
+	MOV	?DPH5,A
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX5,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+?XSTACK_DISP6_8:
+	ADD	A,XSP_L
+	MOV	?DPL6,A
+	CLR	A
+	ADDC	A,XSP_H
+	MOV	?DPH6,A
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX6,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+?XSTACK_DISP7_8:
+	ADD	A,XSP_L
+	MOV	?DPL7,A
+	CLR	A
+	ADDC	A,XSP_H
+	MOV	?DPH7,A
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX7,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+
+    cfi ENDBLOCK ?XSTACK_DISP8
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?XSTACK_DISP16
+;
+;	Description:
+;	       Get a pointer to a specific object on the stack at offset X.
+;
+;              FFFF
+;               :
+;		+------+
+;		| xxxx | <-- post DPTRnr
+;		|   :  | -
+;		|   :  |  |
+;		|   :  |  | pre DPTRnr
+;		|   :  |  |
+;		|   :  | -  <-- XSP
+;		+------+
+;               :
+;               0
+;
+;	Register input:
+;		DPTRnr = 16-bit positive offset
+;               DPSEL  = DPTRnr (where number same as entry nr, only for shadowed)
+;
+;	Register output:
+;		DPTRnr = XSP + DPTRnr (pre)
+;               DPSEL  = Same as input
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx    Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: DPTRx    Returns  DPS: none
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+        MODULE  ?XSTACK_DISP16
+        RSEG    XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	PUBLIC  ?XSTACK_DISP0_16
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	PUBLIC	?XSTACK_DISP1_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 2)
+	PUBLIC	?XSTACK_DISP2_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 3)
+	PUBLIC	?XSTACK_DISP3_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 4)
+	PUBLIC	?XSTACK_DISP4_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 5)
+	PUBLIC	?XSTACK_DISP5_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 6)
+	PUBLIC	?XSTACK_DISP6_16
+#endif
+#if (__NUMBER_OF_DPTRS__ > 7)
+	PUBLIC	?XSTACK_DISP7_16
+#endif
+
+    cfi BLOCK ?XSTACK_DISP16 USING cfi_common
+    cfi NOFUNCTION
+
+#if ( (__NUMBER_OF_DPTRS__ == 1) || ((__NUMBER_OF_DPTRS__ > 1) && (defined ( __DPTR_SHADOWED__ ))))
+?XSTACK_DISP0_16:
+?XSTACK_DISP1_16:
+?XSTACK_DISP2_16:
+?XSTACK_DISP3_16:
+?XSTACK_DISP4_16:
+?XSTACK_DISP5_16:
+?XSTACK_DISP6_16:
+?XSTACK_DISP7_16:
+	XCH	A,DPL
+	ADD	A,XSP_L
+	XCH	A,DPL
+	XCH	A,DPH
+	ADDC	A,XSP_H
+	XCH	A,DPH
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+
+#elif __DPTR_SEPARATE__
+
+?XSTACK_DISP0_16:
+	XCH	A,DPL
+	ADD	A,XSP_L
+	XCH	A,DPL
+	XCH	A,DPH
+	ADDC	A,XSP_H
+	XCH	A,DPH
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+?XSTACK_DISP1_16:
+	XCH	A,?DPL1
+	ADD	A,XSP_L
+	XCH	A,?DPL1
+	XCH	A,?DPH1
+	ADDC	A,XSP_H
+	XCH	A,?DPH1
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX1,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+?XSTACK_DISP2_16:
+	XCH	A,?DPL2
+	ADD	A,XSP_L
+	XCH	A,?DPL2
+	XCH	A,?DPH2
+	ADDC	A,XSP_H
+	XCH	A,?DPH2
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX2,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+?XSTACK_DISP3_16:
+	XCH	A,?DPL3
+	ADD	A,XSP_L
+	XCH	A,?DPL3
+	XCH	A,?DPH3
+	ADDC	A,XSP_H
+	XCH	A,?DPH3
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX3,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+?XSTACK_DISP4_16:
+	XCH	A,?DPL4
+	ADD	A,XSP_L
+	XCH	A,?DPL4
+	XCH	A,?DPH4
+	ADDC	A,XSP_H
+	XCH	A,?DPH4
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX4,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+?XSTACK_DISP5_16:
+	XCH	A,?DPL5
+	ADD	A,XSP_L
+	XCH	A,?DPL5
+	XCH	A,?DPH5
+	ADDC	A,XSP_H
+	XCH	A,?DPH5
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX5,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+?XSTACK_DISP6_16:
+	XCH	A,?DPL6
+	ADD	A,XSP_L
+	XCH	A,?DPL6
+	XCH	A,?DPH6
+	ADDC	A,XSP_H
+	XCH	A,?DPH6
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX6,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+?XSTACK_DISP7_16:
+	XCH	A,?DPL7
+	ADD	A,XSP_L
+	XCH	A,?DPL7
+	XCH	A,?DPH7
+	ADDC	A,XSP_H
+	XCH	A,?DPH7
+#if (defined (__EXTENDED_DPTR__ ))
+	MOV	?DPX7,#BYTE3(sfb(XSTACK))
+#endif
+	RET
+#endif
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+
+    cfi ENDBLOCK ?XSTACK_DISP16
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Call function indirect.
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?CALL_IND
+;
+;	Description:
+;		Emulates 'CALL	@DPTR'
+;
+;	Register input:
+;		DPTR0 = Function address to call
+;
+;	Register output:
+;		A = Zero
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: 0        Requires DPS: 0
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?CALL_IND
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?CALL_IND
+    cfi BLOCK ?CALL_IND USING cfi_common
+    cfi NOFUNCTION
+?CALL_IND:
+	CLR	A
+	JMP	@A+DPTR
+    cfi ENDBLOCK ?CALL_IND
+	ENDMOD
+
+
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?POP_BIT_ISP
+;
+;	Description:
+; 		Restore spilled bit from idata stack.
+;
+;	Register input:
+;		NONE
+;
+;	Register output:
+;		C = restored bit
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?POP_BIT_ISP
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?POP_BIT_ISP
+
+    cfi BLOCK ?POP_BIT_ISP USING cfi_common
+    cfi NOFUNCTION
+
+?POP_BIT_ISP:
+      	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+      	MOV 	A,R0
+      	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 4
+     	MOV 	A,SP
+#if (__CORE__ == __CORE_EXTENDED1__)
+      	ADD 	A,#-5 	; 2 saved bytes and ret addr (3).
+#else
+      	ADD 	A,#-4 	; 2 saved bytes and ret addr (2).	
+#endif
+      	MOV 	R0,A
+    	MOV 	A,@R0
+   	MOV	C,ACC.7
+      	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+     	MOV 	R0,A
+  	POP 	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	RET
+    cfi ENDBLOCK ?POP_BIT_ISP
+	ENDMOD
+
+
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?POP_BIT_ESP
+;
+;	Description:
+; 		Restore spilled bit from extended stack.
+;
+;	Register input:
+;		NONE
+;
+;	Register output:
+;		C = restored bit
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: none
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;	Stack usage: ueage 7 bytes, stack after ret -1
+;
+;	NOTE: Find a better way and make me happy!
+;
+;-----------------------------------------------------------------------------
+	MODULE	?POP_BIT_ESP
+	RSEG	EXT_STACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?POP_BIT_ESP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	EXTERN	?ESP
+    cfi BLOCK ?POP_BIT_ESP USING cfi_common
+    cfi NOFUNCTION
+
+?POP_BIT_ESP:
+#if ((__NUMBER_OF_DPTRS__ > 1) && defined(__DPTR_SEPARATE__ ))
+	SELECT_DPTR0()
+#endif
+      	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+	MOV	A,R0
+      	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 4
+	MOV	A,R1
+      	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 5
+	MOV	A,R2
+      	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 6
+	MOV	A,R3
+      	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 7
+#if (__CORE__ == __CORE_EXTENDED1__)
+	MOV	A,R4
+      	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 8
+#endif
+	PUSH	DPL
+    cfi CFA_MACHINE MACHINE_SP - 8
+	PUSH	DPH
+    cfi CFA_MACHINE MACHINE_SP - 9
+
+#ifdef __EXTENDED_DPTR__
+      	PUSH	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 10
+	MOV     ?DPX,#BYTE3(sfb(EXT_STACK))
+#endif
+
+
+;; Get DPTR to point to element to unspill
+;; subtract size of spilled registers and the return value
+;;
+	MOV	A,SP
+	CLR	C
+
+#if ((__CORE__ == __CORE_EXTENDED1__) && (defined(__EXTENDED_DPTR__)))
+	SUBB	A,#12
+#elif (__CORE__ == __CORE_EXTENDED1__)
+	SUBB	A,#11
+#elif (defined(__EXTENDED_DPTR__))
+	SUBB	A,#10
+#else
+	SUBB	A,#9
+#endif
+	MOV	DPL,A
+	CLR	A
+        MOV     A,?ESP
+	SUBB	A,#0
+	ANL	A,#0x03         ; Maks out relevant ESP bits.
+	ORL     A,#(HIGH(sfb(EXT_STACK)) & 0xFC)
+	MOV	DPH,A
+
+;; We have to rearange the stack, save RET, ACC, and C to
+;; temp registers
+;;
+	MOVX	A,@DPTR
+	MOV	R0,A		; R0 = Cy
+	INC 	DPTR
+
+	MOVX	A,@DPTR
+	MOV	R2,A		; R2 = RET1
+	INC 	DPTR
+
+	MOVX	A,@DPTR
+	MOV	R3,A		; R3 = RET2
+	INC 	DPTR
+
+#if (__CORE__ == __CORE_EXTENDED1__)
+	MOVX	A,@DPTR
+	MOV	R4,A		; R4 = RET3
+	INC 	DPTR
+#endif
+
+	MOVX	A,@DPTR
+	MOV	R1,A		; R1 = Acc
+
+
+;; Make DPTR once again point to the value to unspill, 
+;; stack -1 from original ret value
+;;
+	CLR	C
+	MOV	A,DPL
+#if (__CORE__ == __CORE_EXTENDED1__)
+	SUBB	A,#4
+#else
+	SUBB	A,#3
+#endif
+	MOV	DPL,A
+	MOV	A,DPH
+	SUBB	A,#0
+	MOV	DPH,A
+
+
+;; rearange stack, we want RET at bottom, followed by A and then C,
+;; value to restore
+;;
+	MOV	A,R2
+	MOVX	@DPTR,A		; RET -> stack
+	INC	DPTR
+
+	MOV	A,R3
+	MOVX	@DPTR,A
+	INC	DPTR
+
+#if (__CORE__ == __CORE_EXTENDED1__)
+	MOV	A,R4
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+
+	MOV	A,R1		; ACC -> stack
+	MOVX	@DPTR,A
+	INC	DPTR
+
+	MOV	A,R0		; C -> stack
+	MOVX	@DPTR,A
+
+;; Make DPTR point to top of stack
+;;
+	MOV	A,DPL
+#if ((__CORE__ == __CORE_EXTENDED1__) && (defined(__EXTENDED_STACK__)))
+	ADD	A,#8
+#elif (__CORE__ == __CORE_EXTENDED1__)
+	ADD	A,#7
+#elif (defined(__EXTENDED_DPTR__))
+	ADD	A,#7
+#else
+	ADD	A,#6
+#endif
+	MOV	DPL,A
+	CLR	A
+	ADDC	A,DPH
+	MOV	DPH,A
+
+
+;; Restore saved values
+;;
+
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX		; restore DPTR
+    cfi CFA_MACHINE MACHINE_SP - 11
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 10
+	POP	DPL
+    cfi CFA_MACHINE MACHINE_SP - 9
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 8
+	MOV	R4,A		; restore (R4),R3,R2,R1,R0
+#endif
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 7
+	MOV	R3,A
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 6
+	MOV	R2,A
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 5
+	MOV	R1,A
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 4
+	MOV	R0,A
+	POP	A		; value to restore
+    cfi CFA_MACHINE MACHINE_SP - 3
+   	MOV	C,ACC.7
+	POP	A		; restore A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	RET
+    cfi ENDBLOCK ?POP_BIT_ESP
+	ENDMOD
+
+	END
+	
+;
+;   Revision control system
+;       $Log: iar_stack.s51 $
+;       Revision 1.36  2007/06/07 09:22:08Z  larssu
+;       NOROOT'ify RCODE segments
+;       Revision 1.35  2005/08/30 15:24:44Z  ola
+;       Revision 1.34  2005/01/26 10:21:32Z  ola
+;       Revision 1.33  2005/01/25 09:16:47Z  ola
+;       Revision 1.32  2004/11/23 08:57:12Z  owi
+;       Revision 1.31  2004/11/18 15:21:34Z  owi
+;       Revision 1.30  2004/11/17 08:58:29Z  owi
+;       Revision 1.29  2004/11/16 16:41:07Z  owi
+;       Revision 1.1  2003/05/13 14:07:26Z  owi
+;       Initial revision
+;
+	

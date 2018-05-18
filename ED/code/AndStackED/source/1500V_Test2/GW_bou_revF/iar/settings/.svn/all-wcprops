@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings
+END
+tx_adc.cspy.bat
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/tx_adc.cspy.bat
+END
+per_test.wsdt
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/per_test.wsdt
+END
+rx_print.wsdt
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/rx_print.wsdt
+END
+tx_adc.dbgdt
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/tx_adc.dbgdt
+END
+per_test.cspy.bat
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/per_test.cspy.bat
+END
+rx_print-5.wsdt
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/rx_print-5.wsdt
+END
+rx_print.cspy.bat
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/rx_print.cspy.bat
+END
+per_test.dbgdt
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/per_test.dbgdt
+END
+rx_print.dbgdt
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/rx_print.dbgdt
+END
+rx_print-6.wsdt
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/repos/stack_gw_6/!svn/ver/14/iar/settings/rx_print-6.wsdt
+END
+tx_adc.dni
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/tx_adc.dni
+END
+per_test.dni
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/per_test.dni
+END
+rx_print.dni
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/repos/stack_gw_6/!svn/ver/1/iar/settings/rx_print.dni
+END

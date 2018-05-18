@@ -1,0 +1,51 @@
+[Version]
+Signature="$Windows NT$"
+Class=Ports
+ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}
+Provider=%ANDSOLAR%
+LayoutFile=layout.inf
+DriverVer=02/03/2009,1.0.2.0
+
+[Manufacturer]
+%ANDSOLAR%=GSerialDeviceList
+
+[SourceDisksFiles]
+
+[SourceDisksNames]
+
+[GSerialDeviceList]
+%GSERIAL%=GSerialInstall, USB\VID_11a0&PID_0232
+#USB\VID_0525&PID_A4A7
+
+[DestinationDirs]
+;DefaultDestDir=10,System32\Drivers
+DefaultDestDir=12,
+
+[GSerialInstall]
+CopyFiles=GSerialCopyFiles
+AddReg=GSerialAddReg
+
+[GSerialCopyFiles]
+usbser.sys,,,0x20
+
+[GSerialAddReg]
+HKR,,DevLoader,,*ntkern
+HKR,,NTMPDriver,,usbser.sys
+HKR,,EnumPropPages32,,"MsPorts.dll,SerialPortPropPageProvider"
+
+[GSerialInstall.Services]
+AddService = usbser,0x0002,GSerialService
+
+[GSerialService]
+DisplayName = %GSERIAL_DISPLAY_NAME%
+ServiceType = 1                  ; SERVICE_KERNEL_DRIVER
+StartType = 3                    ; SERVICE_DEMAND_START
+ErrorControl = 1                 ; SERVICE_ERROR_NORMAL
+;ServiceBinary = %10%\System32\Drivers\usbser.sys
+ServiceBinary = %12%\usbser.sys
+LoadOrderGroup = Base
+
+[Strings]
+ANDSOLAR = "AND_Solar"
+GSERIAL = "Gateway Serial v1"
+GSERIAL_DISPLAY_NAME = "USB Gateway Serial Driver"

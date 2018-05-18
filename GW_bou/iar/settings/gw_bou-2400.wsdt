@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Workspace>
+  <ConfigDictionary>
+    
+    
+    
+  <CurrentConfigs><Project>radio_gateway/Build .hex for CC2511 Dongle</Project><Project>usb_boot_sector/Build .hex for CC2511 Dongle</Project><Project>templproj/Debug</Project><Project>usb_boot_sector_windows/Build .hex for CC2511 Dongle</Project></CurrentConfigs><CurrentProj>radio_gateway</CurrentProj><OverviewSelected>1</OverviewSelected></ConfigDictionary>
+  <Desktop>
+    <Static>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>287</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+      <Build>
+        
+        
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1215</ColumnWidth1><ColumnWidth2>324</ColumnWidth2><ColumnWidth3>81</ColumnWidth3></Build>
+    <Find-in-Files><ColumnWidth0>580</ColumnWidth0><ColumnWidth1>82</ColumnWidth1><ColumnWidth2>994</ColumnWidth2></Find-in-Files></Static>
+    <Windows>
+      
+      
+    <Wnd2>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-21790-17426</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>&lt;ws></ExpandedNode><ExpandedNode>&lt;ws>/radio_gateway</ExpandedNode><ExpandedNode>&lt;ws>/usb_boot_sector</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd2><Wnd3>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-711-18435</Identity>
+            <TabName>Build</TabName>
+            <Factory>Build</Factory>
+            <Session/>
+          </Tab>
+        <Tab><Identity>TabID-20869-2832</Identity><TabName>Find in Files</TabName><Factory>Find-in-Files</Factory><Session/></Tab></Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd3></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>E:\ProjectsB\gateway-stack\code\gateway\source\radio.c</Filename><XPos>0</XPos><YPos>42</YPos><SelStart>4253</SelStart><SelEnd>4253</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\ProjectsB\gateway-stack\code\gateway\source\main.c</Filename><XPos>0</XPos><YPos>865</YPos><SelStart>34301</SelStart><SelEnd>34301</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\ProjectsB\gateway-stack\code\gateway\include\main.h</Filename><XPos>0</XPos><YPos>12</YPos><SelStart>2087</SelStart><SelEnd>2087</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\ProjectsB\gateway-stack\code\gateway\source\reed-solomon.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>66</SelStart><SelEnd>66</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\ProjectsB\gateway-stack\code\gateway\source\dma.c</Filename><XPos>0</XPos><YPos>78</YPos><SelStart>5211</SelStart><SelEnd>5211</SelEnd></Tab><ActiveTab>4</ActiveTab><Tab><Factory>TextEditor</Factory><Filename>E:\ProjectsB\gateway-stack\code\gateway\source\bou_main.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>819</SelStart><SelEnd>819</SelEnd></Tab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-0088f8a0><key>iaridepm.enu1</key></Toolbar-0088f8a0></Sizes></Row0></Top><Left><Row0><Sizes><Wnd2><Rect><Top>-2</Top><Left>-2</Left><Bottom>672</Bottom><Right>361</Right><x>-2</x><y>-2</y><xscreen>200</xscreen><yscreen>200</yscreen><sizeHorzCX>119048</sizeHorzCX><sizeHorzCY>205339</sizeHorzCY><sizeVertCX>216071</sizeVertCX><sizeVertCY>691992</sizeVertCY></Rect></Wnd2></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes><Wnd3><Rect><Top>-2</Top><Left>-2</Left><Bottom>258</Bottom><Right>1682</Right><x>-2</x><y>-2</y><xscreen>1684</xscreen><yscreen>260</yscreen><sizeHorzCX>1002381</sizeHorzCX><sizeHorzCY>266940</sizeHorzCY><sizeVertCX>119048</sizeVertCX><sizeVertCY>205339</sizeVertCY></Rect></Wnd3></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Workspace>
+
+

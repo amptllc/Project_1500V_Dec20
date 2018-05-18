@@ -1,0 +1,1653 @@
+###############################################################################
+#                                                                             #
+#     IAR Systems 8051 Assembler V7.30A/W32 02/Apr/2018  11:06:32             #
+#     Copyright 2007 IAR Systems. All rights reserved.                        #
+#                                                                             #
+#           Target option =  plain                                            #
+#           Source file   =  E:\Project_1500V_dec20\ED\code\Library\clib\cmain.s51#
+#           List file     =  E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\List\cmain.lst#
+#           Object file   =  E:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\cmain.r51#
+#           Command line  =  E:\Project_1500V_dec20\ED\code\Library\clib\cmain.s51 #
+#                            -v0 -D__CORE__=1 -D__CODE_MODEL__=1              #
+#                            -D__DATA_MODEL__=2 -D__CALLING_CONVENTION__=4    #
+#                            -D__NUMBER_OF_DPTRS__=1                          #
+#                            -OE:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\Obj\ #
+#                            -s+ -M<>                                         #
+#                            -LE:\Project_1500V_dec20\ED\iar\Build .hex for CC2510\List\ #
+#                            -t8 -xDI -IC:\IARSystems-CD-730B\8051\INC\       #
+#                            -Dchip=2510 -D_LOW_IMAGE_ -w+                    #
+#                                                                             #
+###############################################################################
+
+      1    000000          /**************************************************
+      2    000000           *
+      3    000000           * System initialization code for the 8051 IAR
+                            Systems C/EC++ Compiler.
+      4    000000           *
+      5    000000           * Copyright 2004-2005 IAR Systems. All rights
+                            reserved.
+      6    000000           *
+      7    000000           * $Revision: 1.14 $
+      8    000000           *
+      9    000000           **************************************************/
+     10    000000          
+     11    000000          #include "iar_common.h"
+     12    000000          
+     13    000000                  EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+     13.1  000000          #ifdef __EXTENDED_DPTR__
+     13.2  000000          #endif ; __EXTENDED_DPTR__
+     13.3  000000          #if (__NUMBER_OF_DPTRS__ > 1)
+     13.4  000000          #ifdef __DPTR_SEPARATE__
+     13.5  000000          #ifdef __EXTENDED_DPTR__
+     13.6  000000          #endif ; __EXTENDED_DPTR__
+     13.7  000000          #if (__NUMBER_OF_DPTRS__ > 2)
+     13.8  000000          #ifdef __EXTENDED_DPTR__
+     13.9  000000          #endif ; __EXTENDED_DPTR__
+     13.10 000000          #endif ; __NUMBER_OF_DPTRS__ > 2
+     13.11 000000          #if (__NUMBER_OF_DPTRS__ > 3)
+     13.12 000000          #ifdef __EXTENDED_DPTR__
+     13.13 000000          #endif ; __EXTENDED_DPTR__
+     13.14 000000          #endif ; __NUMBER_OF_DPTRS__ > 3
+     13.15 000000          #if (__NUMBER_OF_DPTRS__ > 4)
+     13.16 000000          #ifdef __EXTENDED_DPTR__
+     13.17 000000          #endif ; __EXTENDED_DPTR__
+     13.18 000000          #endif ; __NUMBER_OF_DPTRS__ > 4
+     13.19 000000          #if (__NUMBER_OF_DPTRS__ > 5)
+     13.20 000000          #ifdef __EXTENDED_DPTR__
+     13.21 000000          #endif ; __EXTENDED_DPTR__
+     13.22 000000          #endif ; __NUMBER_OF_DPTRS__ > 5
+     13.23 000000          #if (__NUMBER_OF_DPTRS__ > 6)
+     13.24 000000          #ifdef __EXTENDED_DPTR__
+     13.25 000000          #endif ; __EXTENDED_DPTR__
+     13.26 000000          #endif ; __NUMBER_OF_DPTRS__ > 6
+     13.27 000000          #if (__NUMBER_OF_DPTRS__ > 7)
+     13.28 000000          #ifdef __EXTENDED_DPTR__
+     13.29 000000          #endif ; __EXTENDED_DPTR__
+     13.30 000000          #endif ; __NUMBER_OF_DPTRS__ > 7
+     13.31 000000          #endif ; __DPTR_SEPARATE__
+     13.32 000000          #endif ; __NUMBER_OF_DPTRS__ > 1
+     13.33 000000                  ENDM
+     14    000000          
+     15    000000          
+     16    000000          #define XRSEGCSTART RSEG CSTART:CODE:NOROOT
+     17    000000          
+     18    000000                  MODULE ?cmain
+     19    000000          
+     20    000000                  EXTERN  main             ; Where to begin
+                                                             execution
+     21    000000                  EXTERN  exit             ; Where to go when
+                            done
+     22    000000          
+     23    000000          
+     24    000000          //--------------------------------------------------
+                           --------------------
+     25    000000          //
+     26    000000          // Catch jump from cstartup.s51
+     27    000000          //
+     28    000000          //--------------------------------------------------
+                           --------------------
+     29    000000          
+     30    000000                  XRSEGCSTART
+     31    000000                  PUBLIC  ?cmain
+     32    000000                  REQUIRE ?call_main
+     33    000000          
+     34    000000          ?cmain:
+     35    000000          
+     36    000000          //--------------------------------------------------
+                           ----------------------
+     37    000000          //
+     38    000000          // Call __low_level_init to perform initialization
+                            before initializing
+     39    000000          // segments and calling main. If the function
+                            returns 0 no segment
+     40    000000          // initialization should take place.
+     41    000000          //
+     42    000000          // Link with your own version of __low_level_init to
+                            override the
+     43    000000          // default action: to do nothing but return
+                            1.
+     44    000000          //
+     45    000000          //--------------------------------------------------
+                           ----------------------
+     46    000000          
+     47    000000                  RSEG    CSTART:CODE:NOROOT
+     48    000000                  EXTERN  __low_level_init
+     49    000000                  PUBLIC  __low_level_init_call
+     50    000000          
+     51    000000          __low_level_init_call:
+     52    000000          
+     53    000000 12....           LCALL   __low_level_init
+     54    000003 B90003           CJNE    R1,#0,__init_segments
+     55    000006          
+     56    000006                  //------------------------------------------
+                           -------------
+     57    000006                  //
+     58    000006                  // Jump to the code that performs the rest
+                            of the system
+     59    000006                  // initialization before calling main().
+     60    000006                  //
+     61    000006                  //------------------------------------------
+                           -------------
+     62    000006          
+     63    000006 02....           LJMP    __skip_segment_init     ; skip
+                                                                    segment
+                                                                    initializat
+                                                                   ion
+     64    000009          
+     65    000009          
+     66    000009          //--------------------------------------------------
+                           ----------------------
+     67    000009          //
+     68    000009          // Segment initialization:
+     69    000009          //
+     70    000009          // Initialization for unused segments will not be
+                            included in the code
+     71    000009          //
+     72    000009          // xxx_Z  -- uninitialized data that are filled with
+                            zeros.
+     73    000009          // xxx_I  -- initialized data that gets the values
+                            from the corresponding
+     74    000009          //           xxx_ID segment.
+     75    000009          //
+     76    000009          //--------------------------------------------------
+                           ----------------------
+     77    000009          
+     78    000009          __init_segments:
+     79    000009          
+     80    000009          
+     81    000009          //--------------------------------------------------
+                           ----------------------
+     82    000009          //
+     83    000009          // Clear the BDATA_Z segment
+     84    000009          //
+     85    000009          
+     86    000000                  RSEG    BDATA_Z:DATA:NOROOT
+     87    000000                  RSEG    CSTART:CODE:NOROOT
+     88    000000                  PUBLIC  __INIT_BDATA_Z
+     89    000000          
+     90    000000          __INIT_BDATA_Z:
+     91    000000 E4               CLR     A
+     92    000001 79..             MOV     R1,#sfb(BDATA_Z)
+     93    000003 78..             MOV     R0,#sizeof(BDATA_Z)
+     94    000005 B80002           CJNE    R0,#0,BDATA_ZERO
+     95    000008 8004             SJMP    BDATA_ZERO_OUT
+     96    00000A          BDATA_ZERO:
+     97    00000A F7               MOV     @R1,A
+     98    00000B 09               INC     R1
+     99    00000C D8FC             DJNZ    R0,BDATA_ZERO
+    100    00000E          BDATA_ZERO_OUT:
+    101    00000E          
+    102    00000E          
+    103    00000E          //--------------------------------------------------
+                           ----------------------
+    104    00000E          //
+    105    00000E          // Clear the DATA_Z segment
+    106    00000E          //
+    107    00000E          
+    108    000000                  RSEG    DATA_Z:DATA:NOROOT
+    109    000000                  RSEG    CSTART:CODE:NOROOT
+    110    000000                  PUBLIC  __INIT_DATA_Z
+    111    000000          
+    112    000000          __INIT_DATA_Z:
+    113    000000 E4               CLR     A
+    114    000001 79..             MOV     R1,#sfb(DATA_Z)
+    115    000003 78..             MOV     R0,#sizeof(DATA_Z)
+    116    000005 B80002           CJNE    R0,#0,DATA_ZERO
+    117    000008 8004             SJMP    DATA_ZERO_OUT
+    118    00000A          DATA_ZERO:
+    119    00000A F7               MOV     @R1,A
+    120    00000B 09               INC     R1
+    121    00000C D8FC             DJNZ    R0,DATA_ZERO
+    122    00000E          DATA_ZERO_OUT:
+    123    00000E          
+    124    00000E          
+    125    00000E          //--------------------------------------------------
+                           ----------------------
+    126    00000E          //
+    127    00000E          // Clear the IDATA_Z segment
+    128    00000E          //
+    129    00000E          
+    130    000000                  RSEG    IDATA_Z:IDATA:NOROOT
+    131    000000                  RSEG    CSTART:CODE:NOROOT
+    132    000000                  PUBLIC  __INIT_IDATA_Z
+    133    000000          
+    134    000000          __INIT_IDATA_Z:
+    135    000000 E4               CLR     A
+    136    000001 79..             MOV     R1,#sfb(IDATA_Z)
+    137    000003 78..             MOV     R0,#sizeof(IDATA_Z)
+    138    000005 B80002           CJNE    R0,#0,IDATA_ZERO
+    139    000008 8004             SJMP    IDATA_ZERO_OUT
+    140    00000A          IDATA_ZERO:
+    141    00000A F7               MOV     @R1,A
+    142    00000B 09               INC     R1
+    143    00000C D8FC             DJNZ    R0,IDATA_ZERO
+    144    00000E          IDATA_ZERO_OUT:
+    145    00000E          
+    146    00000E          
+    147    00000E          //--------------------------------------------------
+                           ----------------------
+    148    00000E          //
+    149    00000E          // Clear the PDATA_Z segment
+    150    00000E          //
+    151    00000E          
+    152    000000                  RSEG    PDATA_Z:XDATA:NOROOT
+    153    000000                  RSEG    CSTART:CODE:NOROOT
+    154    000000                  PUBLIC  __INIT_PDATA_Z
+    155    000000          
+    156    000000          __INIT_PDATA_Z:
+    157    000000 E4               CLR     A
+    158    000001 79..             MOV     R1,#LOW(sfb(PDATA_Z))
+    159    000003 78..             MOV     R0,#sizeof(PDATA_Z)
+    160    000005 B80002           CJNE    R0,#0,PDATA_ZERO
+    161    000008 8004             SJMP    PDATA_ZERO_OUT
+    162    00000A          PDATA_ZERO:
+    163    00000A F3               MOVX    @R1,A
+    164    00000B 09               INC     R1
+    165    00000C D8FC             DJNZ    R0,PDATA_ZERO
+    166    00000E          PDATA_ZERO_OUT:
+    167    00000E          
+    168    00000E          
+    169    00000E          
+    170    00000E          
+    171    00000E          //--------------------------------------------------
+                           ----------------------
+    172    00000E          //
+    173    00000E          // Clear the XDATA_Z segment
+    174    00000E          //
+    175    00000E          
+    176    000000                  RSEG    XDATA_Z:XDATA:NOROOT
+    177    000000                  RSEG    CSTART:CODE:NOROOT
+    178    000000                  PUBLIC  __INIT_XDATA_Z
+    179    000000          
+    180    000000          __INIT_XDATA_Z:
+    181    000000 E4               CLR     A
+    182    000001 90....           MOV     DPTR,#sfb(XDATA_Z)
+    183    000004 78..             MOV     R0,#(low(sizeof(XDATA_Z) +
+                                               1))
+    184    000006 79..             MOV     R1,#(high(sizeof(XDATA_Z) +
+                                               0x0100))
+    185    000008 8002             SJMP    XDATA_ZERO_TEST
+    186    00000A          XDATA_ZERO:
+    187    00000A F0               MOVX    @DPTR,A
+    188    00000B A3               INC     DPTR
+    189    00000C          XDATA_ZERO_TEST:
+    190    00000C D8FC             DJNZ    R0,XDATA_ZERO
+    191    00000E D9FA             DJNZ    R1,XDATA_ZERO
+    192    000010          
+    193    000010          
+    194    000010          //--------------------------------------------------
+                           ----------------------
+    195    000010          //
+    196    000010          // Clear the IXDATA_Z segment
+    197    000010          //
+    198    000010          
+    199    000000                  RSEG    IXDATA_Z:XDATA:NOROOT
+    200    000000                  RSEG    CSTART:CODE:NOROOT
+    201    000000                  PUBLIC  __INIT_IXDATA_Z
+    202    000000          
+    203    000000          __INIT_IXDATA_Z:
+    204    000000 E4               CLR     A
+    205    000001 90....           MOV     DPTR,#sfb(IXDATA_Z)
+    206    000004 78..             MOV     R0,#(low(sizeof(IXDATA_Z) +
+                                               1))
+    207    000006 79..             MOV     R1,#(high(sizeof(IXDATA_Z) +
+                                               0x0100))
+    208    000008 8002             SJMP    IXDATA_ZERO_TEST
+    209    00000A          IXDATA_ZERO:
+    210    00000A F0               MOVX    @DPTR,A
+    211    00000B A3               INC     DPTR
+    212    00000C          IXDATA_ZERO_TEST:
+    213    00000C D8FC             DJNZ    R0,IXDATA_ZERO
+    214    00000E D9FA             DJNZ    R1,IXDATA_ZERO
+    215    000010          
+    216    000010          
+    217    000010          //--------------------------------------------------
+                           ----------------------
+    218    000010          //
+    219    000010          // Clear the FAR_Z segment
+    220    000010          //
+    221    000010          
+    222    000010          #if (defined(__EXTENDED_DPTR__))
+    230    000010            #if ( __CORE__ == __CORE_EXTENDED1__ )
+    232    000010            #else
+    236    000010            #endif
+    247    000010          #endif
+    248    000010          
+    249    000010          
+    250    000010          //--------------------------------------------------
+                           ----------------------
+    251    000010          //
+    252    000010          // Clear the HUGE_Z segment
+    253    000010          //
+    254    000010          
+    255    000010          #if (defined(__EXTENDED_DPTR__))
+    263    000010            #if ( __CORE__ == __CORE_EXTENDED1__ )
+    265    000010            #else
+    269    000010            #endif
+    282    000010          #endif
+    283    000010          
+    284    000010          
+    285    000010          //--------------------------------------------------
+                           ----------------------
+    286    000010          //
+    287    000010          //  Initializise the BDATA_I segment
+    288    000010          //
+    289    000010          
+    290    000000                  RSEG    BDATA_I:DATA:NOROOT     
+    291    000000                  RSEG    BDATA_ID:CONST:NOROOT
+    292    000000                  RSEG    CSTART:CODE:NOROOT
+    293    000000                  PUBLIC  __INIT_BDATA_I
+    294    000000          
+    295    000000          __INIT_BDATA_I:
+    296    000000 78..             MOV     R0,#sfb(BDATA_I)
+    297    000002 90....           MOV     DPTR,#sfb(BDATA_ID)
+    298    000005 7A..             MOV     R2,#sizeof(BDATA_I)
+    299    000007 BA0002           CJNE    R2,#0,BDATA_INIT
+    300    00000A 8007             SJMP    BDATA_INIT_OUT
+    301    00000C          BDATA_INIT:
+    302    00000C E4               CLR     A
+    303    00000D 93               MOVC    A,@A+DPTR
+    304    00000E A3               INC     DPTR
+    305    00000F F6               MOV     @R0,A
+    306    000010 08               INC     R0
+    307    000011 DAF9             DJNZ    R2,BDATA_INIT
+    308    000013          BDATA_INIT_OUT:
+    309    000013          
+    310    000013          
+    311    000013          //--------------------------------------------------
+                           ----------------------
+    312    000013          //
+    313    000013          //  Initializise the DATA_I segment
+    314    000013          //
+    315    000013          
+    316    000000                  RSEG    DATA_I:DATA:NOROOT      
+    317    000000                  RSEG    DATA_ID:CONST:NOROOT
+    318    000000                  RSEG    CSTART:CODE:NOROOT
+    319    000000                  PUBLIC  __INIT_DATA_I
+    320    000000          
+    321    000000          __INIT_DATA_I:
+    322    000000 78..             MOV     R0,#sfb(DATA_I)
+    323    000002 90....           MOV     DPTR,#sfb(DATA_ID)
+    324    000005 7A..             MOV     R2,#sizeof(DATA_I)
+    325    000007 BA0002           CJNE    R2,#0,DATA_INIT
+    326    00000A 8007             SJMP    DATA_INIT_OUT
+    327    00000C          DATA_INIT:
+    328    00000C E4               CLR     A
+    329    00000D 93               MOVC    A,@A+DPTR
+    330    00000E A3               INC     DPTR
+    331    00000F F6               MOV     @R0,A
+    332    000010 08               INC     R0
+    333    000011 DAF9             DJNZ    R2,DATA_INIT
+    334    000013          DATA_INIT_OUT:
+    335    000013          
+    336    000013          
+    337    000013          //--------------------------------------------------
+                           ----------------------
+    338    000013          //
+    339    000013          //  Initializise the IDATA_I segment
+    340    000013          //
+    341    000013          
+    342    000000                  RSEG    IDATA_I:IDATA:NOROOT
+    343    000000                  RSEG    IDATA_ID:CODE:NOROOT    
+    344    000000                  RSEG    CSTART:CODE:NOROOT
+    345    000000                  PUBLIC  __INIT_IDATA_I
+    346    000000          
+    347    000000          __INIT_IDATA_I:
+    348    000000 78..             MOV     R0,#sfb(IDATA_I)
+    349    000002 90....           MOV     DPTR,#sfb(IDATA_ID)
+    350    000005 7A..             MOV     R2,#sizeof(IDATA_I)
+    351    000007 BA0002           CJNE    R2,#0,IDATA_INIT
+    352    00000A 8007             SJMP    IDATA_INIT_OUT
+    353    00000C          IDATA_INIT:
+    354    00000C E4               CLR     A
+    355    00000D 93               MOVC    A,@A+DPTR
+    356    00000E A3               INC     DPTR
+    357    00000F F6               MOV     @R0,A
+    358    000010 08               INC     R0
+    359    000011 DAF9             DJNZ    R2,IDATA_INIT
+    360    000013          IDATA_INIT_OUT:
+    361    000013          
+    362    000013          
+    363    000013          //--------------------------------------------------
+                           ----------------------
+    364    000013          //
+    365    000013          //  Initializise the PDATA_I segment
+    366    000013          //
+    367    000013          
+    368    000000                  RSEG    PDATA_I:XDATA:NOROOT
+    369    000000                  RSEG    PDATA_ID:CODE:NOROOT
+    370    000000                  RSEG    CSTART:CODE:NOROOT
+    371    000000                  PUBLIC  __INIT_PDATA_I
+    372    000000          
+    373    000000          __INIT_PDATA_I:
+    374    000000 78..             MOV     R0,#LOW(sfb(PDATA_I))
+    375    000002 90....           MOV     DPTR,#sfb(PDATA_ID)
+    376    000005 7A..             MOV     R2,#sizeof(PDATA_I)
+    377    000007 BA0002           CJNE    R2,#0,PDATA_INIT
+    378    00000A 8007             SJMP    PDATA_INIT_OUT
+    379    00000C          PDATA_INIT:
+    380    00000C E4               CLR     A
+    381    00000D 93               MOVC    A,@A+DPTR
+    382    00000E A3               INC     DPTR
+    383    00000F F2               MOVX    @R0,A
+    384    000010 08               INC     R0
+    385    000011 DAF9             DJNZ    R2,PDATA_INIT
+    386    000013          PDATA_INIT_OUT:
+    387    000013          
+    388    000013          
+    389    000013          //--------------------------------------------------
+                           ----------------------
+    390    000013          //
+    391    000013          //  Initializise the XDATA_I segment
+    392    000013          //
+    393    000013          
+    394    000000                  RSEG    XDATA_I:XDATA:NOROOT
+    395    000000                  RSEG    XDATA_ID:CODE:NOROOT    
+    396    000000                  RSEG    CSTART:CODE:NOROOT
+    397    000000                  PUBLIC  __INIT_XDATA_I
+    398    000000          
+    399    000000          __INIT_XDATA_I:
+    400    000000 90....           MOV     DPTR,#sfb(XDATA_I)
+    401    000003          #if (defined(__EXTENDED_DPTR__) && ( __CORE__ !=
+                            __CORE_EXTENDED1__ ))
+    403    000003          #endif
+    404    000003 AA82             MOV     R2,DPL
+    405    000005 AB83             MOV     R3,DPH
+    406    000007 90....           MOV     DPTR,#sfb(XDATA_ID)
+    407    00000A 78..             MOV     R0,#(low(sizeof(XDATA_I) +
+                                               1))
+    408    00000C 79..             MOV     R1,#(high(sizeof(XDATA_I) +
+                                               0x0100))
+    409    00000E 8015             SJMP    XDATA_INIT_TEST
+    410    000010          XDATA_INIT:
+    411    000010 E4               CLR     A
+    412    000011 93               MOVC    A,@A+DPTR
+    413    000012 A3               INC     DPTR
+    414    000013 AC82             MOV     R4,DPL
+    415    000015 AD83             MOV     R5,DPH
+    416    000017 8A82             MOV     DPL,R2
+    417    000019 8B83             MOV     DPH,R3
+    418    00001B F0               MOVX    @DPTR,A
+    419    00001C A3               INC     DPTR
+    420    00001D AA82             MOV     R2,DPL
+    421    00001F AB83             MOV     R3,DPH
+    422    000021 8C82             MOV     DPL,R4
+    423    000023 8D83             MOV     DPH,R5
+    424    000025          XDATA_INIT_TEST:
+    425    000025 D8E9             DJNZ    R0,XDATA_INIT
+    426    000027 D9E7             DJNZ    R1,XDATA_INIT
+    427    000029          
+    428    000029          
+    429    000029          //--------------------------------------------------
+                           ----------------------
+    430    000029          //
+    431    000029          //  Initializise the IXDATA_I segment
+    432    000029          //
+    433    000029          
+    434    000000                  RSEG    IXDATA_I:XDATA:NOROOT
+    435    000000                  RSEG    IXDATA_ID:CODE:NOROOT   
+    436    000000                  RSEG    CSTART:CODE:NOROOT
+    437    000000                  PUBLIC  __INIT_IXDATA_I
+    438    000000          
+    439    000000          __INIT_IXDATA_I:
+    440    000000 90....           MOV     DPTR,#sfb(IXDATA_I)
+    441    000003          #if (defined(__EXTENDED_DPTR__) && ( __CORE__ !=
+                            __CORE_EXTENDED1__ ))
+    443    000003          #endif
+    444    000003 AA82             MOV     R2,DPL
+    445    000005 AB83             MOV     R3,DPH
+    446    000007 90....           MOV     DPTR,#sfb(IXDATA_ID)
+    447    00000A 78..             MOV     R0,#(low(sizeof(IXDATA_I) +
+                                               1))
+    448    00000C 79..             MOV     R1,#(high(sizeof(IXDATA_I) +
+                                               0x0100))
+    449    00000E 8015             SJMP    IXDATA_INIT_TEST
+    450    000010          IXDATA_INIT:
+    451    000010 E4               CLR     A
+    452    000011 93               MOVC    A,@A+DPTR
+    453    000012 A3               INC     DPTR
+    454    000013 AC82             MOV     R4,DPL
+    455    000015 AD83             MOV     R5,DPH
+    456    000017 8A82             MOV     DPL,R2
+    457    000019 8B83             MOV     DPH,R3
+    458    00001B F0               MOVX    @DPTR,A
+    459    00001C A3               INC     DPTR
+    460    00001D AA82             MOV     R2,DPL
+    461    00001F AB83             MOV     R3,DPH
+    462    000021 8C82             MOV     DPL,R4
+    463    000023 8D83             MOV     DPH,R5
+    464    000025          IXDATA_INIT_TEST:
+    465    000025 D8E9             DJNZ    R0,IXDATA_INIT
+    466    000027 D9E7             DJNZ    R1,IXDATA_INIT
+    467    000029          
+    468    000029          
+    469    000029          //--------------------------------------------------
+                           ----------------------
+    470    000029          //
+    471    000029          //  Initializise the FAR_I segment
+    472    000029          //
+    473    000029          
+    474    000029          #if (defined(__EXTENDED_DPTR__))
+    475    000029            #if (__NUMBER_OF_DPTRS__ == 1)
+    490    000029              #if ( __CORE__ == __CORE_EXTENDED1__ )
+    492    000029              #else
+    496    000029              #endif
+    522    000029            #elif (__NUMBER_OF_DPTRS__ > 1)
+    534    000029              #ifdef __DPTR_SHADOWED__
+    551    000029              #else ; __DPTR_SEPARATE__
+    557    000029                #if ( __CORE__ == __CORE_EXTENDED1__
+                            )
+    559    000029                #else
+    563    000029                #endif
+    565    000029                #if ( __CORE__ == __CORE_EXTENDED1__
+                            )
+    568    000029                #else
+    573    000029                #endif
+    576    000029              #endif
+    596    000029            #else
+    597    000029              #error "You must define __NUMBER_OF_DPTRS__"
+    598    000029            #endif
+    600    000029          #endif ; __EXTENDED_DPTR__
+    601    000029          
+    602    000029          
+    603    000029          //--------------------------------------------------
+                           ----------------------
+    604    000029          //
+    605    000029          //  Initializise the HUGE_I segment
+    606    000029          //
+    607    000029          
+    608    000029          #if (defined(__EXTENDED_DPTR__))
+    609    000029            #if (__NUMBER_OF_DPTRS__ == 1)
+    625    000029              #if ( __CORE__ == __CORE_EXTENDED1__ )
+    627    000029              #else
+    631    000029              #endif
+    659    000029            #elif (__NUMBER_OF_DPTRS__ > 1)
+    671    000029              #ifdef __DPTR_SHADOWED__
+    689    000029              #else ; __DPTR_SEPARATE__
+    695    000029                #if ( __CORE__ == __CORE_EXTENDED1__
+                            )
+    697    000029                #else
+    701    000029                #endif
+    703    000029                #if ( __CORE__ == __CORE_EXTENDED1__
+                            )
+    706    000029                #else
+    712    000029                #endif
+    715    000029              #endif
+    737    000029            #else
+    738    000029              #error "You must define __NUMBER_OF_DPTRS__"
+    739    000029            #endif
+    741    000029          #endif ;__EXTENDED_DPTR__ far/huge initialized
+                            data
+    742    000029          
+    743    000029          __skip_segment_init:
+    744    000029          
+    745    000029          
+    746    000029          // -------------------------------------------------
+                           -------------
+    747    000029          // Call constructors of static objects.
+    748    000029          // ====================================
+    749    000029          //
+    750    000029          //   This code will only be used if any EC++
+    751    000029          //   modules defines global objects that need
+                            to
+    752    000029          //   have its constructor called before main.
+    753    000029          //
+    754    000029          //--------------------------------------------------
+                           -------------
+    755    000029          
+    756    000029          #if (defined(__DLIB_BUILD__) )
+    763    000029            #if (__CODE_MODEL__ == __CM_BANKED__)
+    768    000029              #ifdef __EXTENDED_DPTR__
+    770    000029              #endif
+    773    000029            #elif (__CORE__ == __CORE_EXTENDED2__ )
+    777    000029            #else
+    779    000029            #endif
+    781    000029          #endif ; __DLIB_BUILD__
+    782    000029          
+    783    000029          
+    784    000029          // -----------------------------------------------
+    785    000029          // Call main() with no arguments and then exit using
+                            the return value
+    786    000029          // of main as the parameter.
+    787    000029          //
+    788    000029          
+    789    000000                  XRSEGCSTART
+    790    000000                  PUBLIC  ?call_main
+    791    000000          
+    792    000000          ?call_main:
+    793    000000          
+    794    000000            #if ( __CODE_MODEL__ == __CM_BANKED__)
+    799    000000              #ifdef __EXTENDED_DPTR__
+    801    000000              #endif
+    807    000000              #ifdef __EXTENDED_DPTR__
+    809    000000              #endif
+    813    000000            #elif (__CODE_MODEL__ == __CM_BANKED_EXT2__)
+    822    000000            #else
+    823    000000          loop_call_main:
+    824    000000 12....               LCALL   main
+    825    000003 00               nop
+    826    000004 80FA             sjmp loop_call_main
+    827    000006                  //LCALL   exit
+    828    000006            #endif
+    829    000006          
+    830    000006                  ENDMOD
+
+
+EOF                  DELIMITER 
+\n                   DELIMITER 
+                     DELIMITER 
+!                    OPERATOR 
+!=                   OPERATOR 
+%                    OPERATOR 
+&                    OPERATOR 
+&&                   OPERATOR 
+(                    OPERATOR 
+(                    DELIMITER 
+)                    OPERATOR 
+)                    DELIMITER 
+*                    OPERATOR 
++                    OPERATOR 
+,                    DELIMITER 
+-                    OPERATOR 
+/                    OPERATOR 
+:                    DELIMITER 
+;                    DELIMITER 
+;                    Target symbol: 23 
+<                    OPERATOR 
+<<                   OPERATOR 
+<=                   OPERATOR 
+<>                   OPERATOR 
+=                    OPERATOR 
+=                    DIRECTIVE 
+==                   OPERATOR 
+>                    OPERATOR 
+>=                   OPERATOR 
+>>                   OPERATOR 
+?XSP                 Target symbol: 0 
+@                    DELIMITER 
+A                    REGISTER 
+AB                   REGISTER 
+ACALL                MNEMONIC 
+ADD                  MNEMONIC 
+ADDC                 MNEMONIC 
+AJMP                 MNEMONIC 
+ALIAS                DIRECTIVE 
+ALIGN                DIRECTIVE 
+ALIGNRAM             DIRECTIVE 
+AND                  OPERATOR 
+ANL                  MNEMONIC 
+ARGFRAME             DIRECTIVE 
+ASEG                 DIRECTIVE 
+ASEGN                DIRECTIVE 
+ASSIGN               DIRECTIVE 
+B                    REGISTER 
+BINAND               OPERATOR 
+BINNOT               OPERATOR 
+BINOR                OPERATOR 
+BINXOR               OPERATOR 
+BIT                  SEGMENT TYPE 
+BITAND               OPERATOR 
+BITNOT               OPERATOR 
+BITOR                OPERATOR 
+BITXOR               OPERATOR 
+BREAK                DIRECTIVE 
+BYTE                 Target symbol: 524288 
+BYTE1                OPERATOR 
+BYTE2                OPERATOR 
+BYTE3                OPERATOR 
+BYTE4                OPERATOR 
+C                    Target symbol: 1 
+CALL                 MNEMONIC 
+CASE                 DIRECTIVE 
+CASEOFF              DIRECTIVE 
+CASEON               DIRECTIVE 
+CFA_ESP16            Target symbol: 0 
+CFA_ESP24            Target symbol: 0 
+CFA_MACHINE          #define, value: CFA_SP, line:      37:3      516:3    517:3    519:3    519:3
+                                                                    519:3    520:3    520:3    520:3
+                                                                    520:3    521:3    521:3    521:3
+                                                                    521:3    521:3
+CFA_PSP24            Target symbol: 0 
+CFA_SPP              #define, value: CFA_PSP16, line:      21:3  
+CFA_SPX              #define, value: CFA_XSP16, line:      23:3  
+CFA_XSP24            Target symbol: 0 
+CFI                  DIRECTIVE 
+CFI_COMMON_DECLARE_CORE_COMMON MACRO 
+CFI_COMMON_DECLARE_SAME_VALUE_FOR_ALL_REGISTERS
+                     MACRO 
+CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS
+                     MACRO 
+CFI_NAMES_DECLARE_REGISTER_RESOURCES
+                     MACRO 
+CFI_NAMES_DECLARE_RETURN_RESOURCE
+                     MACRO 
+CFI_NAMES_DECLARE_STACKS MACRO 
+CFI_banked_com       MACRO 
+CFI_banked_nam       MACRO 
+CFI_com              MACRO 
+CFI_nam              MACRO 
+CFI_pdata_enter_com  MACRO 
+CFI_pdata_enter_nam  MACRO 
+CJNE                 MNEMONIC 
+CLR                  MNEMONIC 
+CODE                 SEGMENT TYPE 
+CODE                 DIRECTIVE 
+COL                  DIRECTIVE 
+COMMON               DIRECTIVE 
+CONST                SEGMENT TYPE 
+CONTINUE             DIRECTIVE 
+CPL                  MNEMONIC 
+CY                   Target symbol: 1 
+DA                   MNEMONIC 
+DATA                 SEGMENT TYPE 
+DATA                 DIRECTIVE 
+DATE                 OPERATOR 
+DB                   DIRECTIVE 
+DC16                 DIRECTIVE 
+DC24                 DIRECTIVE 
+DC32                 DIRECTIVE 
+DC8                  DIRECTIVE 
+DD                   DIRECTIVE 
+DEC                  MNEMONIC 
+DEFAULT              DIRECTIVE 
+DEFINE               DIRECTIVE 
+DIV                  MNEMONIC 
+DJNZ                 MNEMONIC 
+DPTR                 REGISTER 
+DPTR_MASK_SYMBOLS    MACRO 
+DS                   DIRECTIVE 
+DS16                 DIRECTIVE 
+DS24                 DIRECTIVE 
+DS32                 DIRECTIVE 
+DS8                  DIRECTIVE 
+DT                   DIRECTIVE 
+DW                   DIRECTIVE 
+ELSE                 DIRECTIVE 
+ELSEIF               DIRECTIVE 
+ELSEIFS              DIRECTIVE 
+ELSES                DIRECTIVE 
+END                  DIRECTIVE 
+ENDF                 DIRECTIVE 
+ENDIF                DIRECTIVE 
+ENDIFS               DIRECTIVE 
+ENDM                 DIRECTIVE 
+ENDMAC               DIRECTIVE 
+ENDMOD               DIRECTIVE 
+ENDR                 DIRECTIVE 
+ENDS                 DIRECTIVE 
+ENDW                 DIRECTIVE 
+EQ                   OPERATOR 
+EQU                  DIRECTIVE 
+ESP16                Target symbol: 0 
+ESP24                Target symbol: 0 
+EVEN                 DIRECTIVE 
+EXITM                DIRECTIVE 
+EXPORT               DIRECTIVE 
+EXTERN               DIRECTIVE 
+EXTERNS_FOR_ALL_DPTR_SYMBOLS MACRO 
+EXTRN                DIRECTIVE 
+FAR                  SEGMENT TYPE 
+FARCODE              SEGMENT TYPE 
+FARCONST             SEGMENT TYPE 
+FARDATA              SEGMENT TYPE 
+FOR                  DIRECTIVE 
+FUNCALL              DIRECTIVE 
+FUNCTION             DIRECTIVE 
+GE                   OPERATOR 
+GT                   OPERATOR 
+HIGH                 OPERATOR 
+HUGE                 SEGMENT TYPE 
+HUGECODE             SEGMENT TYPE 
+HUGECONST            SEGMENT TYPE 
+HUGEDATA             SEGMENT TYPE 
+HWRD                 OPERATOR 
+IDATA                SEGMENT TYPE 
+IF                   DIRECTIVE 
+IFS                  DIRECTIVE 
+IMPORT               DIRECTIVE 
+INC                  MNEMONIC 
+JB                   MNEMONIC 
+JBC                  MNEMONIC 
+JC                   MNEMONIC 
+JMP                  MNEMONIC 
+JNB                  MNEMONIC 
+JNC                  MNEMONIC 
+JNZ                  MNEMONIC 
+JZ                   MNEMONIC 
+LCALL                MNEMONIC 
+LE                   OPERATOR 
+LIBRARY              DIRECTIVE 
+LIMIT                DIRECTIVE 
+LJMP                 MNEMONIC 
+LOC                  OPERATOR 
+LOCAL                DIRECTIVE 
+LOCFRAME             DIRECTIVE 
+LONG                 Target symbol: 2097152 
+LOW                  OPERATOR 
+LSTCND               DIRECTIVE 
+LSTCOD               DIRECTIVE 
+LSTCYC               DIRECTIVE 
+LSTEXP               DIRECTIVE 
+LSTMAC               DIRECTIVE 
+LSTOUT               DIRECTIVE 
+LSTPAG               DIRECTIVE 
+LSTREP               DIRECTIVE 
+LSTSAS               DIRECTIVE 
+LSTXRF               DIRECTIVE 
+LT                   OPERATOR 
+LWRD                 OPERATOR 
+MACHINE_MEM          #define, value: DATA, line:      39:3      516:3    517:3
+MACHINE_SP           #define, value: SP, line:      38:3      516:3    516:3    517:3    517:3
+                                                                    519:3    520:3    521:3
+MACRO                DIRECTIVE 
+MOD                  OPERATOR 
+MODULE               DIRECTIVE 
+MOV                  MNEMONIC 
+MOVC                 MNEMONIC 
+MOVX                 MNEMONIC 
+MUL                  MNEMONIC 
+NAME                 DIRECTIVE 
+NE                   OPERATOR 
+NEAR                 SEGMENT TYPE 
+NEARCODE             SEGMENT TYPE 
+NEARCONST            SEGMENT TYPE 
+NEARDATA             SEGMENT TYPE 
+NOP                  MNEMONIC 
+NOROOT               SEGMENT TYPE 
+NOT                  OPERATOR 
+NPAGE                SEGMENT TYPE 
+ODD                  DIRECTIVE 
+OR                   OPERATOR 
+ORG                  DIRECTIVE 
+ORL                  MNEMONIC 
+PAGE                 DIRECTIVE 
+PAGSIZ               DIRECTIVE 
+PC                   REGISTER 
+POP                  MNEMONIC 
+PRM                  OPERATOR 
+PROGRAM              DIRECTIVE 
+PSP24                Target symbol: 0 
+PUBLIC               DIRECTIVE 
+PUBWEAK              DIRECTIVE 
+PUSH                 MNEMONIC 
+R0                   REGISTER 
+R1                   REGISTER 
+R2                   REGISTER 
+R3                   REGISTER 
+R4                   REGISTER 
+R5                   REGISTER 
+R6                   REGISTER 
+R7                   REGISTER 
+RADIX                DIRECTIVE 
+READ                 Target symbol: 2048 
+REGISTER             SEGMENT TYPE 
+REORDER              SEGMENT TYPE 
+REPEAT               DIRECTIVE 
+REPT                 DIRECTIVE 
+REPTC                DIRECTIVE 
+REPTI                DIRECTIVE 
+REQUIRE              DIRECTIVE 
+RET                  MNEMONIC 
+RETI                 MNEMONIC 
+RL                   MNEMONIC 
+RLC                  MNEMONIC 
+ROOT                 SEGMENT TYPE 
+RR                   MNEMONIC 
+RRC                  MNEMONIC 
+RSEG                 DIRECTIVE 
+RTMODEL              DIRECTIVE 
+S                    PREFIX 
+SET                  DIRECTIVE 
+SETB                 MNEMONIC 
+SFB                  OPERATOR 
+SFE                  OPERATOR 
+SFRTYPE              DIRECTIVE 
+SHL                  OPERATOR 
+SHR                  OPERATOR 
+SIZEOF               OPERATOR 
+SJMP                 MNEMONIC 
+SORT                 SEGMENT TYPE 
+SPP                  #define, value: PSP16, line:      22:3      521:3
+SPX                  #define, value: XSP16, line:      24:3  
+STACK                DIRECTIVE 
+SUBB                 MNEMONIC 
+SWAP                 MNEMONIC 
+SWITCH               DIRECTIVE 
+SYMBOL               DIRECTIVE 
+UGT                  OPERATOR 
+ULT                  OPERATOR 
+UNTIL                DIRECTIVE 
+UNTYPED              SEGMENT TYPE 
+WHILE                DIRECTIVE 
+WORD                 Target symbol: 1048576 
+WRITE                Target symbol: 4096 
+XCH                  MNEMONIC 
+XCHD                 MNEMONIC 
+XDATA                SEGMENT TYPE 
+XOR                  OPERATOR 
+XRL                  MNEMONIC 
+XRSEGCSTART          #define, value: RSEG CSTART:CODE:NOROOT, line:        16         30      789
+XSP24                Target symbol: 0 
+XSP_H                #define, value: ?XSP+1, line:      24:1  
+XSP_L                #define, value: ?XSP, line:      23:1  
+ZPAGE                SEGMENT TYPE 
+[                    DELIMITER 
+]                    DELIMITER 
+^                    OPERATOR 
+_LOW_IMAGE_          #define, value: 1, line:         0  
+__BUILD_NUMBER__     #define,            line:         0  
+__CALLING_CONVENTION__ #define, value: 4, line:         0  
+__CC_DO__            #define, value: 0, line:      45:2  
+__CC_ER__            #define, value: 5, line:      50:2  
+__CC_IO__            #define, value: 1, line:      46:2  
+__CC_IR__            #define, value: 2, line:      47:2  
+__CC_PR__            #define, value: 3, line:      48:2  
+__CC_XR__            #define, value: 4, line:      49:2  
+__CM_BANKED_EXT2__   #define, value: 4, line:      31:2        813
+__CM_BANKED__        #define, value: 2, line:      29:2        794
+__CM_FAR__           #define, value: 3, line:      30:2       42:3    516:3    519:3
+__CM_NEAR__          #define, value: 1, line:      28:2  
+__CM_TINY__          #define, value: 0, line:      27:2  
+__CODE_MODEL__       #define, value: 1, line:         0       42:3    516:3    519:3      794
+                                                                      813
+__CORE_EXTENDED1__   #define, value: 2, line:      21:2       67:2    521:3      401      441
+__CORE_EXTENDED2__   #define, value: 3, line:      22:2  
+__CORE_PLAIN__       #define, value: 1, line:      20:2  
+__CORE_TINY__        #define, value: 0, line:      19:2  
+__CORE__             #define, value: 1, line:         0       67:2    521:3      401      441
+__DATA_MODEL__       #define, value: 2, line:         0  
+__DATE__             #define,            line:         0  
+__DM_FAR__           #define, value: 4, line:      40:2  
+__DM_GENERIC__       #define, value: 3, line:      39:2  
+__DM_LARGE__         #define, value: 2, line:      38:2  
+__DM_SMALL__         #define, value: 1, line:      37:2  
+__DM_TINY__          #define, value: 0, line:      36:2  
+__EXTENDED_STACK__   Target symbol: 0 
+__FILE__             #define,            line:         0  
+__IAR_SYSTEMS_ASM    #define,            line:         0  
+__IAR_SYSTEMS_ASM__  #define,            line:         0  
+__INC_DPSEL_SELECT__ Target symbol: 0 
+__LINE__             #define,            line:         0  
+__NUMBER_OF_DPTRS__  #define, value: 1, line:         0       56:2    516:3    516:3    516:3
+                                                                    516:3    516:3    516:3    516:3
+                                                                    516:3    516:3    516:3    516:3
+                                                                    516:3    516:3    516:3    516:3
+                                                                    517:3    517:3    517:3    517:3
+                                                                    517:3    517:3    517:3    517:3
+                                                                    517:3    517:3    517:3    517:3
+                                                                    517:3    517:3    517:3    519:3
+                                                                    519:3    519:3    519:3    519:3
+                                                                    519:3    519:3    519:3    519:3
+                                                                    519:3    519:3    519:3    519:3
+                                                                    519:3    519:3    520:3    520:3
+                                                                    520:3    520:3    520:3    520:3
+                                                                    520:3    520:3    520:3    520:3
+                                                                    520:3    520:3    520:3    520:3
+                                                                    520:3    521:3    521:3    521:3
+                                                                    521:3    521:3    521:3    521:3
+                                                                    521:3    521:3    521:3    521:3
+                                                                    521:3    521:3    521:3    521:3
+                                                                     97:1       13
+__SIZE_OF_RETADDR__  #define, value: 2, line:      45:3      519:3    521:3    521:3
+__SUBVERSION__       #define,            line:         0  
+__TID__              #define,            line:         0  
+__TIME__             #define,            line:         0  
+__VER__              #define,            line:         0  
+__XOR_DPSEL_SELECT__ Target symbol: 0 
+bytes                Target symbol: 0 
+cfi_DATA_BLOCK_end   MACRO 
+cfi_DATA_BLOCK_start MACRO 
+cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND
+                     MACRO 
+cfi_PUSH_ISTACK_RET_DEFS_REG_DEPEND
+                     MACRO 
+cfi_PUSH_REG         MACRO 
+cfi_REMEMBER_STATE   MACRO 
+cfi_RESTORE_STATE    MACRO 
+cfi_SET_REG          MACRO 
+cfi_STACK_ALLOC      MACRO 
+cfi_STACK_DEALL      MACRO 
+chip                 #define, value: 2510, line:         0  
+constant             Target symbol: 0 
+define               PREPROCESSOR DIRECTIVE 
+defined              Target symbol: 0 
+elif                 PREPROCESSOR DIRECTIVE 
+else                 PREPROCESSOR DIRECTIVE 
+endif                PREPROCESSOR DIRECTIVE 
+error                PREPROCESSOR DIRECTIVE 
+if                   PREPROCESSOR DIRECTIVE 
+ifdef                PREPROCESSOR DIRECTIVE 
+ifndef               PREPROCESSOR DIRECTIVE 
+include              PREPROCESSOR DIRECTIVE 
+line                 PREPROCESSOR DIRECTIVE 
+message              PREPROCESSOR DIRECTIVE 
+name                 Target symbol: 0 
+no                   Target symbol: 0 
+pragma               PREPROCESSOR DIRECTIVE 
+reg                  Target symbol: 0 
+reg_from             Target symbol: 0 
+reg_to               Target symbol: 0 
+undef                PREPROCESSOR DIRECTIVE 
+|                    OPERATOR 
+||                   OPERATOR 
+~                    OPERATOR 
+
+Segment             Type 	Mode
+----------------------------------------
+BDATA_I             DATA  	REL 
+BDATA_ID            CONST  	REL 
+BDATA_Z             DATA  	REL 
+CSTART              CODE  	REL 
+DATA_I              DATA  	REL 
+DATA_ID             CONST  	REL 
+DATA_Z              DATA  	REL 
+IDATA_I             IDATA  	REL 
+IDATA_ID            CODE  	REL 
+IDATA_Z             IDATA  	REL 
+IXDATA_I            XDATA  	REL 
+IXDATA_ID           CODE  	REL 
+IXDATA_Z            XDATA  	REL 
+PDATA_I             XDATA  	REL 
+PDATA_ID            CODE  	REL 
+PDATA_Z             XDATA  	REL 
+XDATA_I             XDATA  	REL 
+XDATA_ID            CODE  	REL 
+XDATA_Z             XDATA  	REL 
+__EXTERNS           CODE  	ABS Org:0 
+
+Label               Mode   Type                   Segment    Value/Offset
+------------------------------------------------------------------------------
+?RET                ABS    CONST UNTYP.           ASEG       Not solved 
+?RET_EXT            ABS    CONST UNTYP.           ASEG       Not solved 
+?RET_HIGH           ABS    CONST UNTYP.           ASEG       Not solved 
+?RET_LOW            ABS    CONST UNTYP.           ASEG       Not solved 
+?V_START            ABS    CONST UNTYP.           ASEG       Not solved 
+?call_main          REL    CONST PUB UNTYP.       CSTART     0 
+?cmain              REL    CONST PUB UNTYP.       CSTART     0 
+AC                  ABS    CONST UNTYP.           ASEG       D6 
+ACC                 ABS    CONST UNTYP.           ASEG       E0 
+B                   ABS    CONST UNTYP.           ASEG       F0 
+BASEADDRESS         ABS    CONST UNTYP.           ASEG       Not solved 
+BDATA_INIT          REL    CONST UNTYP.           CSTART     C 
+BDATA_INIT_OUT      REL    CONST UNTYP.           CSTART     13 
+BDATA_ZERO          REL    CONST UNTYP.           CSTART     A 
+BDATA_ZERO_OUT      REL    CONST UNTYP.           CSTART     E 
+Base                ABS    CONST UNTYP.           ASEG       Not solved 
+CFA_PSP16           ABS    CONST UNTYP.           ASEG       Not solved 
+CFA_SP              ABS    CONST UNTYP.           ASEG       Not solved 
+CFA_XSP16           ABS    CONST UNTYP.           ASEG       Not solved 
+CODEALIGN           ABS    CONST UNTYP.           ASEG       Not solved 
+COMMON              ABS    CONST UNTYP.           ASEG       Not solved 
+CONCAT              ABS    CONST UNTYP.           ASEG       Not solved 
+DATAALIGN           ABS    CONST UNTYP.           ASEG       Not solved 
+DATA_INIT           REL    CONST UNTYP.           CSTART     C 
+DATA_INIT_OUT       REL    CONST UNTYP.           CSTART     13 
+DATA_ZERO           REL    CONST UNTYP.           CSTART     A 
+DATA_ZERO_OUT       REL    CONST UNTYP.           CSTART     E 
+DPH                 ABS    CONST UNTYP.           ASEG       83 
+DPH0                ABS    CONST UNTYP.           ASEG       Not solved 
+DPL                 ABS    CONST UNTYP.           ASEG       82 
+DPL0                ABS    CONST UNTYP.           ASEG       Not solved 
+DPTR0               ABS    CONST UNTYP.           ASEG       Not solved 
+ENDCOMMON           ABS    CONST UNTYP.           ASEG       Not solved 
+ENDNAMES            ABS    CONST UNTYP.           ASEG       Not solved 
+EXTENDS             ABS    CONST UNTYP.           ASEG       Not solved 
+EXTI0               ABS    CONST UNTYP.           ASEG       3 
+EXTI1               ABS    CONST UNTYP.           ASEG       13 
+F0                  ABS    CONST UNTYP.           ASEG       D5 
+FRAMECELL           ABS    CONST UNTYP.           ASEG       Not solved 
+Frame               ABS    CONST UNTYP.           ASEG       Not solved 
+IDATA_INIT          REL    CONST UNTYP.           CSTART     C 
+IDATA_INIT_OUT      REL    CONST UNTYP.           CSTART     13 
+IDATA_ZERO          REL    CONST UNTYP.           CSTART     A 
+IDATA_ZERO_OUT      REL    CONST UNTYP.           CSTART     E 
+IXDATA_INIT         REL    CONST UNTYP.           CSTART     10 
+IXDATA_INIT_TEST    REL    CONST UNTYP.           CSTART     25 
+IXDATA_ZERO         REL    CONST UNTYP.           CSTART     A 
+IXDATA_ZERO_TEST    REL    CONST UNTYP.           CSTART     C 
+NAMES               ABS    CONST UNTYP.           ASEG       Not solved 
+OV                  ABS    CONST UNTYP.           ASEG       D2 
+P                   ABS    CONST UNTYP.           ASEG       D0 
+PDATA_INIT          REL    CONST UNTYP.           CSTART     C 
+PDATA_INIT_OUT      REL    CONST UNTYP.           CSTART     13 
+PDATA_ZERO          REL    CONST UNTYP.           CSTART     A 
+PDATA_ZERO_OUT      REL    CONST UNTYP.           CSTART     E 
+PSP16               ABS    CONST UNTYP.           ASEG       Not solved 
+PSPH                ABS    CONST UNTYP.           ASEG       Not solved 
+PSPL                ABS    CONST UNTYP.           ASEG       Not solved 
+PSW                 ABS    CONST UNTYP.           ASEG       D0 
+RESET               ABS    CONST UNTYP.           ASEG       0 
+RETH_CELL           ABS    CONST UNTYP.           ASEG       Not solved 
+RETL_CELL           ABS    CONST UNTYP.           ASEG       Not solved 
+RETURNADDRESS       ABS    CONST UNTYP.           ASEG       Not solved 
+RS0                 ABS    CONST UNTYP.           ASEG       D3 
+RS1                 ABS    CONST UNTYP.           ASEG       D4 
+Resource            ABS    CONST UNTYP.           ASEG       Not solved 
+ResourceParts       ABS    CONST UNTYP.           ASEG       Not solved 
+SINT                ABS    CONST UNTYP.           ASEG       23 
+SP                  ABS    CONST UNTYP.           ASEG       81 
+SameValue           ABS    CONST UNTYP.           ASEG       Not solved 
+StackFrame          ABS    CONST UNTYP.           ASEG       Not solved 
+TID                 ABS    CONST UNTYP.           ASEG       2000 
+TIMER0              ABS    CONST UNTYP.           ASEG       B 
+TIMER1              ABS    CONST UNTYP.           ASEG       1B 
+USING               ABS    CONST UNTYP.           ASEG       Not solved 
+Undefined           ABS    CONST UNTYP.           ASEG       Not solved 
+V0                  ABS    CONST UNTYP.           ASEG       Not solved 
+V1                  ABS    CONST UNTYP.           ASEG       Not solved 
+V10                 ABS    CONST UNTYP.           ASEG       Not solved 
+V11                 ABS    CONST UNTYP.           ASEG       Not solved 
+V12                 ABS    CONST UNTYP.           ASEG       Not solved 
+V13                 ABS    CONST UNTYP.           ASEG       Not solved 
+V14                 ABS    CONST UNTYP.           ASEG       Not solved 
+V15                 ABS    CONST UNTYP.           ASEG       Not solved 
+V16                 ABS    CONST UNTYP.           ASEG       Not solved 
+V17                 ABS    CONST UNTYP.           ASEG       Not solved 
+V18                 ABS    CONST UNTYP.           ASEG       Not solved 
+V19                 ABS    CONST UNTYP.           ASEG       Not solved 
+V2                  ABS    CONST UNTYP.           ASEG       Not solved 
+V20                 ABS    CONST UNTYP.           ASEG       Not solved 
+V21                 ABS    CONST UNTYP.           ASEG       Not solved 
+V22                 ABS    CONST UNTYP.           ASEG       Not solved 
+V23                 ABS    CONST UNTYP.           ASEG       Not solved 
+V24                 ABS    CONST UNTYP.           ASEG       Not solved 
+V25                 ABS    CONST UNTYP.           ASEG       Not solved 
+V26                 ABS    CONST UNTYP.           ASEG       Not solved 
+V27                 ABS    CONST UNTYP.           ASEG       Not solved 
+V28                 ABS    CONST UNTYP.           ASEG       Not solved 
+V29                 ABS    CONST UNTYP.           ASEG       Not solved 
+V3                  ABS    CONST UNTYP.           ASEG       Not solved 
+V30                 ABS    CONST UNTYP.           ASEG       Not solved 
+V31                 ABS    CONST UNTYP.           ASEG       Not solved 
+V4                  ABS    CONST UNTYP.           ASEG       Not solved 
+V5                  ABS    CONST UNTYP.           ASEG       Not solved 
+V6                  ABS    CONST UNTYP.           ASEG       Not solved 
+V7                  ABS    CONST UNTYP.           ASEG       Not solved 
+V8                  ABS    CONST UNTYP.           ASEG       Not solved 
+V9                  ABS    CONST UNTYP.           ASEG       Not solved 
+VB                  ABS    CONST UNTYP.           ASEG       Not solved 
+VirtualResource     ABS    CONST UNTYP.           ASEG       Not solved 
+XDATA_INIT          REL    CONST UNTYP.           CSTART     10 
+XDATA_INIT_TEST     REL    CONST UNTYP.           CSTART     25 
+XDATA_ZERO          REL    CONST UNTYP.           CSTART     A 
+XDATA_ZERO_TEST     REL    CONST UNTYP.           CSTART     C 
+XSP16               ABS    CONST UNTYP.           ASEG       Not solved 
+XSPH                ABS    CONST UNTYP.           ASEG       Not solved 
+XSPL                ABS    CONST UNTYP.           ASEG       Not solved 
+__INIT_BDATA_I      REL    CONST PUB UNTYP.       CSTART     0 
+__INIT_BDATA_Z      REL    CONST PUB UNTYP.       CSTART     0 
+__INIT_DATA_I       REL    CONST PUB UNTYP.       CSTART     0 
+__INIT_DATA_Z       REL    CONST PUB UNTYP.       CSTART     0 
+__INIT_IDATA_I      REL    CONST PUB UNTYP.       CSTART     0 
+__INIT_IDATA_Z      REL    CONST PUB UNTYP.       CSTART     0 
+__INIT_IXDATA_I     REL    CONST PUB UNTYP.       CSTART     0 
+__INIT_IXDATA_Z     REL    CONST PUB UNTYP.       CSTART     0 
+__INIT_PDATA_I      REL    CONST PUB UNTYP.       CSTART     0 
+__INIT_PDATA_Z      REL    CONST PUB UNTYP.       CSTART     0 
+__INIT_XDATA_I      REL    CONST PUB UNTYP.       CSTART     0 
+__INIT_XDATA_Z      REL    CONST PUB UNTYP.       CSTART     0 
+__init_segments     REL    CONST UNTYP.           CSTART     9 
+__low_level_init    ABS    CONST EXT [001] UNTYP. __EXTERNS  Solved Extern 
+__low_level_init_callREL    CONST PUB UNTYP.       CSTART     0 
+__skip_segment_init REL    CONST UNTYP.           CSTART     29 
+cfi_banked_common   ABS    CONST UNTYP.           ASEG       Not solved 
+cfi_banked_names    ABS    CONST UNTYP.           ASEG       Not solved 
+cfi_common          ABS    CONST UNTYP.           ASEG       Not solved 
+cfi_names           ABS    CONST UNTYP.           ASEG       Not solved 
+cfi_pdata_enter_commonABS    CONST UNTYP.           ASEG       Not solved 
+cfi_pdata_enter_namesABS    CONST UNTYP.           ASEG       Not solved 
+exit                ABS    CONST EXT [unref] UNTYP. __EXTERNS  Solved Extern 
+loop_call_main      REL    CONST UNTYP.           CSTART     0 
+main                ABS    CONST EXT [000] UNTYP. __EXTERNS  Solved Extern 
+samevalue           ABS    CONST UNTYP.           ASEG       Not solved 
+sub                 ABS    CONST UNTYP.           ASEG       Not solved 
+undefined           ABS    CONST UNTYP.           ASEG       Not solved 
+
+
+##############################
+#          CRC:4D10          #
+#        Errors:   0         #
+#        Warnings: 0         #
+#         Bytes: 261         #
+##############################
+
+
+
+
+
+EOF                  DELIMITER 
+\n                   DELIMITER 
+                     DELIMITER 
+!                    OPERATOR 
+!=                   OPERATOR 
+%                    OPERATOR 
+&                    OPERATOR 
+&&                   OPERATOR 
+(                    OPERATOR 
+(                    DELIMITER 
+)                    OPERATOR 
+)                    DELIMITER 
+*                    OPERATOR 
++                    OPERATOR 
+,                    DELIMITER 
+-                    OPERATOR 
+/                    OPERATOR 
+:                    DELIMITER 
+;                    DELIMITER 
+;                    Target symbol: 23 
+<                    OPERATOR 
+<<                   OPERATOR 
+<=                   OPERATOR 
+<>                   OPERATOR 
+=                    OPERATOR 
+=                    DIRECTIVE 
+==                   OPERATOR 
+>                    OPERATOR 
+>=                   OPERATOR 
+>>                   OPERATOR 
+?XSP                 Target symbol: 0 
+@                    DELIMITER 
+A                    REGISTER 
+AB                   REGISTER 
+ACALL                MNEMONIC 
+ADD                  MNEMONIC 
+ADDC                 MNEMONIC 
+AJMP                 MNEMONIC 
+ALIAS                DIRECTIVE 
+ALIGN                DIRECTIVE 
+ALIGNRAM             DIRECTIVE 
+AND                  OPERATOR 
+ANL                  MNEMONIC 
+ARGFRAME             DIRECTIVE 
+ASEG                 DIRECTIVE 
+ASEGN                DIRECTIVE 
+ASSIGN               DIRECTIVE 
+B                    REGISTER 
+BINAND               OPERATOR 
+BINNOT               OPERATOR 
+BINOR                OPERATOR 
+BINXOR               OPERATOR 
+BIT                  SEGMENT TYPE 
+BITAND               OPERATOR 
+BITNOT               OPERATOR 
+BITOR                OPERATOR 
+BITXOR               OPERATOR 
+BREAK                DIRECTIVE 
+BYTE                 Target symbol: 524288 
+BYTE1                OPERATOR 
+BYTE2                OPERATOR 
+BYTE3                OPERATOR 
+BYTE4                OPERATOR 
+C                    Target symbol: 1 
+CALL                 MNEMONIC 
+CASE                 DIRECTIVE 
+CASEOFF              DIRECTIVE 
+CASEON               DIRECTIVE 
+CFA_ESP16            Target symbol: 0 
+CFA_ESP24            Target symbol: 0 
+CFA_MACHINE          #define, value: CFA_SP, line:      37:3      516:3    517:3    519:3    519:3
+                                                                    519:3    520:3    520:3    520:3
+                                                                    520:3    521:3    521:3    521:3
+                                                                    521:3    521:3
+CFA_PSP24            Target symbol: 0 
+CFA_SPP              #define, value: CFA_PSP16, line:      21:3  
+CFA_SPX              #define, value: CFA_XSP16, line:      23:3  
+CFA_XSP24            Target symbol: 0 
+CFI                  DIRECTIVE 
+CFI_COMMON_DECLARE_CORE_COMMON MACRO 
+CFI_COMMON_DECLARE_SAME_VALUE_FOR_ALL_REGISTERS
+                     MACRO 
+CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS
+                     MACRO 
+CFI_NAMES_DECLARE_REGISTER_RESOURCES
+                     MACRO 
+CFI_NAMES_DECLARE_RETURN_RESOURCE
+                     MACRO 
+CFI_NAMES_DECLARE_STACKS MACRO 
+CFI_banked_com       MACRO 
+CFI_banked_nam       MACRO 
+CFI_com              MACRO 
+CFI_nam              MACRO 
+CFI_pdata_enter_com  MACRO 
+CFI_pdata_enter_nam  MACRO 
+CJNE                 MNEMONIC 
+CLR                  MNEMONIC 
+CODE                 SEGMENT TYPE 
+CODE                 DIRECTIVE 
+COL                  DIRECTIVE 
+COMMON               DIRECTIVE 
+CONST                SEGMENT TYPE 
+CONTINUE             DIRECTIVE 
+CPL                  MNEMONIC 
+CY                   Target symbol: 1 
+DA                   MNEMONIC 
+DATA                 SEGMENT TYPE 
+DATA                 DIRECTIVE 
+DATE                 OPERATOR 
+DB                   DIRECTIVE 
+DC16                 DIRECTIVE 
+DC24                 DIRECTIVE 
+DC32                 DIRECTIVE 
+DC8                  DIRECTIVE 
+DD                   DIRECTIVE 
+DEC                  MNEMONIC 
+DEFAULT              DIRECTIVE 
+DEFINE               DIRECTIVE 
+DIV                  MNEMONIC 
+DJNZ                 MNEMONIC 
+DPTR                 REGISTER 
+DPTR_MASK_SYMBOLS    MACRO 
+DS                   DIRECTIVE 
+DS16                 DIRECTIVE 
+DS24                 DIRECTIVE 
+DS32                 DIRECTIVE 
+DS8                  DIRECTIVE 
+DT                   DIRECTIVE 
+DW                   DIRECTIVE 
+ELSE                 DIRECTIVE 
+ELSEIF               DIRECTIVE 
+ELSEIFS              DIRECTIVE 
+ELSES                DIRECTIVE 
+END                  DIRECTIVE 
+ENDF                 DIRECTIVE 
+ENDIF                DIRECTIVE 
+ENDIFS               DIRECTIVE 
+ENDM                 DIRECTIVE 
+ENDMAC               DIRECTIVE 
+ENDMOD               DIRECTIVE 
+ENDR                 DIRECTIVE 
+ENDS                 DIRECTIVE 
+ENDW                 DIRECTIVE 
+EQ                   OPERATOR 
+EQU                  DIRECTIVE 
+ESP16                Target symbol: 0 
+ESP24                Target symbol: 0 
+EVEN                 DIRECTIVE 
+EXITM                DIRECTIVE 
+EXPORT               DIRECTIVE 
+EXTERN               DIRECTIVE 
+EXTERNS_FOR_ALL_DPTR_SYMBOLS MACRO 
+EXTRN                DIRECTIVE 
+FAR                  SEGMENT TYPE 
+FARCODE              SEGMENT TYPE 
+FARCONST             SEGMENT TYPE 
+FARDATA              SEGMENT TYPE 
+FOR                  DIRECTIVE 
+FUNCALL              DIRECTIVE 
+FUNCTION             DIRECTIVE 
+GE                   OPERATOR 
+GT                   OPERATOR 
+HIGH                 OPERATOR 
+HUGE                 SEGMENT TYPE 
+HUGECODE             SEGMENT TYPE 
+HUGECONST            SEGMENT TYPE 
+HUGEDATA             SEGMENT TYPE 
+HWRD                 OPERATOR 
+IDATA                SEGMENT TYPE 
+IF                   DIRECTIVE 
+IFS                  DIRECTIVE 
+IMPORT               DIRECTIVE 
+INC                  MNEMONIC 
+JB                   MNEMONIC 
+JBC                  MNEMONIC 
+JC                   MNEMONIC 
+JMP                  MNEMONIC 
+JNB                  MNEMONIC 
+JNC                  MNEMONIC 
+JNZ                  MNEMONIC 
+JZ                   MNEMONIC 
+LCALL                MNEMONIC 
+LE                   OPERATOR 
+LIBRARY              DIRECTIVE 
+LIMIT                DIRECTIVE 
+LJMP                 MNEMONIC 
+LOC                  OPERATOR 
+LOCAL                DIRECTIVE 
+LOCFRAME             DIRECTIVE 
+LONG                 Target symbol: 2097152 
+LOW                  OPERATOR 
+LSTCND               DIRECTIVE 
+LSTCOD               DIRECTIVE 
+LSTCYC               DIRECTIVE 
+LSTEXP               DIRECTIVE 
+LSTMAC               DIRECTIVE 
+LSTOUT               DIRECTIVE 
+LSTPAG               DIRECTIVE 
+LSTREP               DIRECTIVE 
+LSTSAS               DIRECTIVE 
+LSTXRF               DIRECTIVE 
+LT                   OPERATOR 
+LWRD                 OPERATOR 
+MACHINE_MEM          #define, value: DATA, line:      39:3      516:3    517:3
+MACHINE_SP           #define, value: SP, line:      38:3      516:3    516:3    517:3    517:3
+                                                                    519:3    520:3    521:3
+MACRO                DIRECTIVE 
+MOD                  OPERATOR 
+MODULE               DIRECTIVE 
+MOV                  MNEMONIC 
+MOVC                 MNEMONIC 
+MOVX                 MNEMONIC 
+MUL                  MNEMONIC 
+NAME                 DIRECTIVE 
+NE                   OPERATOR 
+NEAR                 SEGMENT TYPE 
+NEARCODE             SEGMENT TYPE 
+NEARCONST            SEGMENT TYPE 
+NEARDATA             SEGMENT TYPE 
+NOP                  MNEMONIC 
+NOROOT               SEGMENT TYPE 
+NOT                  OPERATOR 
+NPAGE                SEGMENT TYPE 
+ODD                  DIRECTIVE 
+OR                   OPERATOR 
+ORG                  DIRECTIVE 
+ORL                  MNEMONIC 
+PAGE                 DIRECTIVE 
+PAGSIZ               DIRECTIVE 
+PC                   REGISTER 
+POP                  MNEMONIC 
+PRM                  OPERATOR 
+PROGRAM              DIRECTIVE 
+PSP24                Target symbol: 0 
+PUBLIC               DIRECTIVE 
+PUBWEAK              DIRECTIVE 
+PUSH                 MNEMONIC 
+R0                   REGISTER 
+R1                   REGISTER 
+R2                   REGISTER 
+R3                   REGISTER 
+R4                   REGISTER 
+R5                   REGISTER 
+R6                   REGISTER 
+R7                   REGISTER 
+RADIX                DIRECTIVE 
+READ                 Target symbol: 2048 
+REGISTER             SEGMENT TYPE 
+REORDER              SEGMENT TYPE 
+REPEAT               DIRECTIVE 
+REPT                 DIRECTIVE 
+REPTC                DIRECTIVE 
+REPTI                DIRECTIVE 
+REQUIRE              DIRECTIVE 
+RET                  MNEMONIC 
+RETI                 MNEMONIC 
+RL                   MNEMONIC 
+RLC                  MNEMONIC 
+ROOT                 SEGMENT TYPE 
+RR                   MNEMONIC 
+RRC                  MNEMONIC 
+RSEG                 DIRECTIVE 
+RTMODEL              DIRECTIVE 
+S                    PREFIX 
+SET                  DIRECTIVE 
+SETB                 MNEMONIC 
+SFB                  OPERATOR 
+SFE                  OPERATOR 
+SFRTYPE              DIRECTIVE 
+SHL                  OPERATOR 
+SHR                  OPERATOR 
+SIZEOF               OPERATOR 
+SJMP                 MNEMONIC 
+SORT                 SEGMENT TYPE 
+SPP                  #define, value: PSP16, line:      22:3      521:3
+SPX                  #define, value: XSP16, line:      24:3  
+STACK                DIRECTIVE 
+SUBB                 MNEMONIC 
+SWAP                 MNEMONIC 
+SWITCH               DIRECTIVE 
+SYMBOL               DIRECTIVE 
+UGT                  OPERATOR 
+ULT                  OPERATOR 
+UNTIL                DIRECTIVE 
+UNTYPED              SEGMENT TYPE 
+WHILE                DIRECTIVE 
+WORD                 Target symbol: 1048576 
+WRITE                Target symbol: 4096 
+XCH                  MNEMONIC 
+XCHD                 MNEMONIC 
+XDATA                SEGMENT TYPE 
+XOR                  OPERATOR 
+XRL                  MNEMONIC 
+XRSEGCSTART          #define, value: RSEG CSTART:CODE:NOROOT, line:        16         30      789
+XSP24                Target symbol: 0 
+XSP_H                #define, value: ?XSP+1, line:      24:1  
+XSP_L                #define, value: ?XSP, line:      23:1  
+ZPAGE                SEGMENT TYPE 
+[                    DELIMITER 
+]                    DELIMITER 
+^                    OPERATOR 
+_LOW_IMAGE_          #define, value: 1, line:         0  
+__BUILD_NUMBER__     #define,            line:         0  
+__CALLING_CONVENTION__ #define, value: 4, line:         0  
+__CC_DO__            #define, value: 0, line:      45:2  
+__CC_ER__            #define, value: 5, line:      50:2  
+__CC_IO__            #define, value: 1, line:      46:2  
+__CC_IR__            #define, value: 2, line:      47:2  
+__CC_PR__            #define, value: 3, line:      48:2  
+__CC_XR__            #define, value: 4, line:      49:2  
+__CM_BANKED_EXT2__   #define, value: 4, line:      31:2        813
+__CM_BANKED__        #define, value: 2, line:      29:2        794
+__CM_FAR__           #define, value: 3, line:      30:2       42:3    516:3    519:3
+__CM_NEAR__          #define, value: 1, line:      28:2  
+__CM_TINY__          #define, value: 0, line:      27:2  
+__CODE_MODEL__       #define, value: 1, line:         0       42:3    516:3    519:3      794
+                                                                      813
+__CORE_EXTENDED1__   #define, value: 2, line:      21:2       67:2    521:3      401      441
+__CORE_EXTENDED2__   #define, value: 3, line:      22:2  
+__CORE_PLAIN__       #define, value: 1, line:      20:2  
+__CORE_TINY__        #define, value: 0, line:      19:2  
+__CORE__             #define, value: 1, line:         0       67:2    521:3      401      441
+__DATA_MODEL__       #define, value: 2, line:         0  
+__DATE__             #define,            line:         0  
+__DM_FAR__           #define, value: 4, line:      40:2  
+__DM_GENERIC__       #define, value: 3, line:      39:2  
+__DM_LARGE__         #define, value: 2, line:      38:2  
+__DM_SMALL__         #define, value: 1, line:      37:2  
+__DM_TINY__          #define, value: 0, line:      36:2  
+__EXTENDED_STACK__   Target symbol: 0 
+__FILE__             #define,            line:         0  
+__IAR_SYSTEMS_ASM    #define,            line:         0  
+__IAR_SYSTEMS_ASM__  #define,            line:         0  
+__INC_DPSEL_SELECT__ Target symbol: 0 
+__LINE__             #define,            line:         0  
+__NUMBER_OF_DPTRS__  #define, value: 1, line:         0       56:2    516:3    516:3    516:3
+                                                                    516:3    516:3    516:3    516:3
+                                                                    516:3    516:3    516:3    516:3
+                                                                    516:3    516:3    516:3    516:3
+                                                                    517:3    517:3    517:3    517:3
+                                                                    517:3    517:3    517:3    517:3
+                                                                    517:3    517:3    517:3    517:3
+                                                                    517:3    517:3    517:3    519:3
+                                                                    519:3    519:3    519:3    519:3
+                                                                    519:3    519:3    519:3    519:3
+                                                                    519:3    519:3    519:3    519:3
+                                                                    519:3    519:3    520:3    520:3
+                                                                    520:3    520:3    520:3    520:3
+                                                                    520:3    520:3    520:3    520:3
+                                                                    520:3    520:3    520:3    520:3
+                                                                    520:3    521:3    521:3    521:3
+                                                                    521:3    521:3    521:3    521:3
+                                                                    521:3    521:3    521:3    521:3
+                                                                    521:3    521:3    521:3    521:3
+                                                                     97:1       13
+__SIZE_OF_RETADDR__  #define, value: 2, line:      45:3      519:3    521:3    521:3
+__SUBVERSION__       #define,            line:         0  
+__TID__              #define,            line:         0  
+__TIME__             #define,            line:         0  
+__VER__              #define,            line:         0  
+__XOR_DPSEL_SELECT__ Target symbol: 0 
+bytes                Target symbol: 0 
+cfi_DATA_BLOCK_end   MACRO 
+cfi_DATA_BLOCK_start MACRO 
+cfi_PUSH_ISTACK_RET_DEFS_CONST_DEPEND
+                     MACRO 
+cfi_PUSH_ISTACK_RET_DEFS_REG_DEPEND
+                     MACRO 
+cfi_PUSH_REG         MACRO 
+cfi_REMEMBER_STATE   MACRO 
+cfi_RESTORE_STATE    MACRO 
+cfi_SET_REG          MACRO 
+cfi_STACK_ALLOC      MACRO 
+cfi_STACK_DEALL      MACRO 
+chip                 #define, value: 2510, line:         0  
+constant             Target symbol: 0 
+define               PREPROCESSOR DIRECTIVE 
+defined              Target symbol: 0 
+elif                 PREPROCESSOR DIRECTIVE 
+else                 PREPROCESSOR DIRECTIVE 
+endif                PREPROCESSOR DIRECTIVE 
+error                PREPROCESSOR DIRECTIVE 
+if                   PREPROCESSOR DIRECTIVE 
+ifdef                PREPROCESSOR DIRECTIVE 
+ifndef               PREPROCESSOR DIRECTIVE 
+include              PREPROCESSOR DIRECTIVE 
+line                 PREPROCESSOR DIRECTIVE 
+message              PREPROCESSOR DIRECTIVE 
+name                 Target symbol: 0 
+no                   Target symbol: 0 
+pragma               PREPROCESSOR DIRECTIVE 
+reg                  Target symbol: 0 
+reg_from             Target symbol: 0 
+reg_to               Target symbol: 0 
+undef                PREPROCESSOR DIRECTIVE 
+|                    OPERATOR 
+||                   OPERATOR 
+~                    OPERATOR 
+
+Segment             Type 	Mode
+----------------------------------------
+__EXTERNS           CODE  	ABS Org:0 
+
+Label               Mode   Type                   Segment    Value/Offset
+------------------------------------------------------------------------------
+AC                  ABS    CONST UNTYP.           ASEG       D6 
+ACC                 ABS    CONST UNTYP.           ASEG       E0 
+B                   ABS    CONST UNTYP.           ASEG       F0 
+DPH                 ABS    CONST UNTYP.           ASEG       83 
+DPL                 ABS    CONST UNTYP.           ASEG       82 
+EXTI0               ABS    CONST UNTYP.           ASEG       3 
+EXTI1               ABS    CONST UNTYP.           ASEG       13 
+F0                  ABS    CONST UNTYP.           ASEG       D5 
+OV                  ABS    CONST UNTYP.           ASEG       D2 
+P                   ABS    CONST UNTYP.           ASEG       D0 
+PSW                 ABS    CONST UNTYP.           ASEG       D0 
+RESET               ABS    CONST UNTYP.           ASEG       0 
+RS0                 ABS    CONST UNTYP.           ASEG       D3 
+RS1                 ABS    CONST UNTYP.           ASEG       D4 
+SINT                ABS    CONST UNTYP.           ASEG       23 
+SP                  ABS    CONST UNTYP.           ASEG       81 
+TID                 ABS    CONST UNTYP.           ASEG       2000 
+TIMER0              ABS    CONST UNTYP.           ASEG       B 
+TIMER1              ABS    CONST UNTYP.           ASEG       1B 
+
+
+##############################
+#          CRC:4D10          #
+#        Errors:   0         #
+#        Warnings: 0         #
+#         Bytes: 261         #
+##############################
+
+
+
+

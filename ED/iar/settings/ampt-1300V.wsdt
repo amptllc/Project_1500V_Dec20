@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Workspace>
+  <ConfigDictionary>
+    
+    
+    
+  <CurrentConfigs><Project>dummy/Debug on CC1110</Project><Project>ampt-ms-low/Build .hex for CC2510</Project><Project>ampt-spt-low/Debug on CC1110</Project><Project>ampt-spt-high/Debug on CC1110</Project><Project>ya-boot/Debug on CC1110</Project><Project>ampt-ms-high/Build .hex for CC2510</Project><Project>fc-boot/Debug on CC1110</Project><Project>nx-boot/Debug on CC1110</Project><Project>ny-boot/Debug on CC1110</Project></CurrentConfigs><CurrentProj>ampt-ms-low</CurrentProj><OverviewSelected>0</OverviewSelected></ConfigDictionary>
+  <Desktop>
+    <Static>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>253</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+      <Build>
+        
+        
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>915</ColumnWidth1><ColumnWidth2>244</ColumnWidth2><ColumnWidth3>61</ColumnWidth3></Build>
+    </Static>
+    <Windows>
+      
+      
+    <Wnd2>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-877-30276</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>&lt;ws></ExpandedNode><ExpandedNode>ampt-ms-high</ExpandedNode><ExpandedNode>ampt-ms-low</ExpandedNode><ExpandedNode>ampt-ms-low/main.c</ExpandedNode><ExpandedNode>ny-boot</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd2><Wnd3>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-9011-30328</Identity>
+            <TabName>Build</TabName>
+            <Factory>Build</Factory>
+            <Session/>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd3></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>E:\Project_1300V\ED\code\AndStackED\source\main.c</Filename><XPos>0</XPos><YPos>648</YPos><SelStart>29792</SelStart><SelEnd>29801</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\Project_1300V\ED\code\AndStackED\include\parameter_block.h</Filename><XPos>0</XPos><YPos>81</YPos><SelStart>5522</SelStart><SelEnd>5527</SelEnd></Tab><ActiveTab>1</ActiveTab><Tab><Factory>TextEditor</Factory><Filename>E:\Project_1300V\ED\code\AndStackED\include\main.h</Filename><XPos>0</XPos><YPos>106</YPos><SelStart>5430</SelStart><SelEnd>5430</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\Project_1300V\ED\code\AndStackED\include\commands.h</Filename><XPos>0</XPos><YPos>71</YPos><SelStart>2549</SelStart><SelEnd>2549</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\Project_1300V\ED\code\AndStackED\source\main-assymetric-high.c</Filename><XPos>0</XPos><YPos>510</YPos><SelStart>26298</SelStart><SelEnd>26302</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\Project_1300V\ED\code\AndStackED\source\ny-alt-call.s51</Filename><XPos>0</XPos><YPos>228</YPos><SelStart>9131</SelStart><SelEnd>9134</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\Project_1300V\ED\code\AndStackED\source\ny-boot.c</Filename><XPos>0</XPos><YPos>0</YPos><SelStart>578</SelStart><SelEnd>581</SelEnd></Tab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-0088e6e0><key>iaridepm.enu1</key></Toolbar-0088e6e0></Sizes></Row0></Top><Left><Row0><Sizes><Wnd2><Rect><Top>-2</Top><Left>-2</Left><Bottom>804</Bottom><Right>327</Right><x>-2</x><y>-2</y><xscreen>329</xscreen><yscreen>228</yscreen><sizeHorzCX>171354</sizeHorzCX><sizeHorzCY>227092</sizeHorzCY><sizeVertCX>171354</sizeVertCX><sizeVertCY>802789</sizeVertCY></Rect></Wnd2></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes><Wnd3><Rect><Top>-2</Top><Left>-2</Left><Bottom>156</Bottom><Right>1922</Right><x>-2</x><y>-2</y><xscreen>1924</xscreen><yscreen>158</yscreen><sizeHorzCX>1002083</sizeHorzCX><sizeHorzCY>157371</sizeHorzCY><sizeVertCX>171354</sizeVertCX><sizeVertCY>227092</sizeVertCY></Rect></Wnd3></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Workspace>
+
+

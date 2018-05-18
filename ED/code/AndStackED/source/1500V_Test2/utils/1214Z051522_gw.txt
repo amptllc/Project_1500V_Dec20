@@ -1,0 +1,12 @@
+Gateway
+MAC 0v@ Converted on Thu Jul  2 07:14:44 2015
+ version: 21 Apr 2014
+
+boot ../ED/hex/ny-boot.hex radio ../GW_BOU/hex/gw.hex 
+serial number:1214Z051522
+MAC 30764000c942
+dFk -0.000627 0.0469 0.253 -123
+Tk 0.435 625
+Channel 254
+12kbod YES Hopping NO
+edAddr: 2 gwAddr 1

@@ -1,0 +1,3923 @@
+;-----------------------------------------------------------------------------
+;
+;	File:		iar_stack_enter_leave.s51
+;
+;	Version:	6.10
+;
+;	Created:	12/Mar/02 IANB
+;	Revised:
+;
+;
+;	Description:	Save registers on stack.
+;
+;	Calling convention:
+;	-------------------
+;
+;		Scratch registers:
+;			A	Destroyed at enter & leave
+;			B	Contains bit parameters (if any)
+;			Carry	Destroyed at enter
+;			R0	Destroyed at enter & leave
+;			R1-R5	Can be register parameters (if any)
+;
+;		Preserved registers:
+;		       *DPTR	Avoid re-load
+;			R6-R7	Register variables
+;			V0-Vx	Register variables in IDATA
+;
+;		* DPTR is only preserved in XDATA memory models.
+;
+;               ATTENTION!!! Carry bit MUST be preserved in leave routines.
+;
+;
+;       REVISON INFORMATION
+;
+;       Log information is available at the end of this file
+;-----------------------------------------------------------------------------
+
+#include "iar_common.h"
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FUNC_ENTER_OVERLAY
+;
+;	Description:
+;		Saves register R6 and R7 plus a specified number of virtual
+;		registers on the machine stack.
+;
+;
+;		+------+
+;		|      | <-- FRAME
+;		+ - - -+
+;		|  Vn  |
+;		|  :   |
+;		|  V0  |
+;		+ - - -+
+;		|  VB  |
+;		+ - - -+
+;		|  R6  |
+;		+ - - -+
+;		|  R7  |
+;		+------+
+;
+;
+;	Register input:
+;		R0 Points to parameter (PRM) area, where to save registers.
+;		A  The number of Virtual regs to push.
+;
+;	Register output:
+;		A  = 0
+;		R6 = 0
+;		R0   Is undefined.
+;
+;       Multiple DPTR
+;               DPTR/DPS: unchanged
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+;
+;                           FF
+;                           :
+;                           +------+
+; [Base(2), CFA_SP - A - 2] | RetH | (holds high part of return address from start)
+;                           + - - -+
+; [Base(1), CFA_SP - A - 3] | RetL | (holds low part of return address from start)
+;                           +------+
+; [Base(0)]                 |  xx  | <-- SP <-- CFA_SP
+;                           +------+
+;                           :
+;                           0
+;
+
+	MODULE	?FUNC_ENTER_OVERLAY
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?FUNC_ENTER_OVERLAY
+	EXTERN	?V0
+	EXTERN	?VB
+        EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?FUNC_ENTER_OVERLAY Using cfi_common
+    cfi NOFUNCTION
+    cfi R0 Undefined
+    cfi R1 Undefined
+    cfi R2 Undefined
+    cfi R3 Undefined
+    cfi R4 Undefined
+    cfi R5 Undefined
+    cfi R6 Undefined
+    cfi R7 Undefined
+    cfi A  Undefined
+
+?FUNC_ENTER_OVERLAY:
+#if (__NUMBER_OF_DPTRS__ > 1)
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+	XCH	A,R7		; save R6 and R7
+	MOV	@R0,A
+	INC 	R0
+	MOV	A,R6
+	MOV	@R0,A
+	INC 	R0
+
+	MOV	@R0,?VB 	; save Bit register
+	INC	R0
+
+	MOV	A,R1		; save tmp reg
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+
+	MOV	R1,#?V0
+Loop:	
+	MOV	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	DJNZ	R7,Loop
+
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	MOV	R1,A
+
+	RET
+
+#ifdef __BACKTRACE_TESTER__
+       PUBLIC  ?FUNC_ENTER_OVERLAY_ENDS
+?FUNC_ENTER_OVERLAY_ENDS:
+#endif ; __BACKTRACE_TESTER__
+
+    cfi ENDBLOCK ?FUNC_ENTER_OVERLAY
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FUNC_LEAVE_OVERLAY
+;
+;	Description:
+;		Restore register R6, R7 and ?BREG_SEG plus a specified
+;		number of virtual registers on the machine stack.
+;
+;		+------+
+;		|      | <-- FRAME
+;		+ - - -+
+;		|  Vn  |
+;		|  :   |
+;		|  V0  |
+;		+ - - -+
+;		|  VB  |
+;		+ - - -+
+;		|  R6  |
+;		+ - - -+
+;		|  R7  |
+;		+------+
+;
+;
+;	Register input:
+;		R0  Points to parameter (PRM) area, from where to restore registers.
+;		A  The number of Virtual regs to push.
+;
+;	Register output:
+;		A  = undefined.
+;		R7 = restored value.
+;		R0   Is undefined.
+;
+;       Multiple DPTR
+;               DPTR/DPS: unchanged
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FUNC_LEAVE_OVERLAY
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?FUNC_LEAVE_OVERLAY
+	EXTERN	?V0
+	EXTERN	?VB
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?FUNC_LEAVE_OVERLAY Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?FUNC_LEAVE_OVERLAY:
+	XCH	A,R2
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+	MOV	A,R1		; save tmp reg
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 4
+
+	MOV	A,@R0
+	MOV	R7,A
+	INC	R0
+	MOV	A,@R0
+	MOV	R6,A
+	INC	R0
+
+	MOV	?VB,@R0	; restore Bit register
+	INC	R0
+
+	MOV	R1,#?V0
+Loop:	
+	MOV	A,@R0
+	MOV	@R1,A
+	INC	R1
+	INC	R0
+	DJNZ	R2,Loop
+
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+	MOV	R1,A
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	MOV	R2,A
+
+#if  (__NUMBER_OF_DPTRS__ > 1)
+	SELECT_DPTR0()
+#endif
+	RET
+
+#ifdef __BACKTRACE_TESTER__
+       PUBLIC  ?FUNC_LEAVE_OVERLAY_ENDS
+?FUNC_LEAVE_OVERLAY_ENDS:
+#endif ; __BACKTRACE_TESTER__
+
+    cfi ENDBLOCK ?FUNC_LEAVE_OVERLAY
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FUNC_ENTER_SP
+;
+;	Description:
+;		Saves register R6 and R7 plus a specified number of virtual
+;		registers on the machine stack.
+;
+;                  FF
+;                  :
+;		+------+
+;       CFA --> |  Vn  | <-- SP end, n = A in
+;		+ - - -+
+;		 :  :  :
+;		+ - - -+
+;		|  V1  |
+;		+ - - -+
+;		|  V0  |
+;		+ - - -+
+;		|  VB  |
+;		+ - - -+
+;		|  R7  | <-- SP begin
+;		+ - - -+
+;		|  R6  |
+;		+ - - -+
+;		| xxxx |
+;		+------+
+;                  :
+;                  0
+;
+;	Register input:
+;		A  = Number of virtual registers to save.
+;
+;	Register output:
+;		SP = SP+A
+;		A  = 0
+;		R6 = 0
+;		R0 = Undefined.
+;		DPTR0  = The return address from this function.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FUNC_ENTER_SP
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?FUNC_ENTER_SP
+	EXTERN  ?VB
+	EXTERN  ?V0
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?FUNC_ENTER_SP Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+    cfi B     Undefined
+    cfi VB    Undefined
+    cfi R0    Undefined
+    cfi R1    Undefined
+    cfi R2    Undefined
+    cfi R3    Undefined
+    cfi R4    Undefined
+    cfi R5    Undefined
+    cfi R6    Undefined
+    CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS()
+#if (__CORE__ == __CORE_EXTENDED1__)
+  cfi CFA_MACHINE  add(MACHINE_SP,A)
+  #if (defined(__EXTENDED_STACK__))
+    cfi ?RET_EXT  load(1, XDATA, sub(CFA_MACHINE, A))
+    cfi ?RET_HIGH load(1, XDATA, sub(sub(CFA_MACHINE, A), 1))
+    cfi ?RET_LOW  load(1, XDATA, sub(sub(CFA_MACHINE, A), 2))
+  #else
+    cfi ?RET_EXT  load(1, IDATA, sub(CFA_MACHINE, A))
+    cfi ?RET_HIGH load(1, IDATA, sub(sub(CFA_MACHINE, A), 1))
+    cfi ?RET_LOW  load(1, IDATA, sub(sub(CFA_MACHINE, A), 2))
+  #endif
+#else
+  cfi CFA_MACHINE  add(MACHINE_SP,add(A,1))
+  #if (defined(__EXTENDED_STACK__))
+    cfi ?RET_HIGH load(1, XDATA, sub(sub(CFA_MACHINE, A), 1))
+    cfi ?RET_LOW  load(1, XDATA, sub(sub(CFA_MACHINE, A), 2))
+  #else
+    cfi ?RET_HIGH load(1, IDATA, sub(sub(CFA_MACHINE, A), 1))
+    cfi ?RET_LOW  load(1, IDATA, sub(sub(CFA_MACHINE, A), 2))
+  #endif
+#endif
+
+?FUNC_ENTER_SP:
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE ADD(SUB(MACHINE_SP, 2), ADD(A, 3))
+    cfi ?RET_EXT DPX0
+	POP	DPH
+    cfi CFA_MACHINE ADD(SUB(MACHINE_SP, 1), ADD(A, 3))
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE ADD(SUB(MACHINE_SP, 0), ADD(A, 3))
+    cfi ?RET_LOW DPL0
+#else
+#if ( defined(__EXTENDED_DPTR__))
+	MOV	?DPX,#0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE ADD(SUB(MACHINE_SP, 1), ADD(A, 3))
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE ADD(SUB(MACHINE_SP, 0), ADD(A, 3))
+    cfi ?RET_LOW DPL0
+#endif
+
+	XCH	A,R6
+    cfi CFA_MACHINE ADD(SUB(MACHINE_SP, 0), ADD(R6, 3))
+
+	PUSH	A
+    cfi CFA_MACHINE ADD(SUB(MACHINE_SP, 1), ADD(R6, 3))
+	MOV	A,R7
+	PUSH	A
+    cfi CFA_MACHINE ADD(SUB(MACHINE_SP, 2), ADD(R6, 3))
+
+	PUSH	?VB
+    cfi CFA_MACHINE ADD(SUB(MACHINE_SP, 3), ADD(R6, 3))
+	MOV	R0,#?V0
+
+Loop:	MOV	A,@R0
+	INC	R0
+	PUSH	A
+    cfi CFA_MACHINE add(sub(MACHINE_SP, 4), add(R6, 3))
+	DJNZ	R6,Loop
+    cfi CFA_MACHINE MACHINE_SP + 0
+	CLR	A
+	JMP	@A+DPTR
+
+#ifdef __BACKTRACE_TESTER__
+       PUBLIC  ?FUNC_ENTER_SP_ENDS
+?FUNC_ENTER_SP_ENDS:
+#endif ; __BACKTRACE_TESTER__
+
+    cfi ENDBLOCK ?FUNC_ENTER_SP
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FUNC_LEAVE_SP
+;
+;	Description:
+;		Restore register R6 and R7 plus a specified number of virtual
+;		registers from the machine stack.
+;
+;                   FF
+;                   :
+;		+------ +
+;		|  Vn   | <-- SP begin, n = R7 in
+;		+ - - - +
+;		 :  :  :
+;		+ - - - +
+;		|  V1   |
+;		+ - - - +
+;		|  V0   |
+;		+ - - - +
+;		|  VB   |
+;		+ - - - +
+;		|  R7   |
+;		+ - - - +
+;               |  R6   |
+;	        + - - - +
+;	      ( |  retx | ) retx may or may not exist.
+;	      ( + - - - + )
+;		|  reth | <-- SP end (before return)
+;		+ - - - +
+;		|  retl |
+;		+ - - - +
+;       CFA --> | xxxxx |
+;		+-------+
+;                   :
+;                   00
+;
+;	Register input:
+;		R7 = Number of virtual registers to restore.
+;
+;	Register output:
+;		SP = SP-R7
+;		R0 = R0-R7
+;		R6 = Restored value
+;		R7 = Restored value
+;		A  = R6
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+
+leave_SP MACRO retType
+	MODULE	?\1_LEAVE_SP
+	EXTERN  ?VB
+	EXTERN	?V0
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	IF      '\1'='BANKED'
+	EXTERN	?BRET
+	ENDIF
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?\1_LEAVE_SP
+    cfi BLOCK ?\1_LEAVE_SP USING cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+    cfi B     Undefined
+    cfi VB    Undefined
+    cfi R0    Undefined
+    cfi R1    Undefined
+    cfi R2    Undefined
+    cfi R3    Undefined
+    cfi R4    Undefined
+    cfi R5    Undefined
+    cfi R6    Undefined
+    cfi R7    Undefined
+    CFI_COMMON_DECLARE_UNDEFINED_FOR_ALL_DPTR_REGISTERS()
+#if   (__CODE_MODEL__ == __CM_BANKED__)
+    cfi CFA_MACHINE  sub(MACHINE_SP,add(add(4,__SIZE_OF_RETADDR__),R7))
+#else
+    cfi CFA_MACHINE  sub(MACHINE_SP,add(add(3,__SIZE_OF_RETADDR__),R7))
+#endif
+#if (__CORE__ == __CORE_EXTENDED1__)
+  #if (defined(__EXTENDED_STACK__))
+    cfi ?RET_EXT  load(1, XDATA, add(CFA_MACHINE, 3))
+    cfi ?RET_HIGH load(1, XDATA, add(CFA_MACHINE, 2))
+    cfi ?RET_LOW  load(1, XDATA, add(CFA_MACHINE, 1))
+  #else
+    cfi ?RET_EXT  load(1, IDATA, add(CFA_MACHINE, 3))
+    cfi ?RET_HIGH load(1, IDATA, add(CFA_MACHINE, 2))
+    cfi ?RET_LOW  load(1, IDATA, add(CFA_MACHINE, 1))
+  #endif
+#else
+  #if (defined(__EXTENDED_STACK__))
+    cfi ?RET_HIGH load(1, XDATA, add(CFA_MACHINE, 2))
+    cfi ?RET_LOW  load(1, XDATA, add(CFA_MACHINE, 1))
+  #else
+    cfi ?RET_HIGH load(1, IDATA, add(CFA_MACHINE, 2))
+    cfi ?RET_LOW  load(1, IDATA, add(CFA_MACHINE, 1))
+  #endif
+#endif
+
+?\1_LEAVE_SP:
+;; Here we describe if Vx has been pushed yet.
+;; R6 goes from NrOfVRegs to 0
+;; R0 - VStart goes from 0 to NrOfVRegs
+;;
+	PUSH	PSW     ; Preserves carry
+#if   (__CODE_MODEL__ == __CM_BANKED__)
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(add(5,__SIZE_OF_RETADDR__),R7))
+#else
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(add(4,__SIZE_OF_RETADDR__),R7))
+#endif
+	MOV	A,#?V0 - 1
+	ADD	A,R7
+	POP	PSW     ; Preserves carry
+#if   (__CODE_MODEL__ == __CM_BANKED__)
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(add(4,__SIZE_OF_RETADDR__),R7))
+#else
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(add(3,__SIZE_OF_RETADDR__),R7))
+#endif
+	MOV	R0,A    ; R0 now points at the last virtual register to restore.
+Loop:	POP	A
+#if   (__CODE_MODEL__ == __CM_BANKED__)
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(add(3,__SIZE_OF_RETADDR__),R7))
+#else
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(add(2,__SIZE_OF_RETADDR__),R7))
+#endif
+	MOV	@R0,A
+	DEC	R0
+	DJNZ	R7,Loop
+#if   (__CODE_MODEL__ == __CM_BANKED__)
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(4,__SIZE_OF_RETADDR__)) ; R7 is now 0
+#else
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(3,__SIZE_OF_RETADDR__)) ; R7 is now 0
+#endif
+	POP	?VB
+#if   (__CODE_MODEL__ == __CM_BANKED__)
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(3,__SIZE_OF_RETADDR__))
+#else
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(2,__SIZE_OF_RETADDR__))
+#endif
+	POP	A
+#if   (__CODE_MODEL__ == __CM_BANKED__)
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(2,__SIZE_OF_RETADDR__))
+#else
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(1,__SIZE_OF_RETADDR__))
+#endif
+	MOV	R7,A
+	POP	A
+#if   (__CODE_MODEL__ == __CM_BANKED__)
+   cfi CFA_MACHINE  sub(MACHINE_SP, add(__SIZE_OF_RETADDR__,1))
+#else
+   cfi CFA_MACHINE  sub(MACHINE_SP, __SIZE_OF_RETADDR__)
+#endif
+	MOV	R6,A
+
+#if  (__NUMBER_OF_DPTRS__ > 1)
+	SELECT_DPTR0()
+#endif
+
+	IF      '\1'='BANKED'
+	LJMP	?BRET
+	ELSE
+	RET
+	ENDIF
+
+#ifdef __BACKTRACE_TESTER__
+       PUBLIC  ?\1_LEAVE_SP_ENDS
+?\1_LEAVE_SP_ENDS:
+#endif ; __BACKTRACE_TESTER__
+
+    cfi ENDBLOCK ?\1_LEAVE_SP
+	ENDMOD
+
+	ENDM
+
+	leave_SP BANKED
+	leave_SP FUNC
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FUNC_ENTER_PDATA
+;
+;	Description:
+;		Saves register R6 and R7 plus a specified number of virtual
+;		registers on the PDATA stack.
+;
+;               FF
+;               :
+;          +----------+
+;          | xxxxxxxx |  <-- ?PSP begin
+;          + - - - - -+
+;        ( | Ret_cc_E | )
+;        ( + - - - - -+ )
+;          | Ret_cc_H |
+;          + - - - - -+
+;          | Ret_cc_L |
+;          + - - - - -+
+;          |    R7    |
+;          + - - - - -+
+;          |    Vn    |
+;          + - - - - -+
+;           :    :   :
+;          + - - - - -+
+;          |    V1    |
+;          + - - - - -+
+;          |    V0    |
+;          + - - - - -+
+;          |    VB    |
+;          + - - - - -+
+;   CFA--> |    R6    | <-- ?PSP end
+;          +----------+
+;               :
+;               00
+;
+;	Register input:
+;		A      = -(Number of bytes to save)
+;
+;	Register output:
+;		?PSP   = ?PSP - (-A)
+;		DPTR0  = PC
+;		R0     = Undefined
+;		A      = 0
+;		R6     = 0
+;		CY     = 0
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+enter_PSP MACRO retType
+	MODULE	?\1_ENTER_PDATA
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?\1_ENTER_PDATA
+	EXTERN  ?VB
+	EXTERN  ?V0
+	EXTERN	?PSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?\1_ENTER_PDATA Using cfi_pdata_enter_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+    cfi CFA_SPP sub(SPP,sub(256,A))
+
+?\1_ENTER_PDATA:
+?\1_ENTER_PDATA_CFI_INVALID_BEGINS:
+    cfi invalid
+#if (__NUMBER_OF_DPTRS__ > 1)
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#elif defined(__EXTENDED_DPTR__)
+	MOV	?DPX,#0
+#endif
+	POP	DPH		; Remove the library function return address
+    cfi CFA_MACHINE MACHINE_SP - 3
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_LOW DPL0
+
+	ADD	A,?PSP	        ; Allocate space on the stack
+    cfi CFA_SPP A
+	MOV	R0,A		; R0 = Start of the save area
+	XCH	A,?PSP	        ; Save the new value of SP and get the old one
+    cfi CFA_SPP SPP
+    cfi Base    add(R0,sub(256,A))
+
+	CLR	C		; Counter = end - start - 5
+	SUBB	A,R0
+
+	IF      '\1'='BANKED'
+	ADD	A,#-6
+	ELSE
+#if (__CODE_MODEL__ == __CM_FAR__)
+	ADD	A,#-6
+#else
+	ADD	A,#-5
+#endif
+	ENDIF
+
+	XCH	A,R6		; R6 = counter
+	MOVX	@R0,A		; R6 ==> PStack.
+	INC	R0
+
+        MOV     A,?VB
+	MOVX	@R0,A           ; VB ==> PStack.
+	INC	R0
+
+	MOV	A,R1
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+
+	MOV	R1,#?V0
+Loop:	MOV	A,@R1		; Vn ==> PStack.
+	INC	R1
+	MOVX	@R0,A
+	INC	R0
+	DJNZ	R6,Loop
+
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	MOV	R1,A
+
+	MOV	A,R7
+	MOVX	@R0,A           ; R7 == > PStack.
+	INC	R0
+	
+;=======================================;
+; Move the function return address from ;
+; the IDATA stack to the PDATA stack.	;
+;=======================================;
+	IF      '\1'='BANKED'
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	MOV	R7,A
+	ELSE
+#if (__CODE_MODEL__ == __CM_FAR__)
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP -2
+	MOV	R7,A
+#endif
+	ENDIF
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	MOV	R6,A
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP
+	
+	MOVX	@R0,A           ; RetL_cc ==> PStack.
+	INC	R0
+	MOV	A,R6
+	MOVX	@R0,A           ; RetH_cc ==> PStack.
+	INC	R0
+
+	IF      '\1'='BANKED'
+	MOV	A,R7
+	MOVX	@R0,A           ; RetE_cc ==> PStack.
+	INC	R0
+	ELSE
+#if (__CODE_MODEL__ == __CM_FAR__)
+	MOV	A,R7
+	MOVX	@R0,A           ; RetE_cc ==> PStack.
+	INC	R0
+#endif
+	ENDIF
+	CLR	A
+	JMP	@A+DPTR
+    cfi valid
+?\1_ENTER_PDATA_CFI_INVALID_ENDS:
+    cfi ENDBLOCK ?\1_ENTER_PDATA
+	ENDMOD
+	ENDM
+
+	enter_PSP BANKED
+	enter_PSP FUNC
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FUNC_LEAVE_PDATA
+;
+;	Description:
+;		Restore register R6 and R7 plus a specified number of virtual
+;		registers from the PDATA stack.
+;
+;		+----------+
+;               | Ret_cc_E |
+;               + - - - - -+
+;               | Ret_cc_H |
+;               + - - - - -+
+;               | Ret_cc_L |
+;               + - - - - -+
+;		|    R7    |
+;		+ - - - - -+
+;		|    VR    |
+;		+ - - - - -+
+;		|    VB    |
+;		+ - - - - -+
+;		|    R6    |
+;		+ - - - - -+
+;		|          | <-- ?PSP
+;		+----------+
+;
+;	Register input:
+;		R7     = Number of virtual registers to restore.
+;
+;	Register output:
+;		R0     = ?PSP
+;		R6     = Restored value
+;		R7     = Restored value
+;		A      = RETH
+;
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: 0
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+leave_PSP MACRO retType
+
+	MODULE	?\1_LEAVE_PDATA
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?\1_LEAVE_PDATA
+	EXTERN  ?VB	
+	EXTERN	?V0
+	EXTERN	?PSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+	IF      '\1'='BANKED'
+	EXTERN	?BRET
+	ENDIF
+
+    cfi BLOCK ?\1_LEAVE_PDATA USING cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+?\1_LEAVE_PDATA:
+?\1_LEAVE_PDATA_CFI_INVALID_BEGINS:
+    cfi invalid
+	MOV	R0,?PSP
+
+;=======================================;
+;       Restore the R6 register.	;
+;=======================================;
+	MOVX	A,@R0
+	MOV	R6,A
+	INC	R0
+
+;=======================================;
+;   Restore VB register.                ;
+;=======================================;
+	MOVX	A,@R0
+	INC	R0
+	MOV	?VB,A
+
+;=======================================;
+;       Preserve the R1 register.	;
+;=======================================;
+	MOV	A,R1		; Save R1, used as tmp
+	PUSH 	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+	
+
+;=======================================;
+;   Restore all the virtual registers.	;
+;=======================================;
+	MOV	R1,#?V0    ; R0 now points at the first virtual register to restore.
+Loop:	MOVX	A,@R0
+	INC	R0
+	MOV	@R1,A
+	INC	R1
+	DJNZ	R7,Loop
+
+;=======================================;
+;       Restore the R7 register.	;
+;=======================================;
+	MOVX	A,@R0
+	INC	R0
+	MOV	R7,A
+
+;=======================================;
+;       Restore the R1 register.	;
+;=======================================;
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 0
+	MOV	R1,A
+
+;=======================================;
+; Restore the function return address.	;
+;=======================================;
+	MOVX	A,@R0
+	INC	R0
+	PUSH 	A               ; RET_L ==> Machine stack.
+    cfi CFA_MACHINE MACHINE_SP - 1
+	MOVX	A,@R0
+	INC	R0
+	PUSH	A               ; RET_H ==> Machine stack.
+    cfi CFA_MACHINE MACHINE_SP - 2
+
+	IF      '\1'='BANKED'
+	MOVX	A,@R0
+	INC	R0
+	PUSH	A               ; RET_E ==> Machine stack.
+    cfi CFA_MACHINE MACHINE_SP - 2
+	ELSE
+#if ( (__CODE_MODEL__ == __CM_FAR__))
+	MOVX	A,@R0
+	INC	R0
+	PUSH	A               ; RET_E ==> Machine stack.
+    cfi CFA_MACHINE MACHINE_SP - 2
+#endif
+	ENDIF
+	MOV	?PSP,R0
+
+#if  (__NUMBER_OF_DPTRS__ > 1)
+	SELECT_DPTR0()
+#endif
+
+	IF      '\1'='BANKED'
+	LJMP	?BRET
+	ELSE
+	RET
+	ENDIF
+
+?\1_LEAVE_PDATA_CFI_INVALID_ENDS:
+    cfi invalid
+
+    cfi ENDBLOCK ?\1_LEAVE_PDATA
+	ENDMOD
+
+        ENDM
+
+
+	leave_PSP BANKED
+	leave_PSP FUNC
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FUNC_ENTER_XDATA
+;
+;	Description:
+;		Saves register R6,R7,(DPX),DPH,DPL,VB,(RETX)RETH,RETL
+;		plus a specified number of virtual
+;		registers on the XDATA stack.
+;
+;               +----------+
+;               |  ?DPX (if extended dptr)   |
+;               + - - - - -+
+;               |   DPH    |
+;               + - - - - -+
+;               |   DPL    |
+;               + - - - - -+
+;               | Ret_cc_E (if banked of far)|
+;               + - - - - -+
+;               | Ret_cc_H |
+;               + - - - - -+
+;               | Ret_cc_L |
+;               + - - - - -+
+;		|    R7    |
+;		+ - - - - -+
+;		|    VR    |
+;		+ - - - - -+
+;		|    VB    |
+;		+ - - - - -+
+;		|    R6    | <-- XSP
+;		+----------+
+;
+;
+;	Register input:
+;		A  -(The number of bytes to push + 7/8).
+;
+;	Register output:
+;		DPTR0  = XSTACK - 1
+;		XSTACK = XSTACK - (-A)
+;		R0     = R0 + (-A) - 2
+;		A      = R7
+;		R6     = Is undefined
+;		CY     = Undefined
+;
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage peak	:  5
+;	Stack usage after return: -2
+;
+;-----------------------------------------------------------------------------
+enter_XSP MACRO retType
+	MODULE	?\1_ENTER_XDATA
+	RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?\1_ENTER_XDATA
+	EXTERN  ?V0
+	EXTERN  ?VB
+	EXTERN	?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?\1_ENTER_XDATA Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+?\1_ENTER_XDATA:
+?\1_ENTER_XDATA_CFI_INVALID_BEGINS:
+    cfi invalid
+#if (__NUMBER_OF_DPTRS__ > 1)
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+	ADD	A,XSP_L
+	XCH	A,DPL
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 5
+	MOV	A,XSP_H
+	ADDC	A,#255
+	XCH	A,DPH
+	PUSH	A
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX
+	MOV	?DPX,#BYTE3(SFB(XSTACK))
+#endif
+    cfi CFA_MACHINE MACHINE_SP - 6
+	MOV	A,XSP_L
+	CLR	C
+	SUBB	A,DPL
+
+	IF      '\1'='BANKED'
+#if (defined (__EXTENDED_DPTR__))
+	ADD	A,#-9
+#else
+	ADD	A,#-8
+#endif
+	ELSE
+#if ((__CODE_MODEL__ == __CM_FAR__) && (defined (__EXTENDED_DPTR__)))
+	ADD	A,#-9
+#elif (defined (__EXTENDED_DPTR__))
+	ADD	A,#-8
+#else
+	ADD	A,#-7
+#endif
+	ENDIF
+
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+    cfi CFA_MACHINE MACHINE_SP - 7
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,DPH
+	MOV	XSP_L,DPL
+	POP	0xA8 /* IE */
+    cfi CFA_MACHINE MACHINE_SP - 6
+
+;=======================================;
+;  Preserve the R6 register.		;
+;=======================================;
+	XCH	A,R6		; R6 = Number of virtual registers to push
+	MOVX	@DPTR,A
+	INC	DPTR
+
+;=======================================;
+;    Move all the virtual registers	;
+;    in IDATA to the XDATA stack.	;
+;=======================================;
+        MOV     A,?VB
+	MOVX	@DPTR,A
+	INC  	DPTR
+
+	MOV	R0,#?V0
+Loop:	MOV	A,@R0
+	INC	R0
+	MOVX	@DPTR,A
+	INC	DPTR
+	DJNZ	R6,Loop
+
+;=======================================;
+;       Preserve the R7 register.	;
+;=======================================;
+	MOV	A,R7
+	MOVX	@DPTR,A
+	INC	DPTR
+
+;=======================================;
+; Move the function return address from ;
+; the IDATA stack to the XDATA stack.	;
+;
+;   IDATA stack
+;
+;  +----------+
+;  |  ?DPX (if extended dptr)    | <-- SP
+;  |   DPH    |
+;  |   DPL    |
+;  + - - - - -+
+;  | Ret_lib_E (if far)|
+;  | Ret_lib_H|
+;  | Ret_lib_L|
+;  + - - - - -+
+;  | Ret_cc_E (if banked or far)|
+;  | Ret_cc_H |
+;  | Ret_cc_L | <-- R0
+;  +----------+
+;
+; offset = 5
+; if (CM = far) offest += 2
+; else if (CM = banked) offset +=1
+; if (extended_dptr) offset += 1
+;
+;
+;=======================================;
+
+
+	MOV	A,SP
+
+	IF      '\1'='BANKED'
+#if (defined (__EXTENDED_DPTR__))
+	ADD	A,#-7
+#else
+	ADD	A,#-6
+#endif
+	ELSE
+#if (__CODE_MODEL__ == __CM_FAR__)
+  #if (defined (__EXTENDED_DPTR__))
+	ADD	A,#-8
+  #else
+	ADD	A,#-7
+  #endif
+#else
+  #if (defined (__EXTENDED_DPTR__))
+	ADD	A,#-6
+  #else
+	ADD	A,#-5
+  #endif
+#endif
+	ENDIF
+
+	MOV	R0,A
+
+	MOV	A,@R0
+	INC	R0
+	MOVX	@DPTR,A    ; Ret_cc_L ==> XStack
+	INC	DPTR
+
+	MOV	A,@R0
+	INC	R0
+	MOVX	@DPTR,A    ; Ret_cc_H ==> XStack
+	INC	DPTR
+
+	IF      '\1'='BANKED'
+	MOV	A,@R0
+	INC	R0
+	MOVX	@DPTR,A    ; Ret_cc_E ==> XStack
+	INC	DPTR
+	ELSE
+#if ((__CODE_MODEL__ == __CM_FAR__))
+	MOV	A,@R0
+	INC	R0
+	MOVX	@DPTR,A    ; Ret_cc_E ==> XStack
+	INC	DPTR
+#endif
+	ENDIF
+
+	INC	R0
+	INC	R0
+#if (__CODE_MODEL__ == __CM_FAR__)
+	INC	R0
+#endif
+
+	MOV	A,@R0
+	INC	R0
+	MOVX	@DPTR,A    ; DPL ==> XStack
+	INC	DPTR
+
+	MOV	A,@R0
+	INC	R0
+	MOVX	@DPTR,A    ; DPH ==> XStack
+	INC	DPTR
+
+#if (defined(__EXTENDED_DPTR__))
+	MOV	A,@R0
+	INC	R0
+	MOVX	@DPTR,A    ; ?DPX ==> XStack
+	INC	DPTR
+#endif
+
+#if (defined(__EXTENDED_DPTR__))
+	DEC	SP
+#endif
+	DEC	SP
+	DEC	SP
+
+#if ( __CODE_MODEL__ == __CM_FAR__ )
+	POP	A
+	MOV	R7,A
+#endif
+	POP	A
+	MOV	R6,A
+	POP	A
+	MOV	R0,A
+
+	IF      '\1'='BANKED'
+	DEC	SP
+	ELSE
+#if ((__CODE_MODEL__ == __CM_FAR__))
+	DEC	SP
+#endif
+	ENDIF
+
+	DEC	SP
+	DEC	SP
+
+	MOV	A,R0
+	PUSH	A
+	MOV	A,R6
+	PUSH	A
+#if ( __CODE_MODEL__ == __CM_FAR__ )
+	MOV	A,R7
+	PUSH	A
+#endif
+	RET
+
+?\1_ENTER_XDATA_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?\1_ENTER_XDATA
+	ENDMOD
+
+	ENDM
+
+	enter_XSP BANKED
+	enter_XSP FUNC
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FUNC_LEAVE_XDATA
+;
+;	Description:
+;		Restore register R6 and R7 plus a specified number of virtual
+;		registers from the machine stack.
+;
+;               +----------+
+;               |  ?DPX (if extended dptr)   |
+;               + - - - - -+
+;               |   DPH    |
+;               + - - - - -+
+;               |   DPL    |
+;               + - - - - -+
+;               | Ret_cc_E (if banked or far) |
+;               + - - - - -+
+;               | Ret_cc_H |
+;               + - - - - -+
+;               | Ret_cc_L |
+;               + - - - - -+
+;		|    R7    |
+;		+ - - - - -+
+;		|    VR    |
+;		+ - - - - -+
+;		|    VB    |
+;		+ - - - - -+
+;		|    R6    |
+;		+ - - - - -+
+;		|          | <-- XSP
+;		+----------+
+;
+;
+;	Register input:
+;		R7 Number of vitrual registers to restore
+;
+;	Register output:
+;		R0     = Undefined
+;		DPTR   = Restored value
+;		R6     = Restored value
+;		R7     = Restored value
+;		A      = Undefined
+;		B      = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+
+leave_XSP MACRO retType
+
+	MODULE	?\1_LEAVE_XDATA
+        RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?\1_LEAVE_XDATA
+	EXTERN  ?VB
+	EXTERN	?V0
+	EXTERN	?XSP
+;#if ((__CODE_MODEL__ == __CM_BANKED_EXT2__))
+	EXTERN  ?RET_EXT2
+;#endif
+	IF      '\1'='BANKED'
+	EXTERN	?BRET
+	ENDIF
+
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?\1_LEAVE_XDATA USING cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+?\1_LEAVE_XDATA:
+?\1_LEAVE_XDATA_CFI_INVALID_BEGINS:
+    cfi invalid
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+	MOV	DPH,XSP_H
+	MOV	DPL,XSP_L
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+
+;=======================================;
+;       Restore the R6 register.	;
+;=======================================;
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	R6,A
+
+;=======================================;
+;   Restore VB register.                ;
+;=======================================;
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?VB,A
+
+;=======================================;
+;   Restore all the virtual registers.	;
+;=======================================;
+	MOV	R0,#?V0
+Loop:	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	@R0,A
+	INC	R0
+	DJNZ	R7,Loop
+
+;=======================================;
+;       Restore the R7 register.	;
+;=======================================;
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	R7,A
+	
+;===========================================;
+;       Prepare IStack with Return address. ;
+;===========================================;
+	MOVX	A,@DPTR
+	INC	DPTR
+	PUSH	A          ; Ret_cc_L ==> IStack
+	MOVX	A,@DPTR
+	INC	DPTR
+	PUSH	A          ; Ret_cc_H ==> IStack
+
+	IF      '\1'='BANKED'
+	MOVX	A,@DPTR
+	INC	DPTR
+	PUSH	A          ; Ret_cc_E ==> IStack
+	ELSE
+#if ( (__CODE_MODEL__ == __CM_FAR__))
+	MOVX	A,@DPTR
+	INC	DPTR
+	PUSH	A          ; Ret_cc_E ==> IStack
+#endif
+	ENDIF
+
+;=======================================;
+;       Prepare IStack with old DPTR.   ;
+;=======================================;
+	MOVX	A,@DPTR
+	INC	DPTR
+	PUSH	A          ; old_DPL  ==> IStack
+	MOVX	A,@DPTR
+	INC	DPTR
+	PUSH	A          ; old_DPH  ==> IStack
+#if (defined (__EXTENDED_DPTR__) )
+	MOVX	A,@DPTR
+	INC	DPTR
+	PUSH	A          ; old_?DPX ==> IStack
+#endif
+
+;=======================================;
+;       Dealloc XSP.               	;
+;=======================================;
+	MOV	B,0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_L,DPL
+	MOV	XSP_H,DPH
+	MOV	0xA8 /* IE */,B
+
+;=======================================;
+;       Restore DPTR register.          ;
+;=======================================;
+#if (defined (__EXTENDED_DPTR__) )
+	POP	?DPX
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 0
+	POP	DPL
+    cfi CFA_MACHINE MACHINE_SP - 0
+
+#if  (__NUMBER_OF_DPTRS__ > 1)
+	SELECT_DPTR0()
+#endif
+
+	IF      '\1'='BANKED'
+	LJMP	?BRET
+	ELSE
+	RET
+	ENDIF
+
+?\1_LEAVE_XDATA_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?\1_LEAVE_XDATA
+	ENDMOD
+
+	ENDM
+
+	leave_XSP BANKED
+	leave_XSP FUNC
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?INTERRUPT_ENTER_OVERLAY
+;
+;	Description:
+;		Saves register R1-R7,PSW,DPL,DPH,(DPX),B,VB,(DPSEL)
+;		plus a specified number of virtual
+;		registers on the machine stack.
+;
+;	Register input:
+;		R0 Points to parameter (PRM) area, where to save registers.
+;		A  The number of Virtual regs to push.
+;
+;	Register output:
+;		A  = restored value
+;		R0 = restored value
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: none
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+
+	MODULE	?INTERRUPT_ENTER_OVERLAY
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?INTERRUPT_ENTER_OVERLAY
+	EXTERN	?V0
+	EXTERN	?VB
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?INTERRUPT_ENTER_OVERLAY Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?INTERRUPT_ENTER_OVERLAY:
+	; save R1-R7
+	XCH	A,R7		; -> R7 = number of Vregs to save
+	MOV	@R0,A
+	INC 	R0
+	MOV	A,R6
+	MOV	@R0,A
+	INC 	R0
+	MOV	A,R5
+	MOV	@R0,A
+	INC 	R0
+	MOV	A,R4
+	MOV	@R0,A
+	INC 	R0
+	MOV	A,R3
+	MOV	@R0,A
+	INC 	R0
+	MOV	A,R2
+	MOV	@R0,A
+	INC 	R0
+	MOV	A,R1
+	MOV	@R0,A
+	INC 	R0
+
+	; save reg PSW
+	MOV	@R0,PSW
+	INC	R0
+
+	;save reg DPL,DPH,B,VB,(DPSEL)
+#if (__NUMBER_OF_DPTRS__ > 1)
+	MOV	@R0,?DPS
+	INC	R0
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+	MOV	@R0,DPL
+	INC	R0
+	MOV	@R0,DPH
+	INC	R0
+#if (defined (__EXTENDED_DPTR__) )
+	MOV	@R0,?DPX
+	INC	R0
+#endif
+	MOV	@R0,B
+	INC	R0
+	MOV	@R0,?VB
+	INC	R0
+
+	; save virtual registers
+	MOV	R1,#?V0
+Loop:	
+	MOV	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	DJNZ	R7,Loop
+
+	RET
+
+    cfi ENDBLOCK ?INTERRUPT_ENTER_OVERLAY
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SMALL_INTERRUPT_ENTER_OVERLAY
+;
+;	Description:
+;		Saves register DPL,DPH,(DPX),B,VB,(DPSEL)
+;		plus a specified number of virtual
+;		registers on the machine stack.
+;
+;	Register input:
+;		R0 Points to parameter (PRM) area, where to save registers.
+;		R7  The number of Virtual regs to push.
+;
+;	Register output:
+;		A  = restored value
+;		R7 = restored value
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: none
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+
+	MODULE	?SMALL_INTERRUPT_ENTER_OVERLAY
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SMALL_INTERRUPT_ENTER_OVERLAY
+	EXTERN	?V0
+	EXTERN	?VB
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?SMALL_INTERRUPT_ENTER_OVERLAY Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?SMALL_INTERRUPT_ENTER_OVERLAY:
+	;save reg DPL, DPH, B,VB,(DPSEL)
+#if (__NUMBER_OF_DPTRS__ > 1)
+	MOV	@R0,?DPS
+	INC	R0
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+	MOV	@R0,DPL
+	INC	R0	
+	MOV	@R0,DPH
+	INC	R0	
+#if (defined (__EXTENDED_DPTR__) )
+	MOV	@R0,?DPX
+	INC	R0
+#endif
+	MOV	@R0,B
+	INC	R0
+	MOV	@R0,?VB
+	INC	R0
+
+	; save virtual registers
+	MOV	R1,#?V0
+Loop:	
+	MOV	A,@R1
+	MOV	@R0,A
+	INC	R0
+	INC	R1
+	DJNZ	R7,Loop
+
+	RET
+
+    cfi ENDBLOCK ?SMALL_INTERRUPT_ENTER_OVERLAY
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?INTERRUPT_LEAVE_OVERLAY
+;
+;	Description:
+;		Restore register R1-R7,PSW,DPL,DPH,(DPX),B,VB,(DPSEL)
+;		 plus a specified
+;		number of virtual registers on the machine stack.
+;
+;	Register input:
+;		R0  Points to parameter (PRM) area, from where to restore registers.
+;		R7  The number of Virtual regs to push.
+;
+;	Register output:
+;		A  = undefined.
+;		R7 = restored value.
+;		R0   Is undefined.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;               Separate:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?INTERRUPT_LEAVE_OVERLAY
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?INTERRUPT_LEAVE_OVERLAY
+	EXTERN	?V0
+	EXTERN	?VB
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?INTERRUPT_LEAVE_OVERLAY Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?INTERRUPT_LEAVE_OVERLAY:
+	; restore R1-r7
+	MOV	A,@R0
+	PUSH	A		; R7 (restored)-> idata stack
+	INC	R0
+	MOV	A,@R0
+	MOV	R6,A
+	INC	R0
+	MOV	A,@R0
+	MOV	R5,A
+	INC	R0
+	MOV	A,@R0
+	MOV	R4,A
+	INC	R0
+	MOV	A,@R0
+	MOV	R3,A
+	INC	R0
+	MOV	A,@R0
+	MOV	R2,A
+	INC	R0
+	MOV	A,@R0
+	PUSH	A		; R1 (restored) -> idata stack
+	INC	R0
+
+	; restore PSW
+	MOV	PSW,@R0
+	INC	R0
+
+	; restore B,VB,(DPSEL)
+#if (__NUMBER_OF_DPTRS__ > 1)
+	MOV	?VB,@R0         ; save ?DPS resore value in ?VB
+	INC	R0
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+	MOV	DPL,@R0
+	INC	R0	
+	MOV	DPH,@R0
+	INC	R0	
+#if (defined (__EXTENDED_DPTR__) )
+	MOV	?DPX,@R0
+	INC	R0
+#endif
+	MOV	B,@R0
+	INC	R0
+#if (__NUMBER_OF_DPTRS__ > 1)
+        MOV     ?DPS,?VB
+#endif
+	MOV	?VB,@R0
+	INC	R0
+
+	; restore virtual register
+	MOV	R1,#?V0
+Loop:	
+	MOV	A,@R0
+	MOV	@R1,A
+	INC	R1
+	INC	R0
+	DJNZ	R7,Loop
+
+	; restore R1 and R7
+	POP	A
+	MOV	R1,A
+	POP	A
+	MOV	R7,A
+
+	; restore R0, A
+	POP	A
+	MOV	R0,A
+	POP	A
+
+	RETI
+
+    cfi ENDBLOCK ?INTERRUPT_LEAVE_OVERLAY
+	ENDMOD
+
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SMALL_INTERRUPT_LEAVE_OVERLAY
+;
+;	Description:
+;		Restore register DPL,DPH,(DPX),B,VB,(DPS) plus a specified
+;		number of virtual registers on the machine stack.
+;
+;	Register input:
+;		R0  Points to parameter (PRM) area, from where to restore registers.
+;		R7  The number of Virtual regs to push.
+;
+;	Register output:
+;		A  = undefined.
+;		R7 = restored value.
+;		R0   Is undefined.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;               Separate:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SMALL_INTERRUPT_LEAVE_OVERLAY
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SMALL_INTERRUPT_LEAVE_OVERLAY
+	EXTERN	?V0
+	EXTERN	?VB
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?SMALL_INTERRUPT_LEAVE_OVERLAY Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?SMALL_INTERRUPT_LEAVE_OVERLAY:
+	; restore DPL, DPH,B,VB,(DPS)
+#if (__NUMBER_OF_DPTRS__ > 1)
+	MOV	?VB,@R0         ; save ?DPS resore value in ?VB
+	INC	R0
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+	MOV	DPL,@R0
+	INC	R0
+	MOV	DPH,@R0
+	INC	R0
+#if (defined (__EXTENDED_DPTR__) )
+	MOV	?DPX,@R0
+	INC	R0
+#endif
+	MOV	B,@R0
+	INC	R0
+#if (__NUMBER_OF_DPTRS__ > 1)
+        MOV     ?DPS,?VB
+#endif
+	MOV	?VB,@R0
+	INC	R0
+
+	; restore virtual register
+	MOV	R1,#?V0
+Loop:	
+	MOV	A,@R0
+	MOV	@R1,A
+	INC	R1
+	INC	R0
+	DJNZ	R7,Loop
+
+	; restore A, PSW
+	POP	A
+	POP	PSW
+
+	RETI
+
+    cfi ENDBLOCK ?SMALL_INTERRUPT_LEAVE_OVERLAY
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?INTERRUPT_ENTER_SP
+;
+;	Description:
+;		Saves register PSW, B, VB, DPL, DPH, (DPX), DPS, R0-R7 plus
+;		a specified number of virtual registers on
+;		the machine stack.
+;
+;               +----------+
+;		|    Vn    | <-- SP
+;		|    :     |
+;		|    V0    |
+;		+ - - - - -+
+;		|    ?VB   |
+;		+ - - - - -+
+;		|    B     |
+;		+ - - - - -+
+;		|    PSW   |
+;               + - - - - -+
+;               |    R7    |
+;               + - - - - -+
+;               |    R6    |
+;               + - - - - -+
+;		|    R5    |
+;		+ - - - - -+
+;		|    R4    |
+;		+ - - - - -+
+;		|    R3    |
+;		+ - - - - -+
+;		|    R2    |
+;		+ - - - - -+
+;               |    R1    |
+;               + - - - - -+
+;               |    R0    |
+;               + - - - - -+
+;               |   ?DPX   | (if extended dptr and NOT far code model)
+;               + - - - - -+
+;               |   ?DPS   | (if nr of DPTRs > 1)
+;               + - - - - -+
+;               |   ?DPX   | (if far code model)
+;               + - - - - -+
+;               |   DPH    |
+;               + - - - - -+
+;               |   DPL    |
+;		+----------+
+;
+;	Register input:
+;		A  = Number of virtual registers to save.
+;
+;	Register output:
+;		SP = SP+(A+12)
+;		A  = Undefined
+;		R1 = Undefined
+;		R0 = Undefined.
+;		DPTR0 Is the return address from this function.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?INTERRUPT_ENTER_SP
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?INTERRUPT_ENTER_SP
+	EXTERN  ?VB
+	EXTERN  ?V0
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?INTERRUPT_ENTER_SP Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?INTERRUPT_ENTER_SP:
+#if (__NUMBER_OF_DPTRS__ > 1)
+	EXTERN	?DPS
+	PUSH	?DPS
+	SELECT_DPTR0()
+#endif
+
+#if defined(__EXTENDED_DPTR__)
+#if (__CODE_MODEL__ != __CM_FAR__)
+	PUSH	?DPX
+	MOV	?DPX,#0
+#endif
+#endif
+
+	; save R0-R1
+	XCH	A,R0	; loop count in R0
+	PUSH	A
+	MOV	A,R1
+	PUSH	A
+
+	; exchange DPTR and return address located on stack
+	MOV	R1,SP
+	DEC	R1
+	DEC	R1
+#if defined(__EXTENDED_DPTR__)
+#if (__CODE_MODEL__ != __CM_FAR__)
+	DEC	R1
+#endif
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+        DEC     R1
+#endif
+
+#if (__CODE_MODEL__ == __CM_FAR__)
+	MOV	A,?DPX
+	XCH	A,@R1
+	MOV	?DPX,A
+	DEC	R1
+#endif
+
+	MOV	A,DPH
+	XCH	A,@R1
+	MOV	DPH,A
+	DEC	R1
+	MOV	A,DPL
+	XCH	A,@R1
+	MOV	DPL,A
+
+	; save R1-R7
+	MOV	A,R2
+	PUSH	A
+	MOV	A,R3
+	PUSH	A
+	MOV	A,R4
+	PUSH	A
+	MOV	A,R5
+	PUSH	A
+	MOV	A,R6
+	PUSH	A
+	MOV	A,R7
+	PUSH	A
+	
+	; save ,PSW, B, VB, DPS
+	PUSH	PSW
+	PUSH	B
+	PUSH	?VB
+
+	; save virtual registers
+	MOV	R1,#?V0
+Loop:	MOV	A,@R1
+	INC	R1	
+	PUSH	A
+	DJNZ	R0,Loop
+
+	CLR	A
+	JMP	@A+DPTR
+
+    cfi ENDBLOCK ?INTERRUPT_ENTER_SP
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?INTERRUPT_LEAVE_SP
+;
+;	Description:
+;		Restore register R0-R1,A,B,PSW,?VB,?DPS,DPL,DPH,(DPX) plus a specified
+;		number of virtual registers from the machine stack.
+;
+;	Register input:
+;		R7 = Number of virtual registers to restore.
+;
+;	Register output:
+;		SP = SP-R7
+;		R0 = R0-R7
+;		R6 = Restored value
+;		R7 = Restored value
+;		A  = R6
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;               Separate:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?INTERRUPT_LEAVE_SP
+	EXTERN  ?VB
+	EXTERN	?V0
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?INTERRUPT_LEAVE_SP
+
+    cfi BLOCK ?INTERRUPT_LEAVE_SP USING cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?INTERRUPT_LEAVE_SP:
+#if (__NUMBER_OF_DPTRS__ > 1)
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+	; restore virtual registers
+	MOV	A,#?V0-1
+	ADD	A,R7
+	MOV	R0,A
+Loop:	
+	POP	A
+	MOV	@R0,A
+	DEC	R0
+	DJNZ	R7,Loop
+
+	POP	?VB
+	; restore PSW, B, ?VB, ?DPS
+	POP	B
+	POP	PSW
+
+	; restore R0-R7
+	POP	A
+	MOV	R7,A
+	POP	A
+	MOV	R6,A
+	POP	A
+	MOV	R5,A
+	POP	A
+	MOV	R4,A
+	POP	A
+	MOV	R3,A
+	POP	A
+	MOV	R2,A
+	POP	A
+	MOV	R1,A
+	POP	A
+	MOV	R0,A
+
+	; restore DPTR (and DPS)
+
+#if (defined(__EXTENDED_DPTR__) && (__CODE_MODEL__ != __CM_FAR__))
+	POP	?DPX
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+        POP     A
+#endif
+
+#if (__CODE_MODEL__ == __CM_FAR__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+        EXTERN  ?DPS
+	MOV	?DPS,A
+#endif
+
+	; restore A
+	POP	A
+
+	RETI
+
+    cfi ENDBLOCK ?INTERRUPT_LEAVE_SP
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SMALL_INTERRUPT_ENTER_SP
+;
+;	Description:
+;		This interrupt enter shuld be used when the register bank
+;		have been changed. Saves register DPL, DPH, (DPX), B, VB, DPS, plus
+;		a specified number of virtual registers on
+;		the machine stack.
+;
+;               The below picture shows the most trivial case (i.e. no DPS and no extended core)
+;
+;                         FF
+;                         :
+;                      +-------+
+;              CFA --> |   Vn  | <-- SP End, n = (R7 begin) - 1
+;                      + - - - +
+;                       :  :  :
+;                      + - - - +
+;                      |   V1  |
+;                      + - - - +
+;                      |   V0  |
+;                      + - - - +
+;                      |   VB  |
+;                      + - - - +
+;                      |   B   |
+;          + - - - +   + - - - +
+;          | retH  |   |  DPH0 | <-- SP begin
+;          + - - - +   + - - - +
+;          | retL  |   |  DPL0 |
+;          +-------+   +-------+
+;                       :
+;                       00
+;
+;	Register input:
+;		R7  = Number of virtual registers to save.
+;
+;	Register output:
+;		SP = SP+(A+12)
+;		A  = Undefined
+;		R1 = Undefined
+;		R7 = Undefined.
+;		DPTR0 Is the return address from this function.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SMALL_INTERRUPT_ENTER_SP
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SMALL_INTERRUPT_ENTER_SP
+	EXTERN  ?VB
+	EXTERN  ?V0
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?SMALL_INTERRUPT_ENTER_SP Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+#if (__CORE__ == __CORE_EXTENDED1__)
+    cfi CFA_MACHINE  add(add(MACHINE_SP, R7),1)
+    cfi ?RET_EXT  load(1, IDATA, sub(sub(CFA_MACHINE, R7), 2))
+    cfi ?RET_HIGH load(1, IDATA, sub(sub(CFA_MACHINE, R7), 3))
+    cfi ?RET_LOW  load(1, IDATA, sub(sub(CFA_MACHINE, R7), 4))
+#else
+    cfi CFA_MACHINE  add(add(MACHINE_SP, R7),2)
+    cfi ?RET_HIGH load(1, IDATA, sub(sub(CFA_MACHINE, R7), 2))
+    cfi ?RET_LOW  load(1, IDATA, sub(sub(CFA_MACHINE, R7), 3))
+#endif
+
+?SMALL_INTERRUPT_ENTER_SP:
+#if (__NUMBER_OF_DPTRS__ > 1)
+	EXTERN	?DPS
+	PUSH	?DPS
+	SELECT_DPTR0()
+#endif
+	; exchange DPTR and return address located on stack
+	MOV	R1,SP
+#if (__NUMBER_OF_DPTRS__ > 1)
+        DEC     R1
+#endif
+
+#if (__CODE_MODEL__ == __CM_FAR__)
+	MOV	A,?DPX
+	XCH	A,@R1
+    cfi ?RET_EXT A
+	MOV	?DPX,A
+    cfi ?RET_EXT DPX0
+	DEC	R1
+#elif (defined(__EXTENDED_DPTR__))
+	PUSH	?DPX
+	MOV	?DPX,#0
+#endif
+	MOV	A,DPH
+	XCH	A,@R1
+    cfi ?RET_HIGH A
+	MOV	DPH,A
+    cfi ?RET_HIGH DPH0
+	DEC	R1
+	MOV	A,DPL
+	XCH	A,@R1
+    cfi ?RET_LOW A
+	MOV	DPL,A
+    cfi ?RET_LOW DPL0
+
+	; save B, VB
+	PUSH	B
+    cfi CFA_MACHINE  add(add(MACHINE_SP, R7),1)
+	PUSH	?VB
+    cfi CFA_MACHINE  add(MACHINE_SP, R7)
+	; save virtual registers
+	MOV	R1,#?V0
+Loop:	MOV	A,@R1
+	INC	R1
+	PUSH	A
+    cfi CFA_MACHINE sub(add(MACHINE_SP, R7), 1)
+	DJNZ	R7,Loop
+
+    cfi CFA_MACHINE MACHINE_SP + 0
+	CLR	A
+	JMP	@A+DPTR
+
+    cfi ENDBLOCK ?SMALL_INTERRUPT_ENTER_SP
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SMALL_INTERRUPT_LEAVE_SP
+;
+;	Description:
+;		This interrupt enter routine shoul dbe used when the
+;		register bank is switched.
+;		Restore registers A,B,PSW,?VB,?DPS,DPL,DPH,(DPX) plus a specified
+;		number of virtual registers from the machine stack.
+;
+;               The below picture shows the most trivial case (i.e. no DPS and no extended core)
+;
+;              FF
+;              :
+;          +-------+
+;          |   Vn  | <-- SP begin, n = (R7 begin) - 1
+;          + - - - +
+;           :  :  :
+;          + - - - +
+;          |   V1  |
+;          + - - - +
+;          |   V0  |
+;          + - - - +
+;          |   VB  |
+;          + - - - +
+;          |   B   |
+;          + - - - +
+;        ( |  DPX0 | ) DPX0 exists only if __EXTENDED_DPTR__
+;        ( + - - - + )
+;          |  DPH0 |
+;          + - - - +
+;          |  DPL0 |
+;          + - - - +
+;        ( |  DPS  | ) DPS exists only if __NUMBER_OF_DPTRS__ > 1
+;        ( + - - - + )
+;          |  PSW  |
+;          + - - - +
+;          |   A   |
+;          + - - - +
+;        ( |  retx | ) retx exists only if __CODE_MODEL__ == __CM_FAR__
+;        ( + - - - + )
+;          |  reth | <-- SP End      (note, SP points on retx, if retx exists).
+;          + - - - +
+;          |  retl |   This return address is to the jumpers caller.
+;          + - - - +
+;  CFA --> | xxxxx |
+;          +-------+
+;              :
+;              00
+;
+;	Register input:
+;		R7 = Number of virtual registers to restore.
+;
+;	Register output:
+;		SP = SP-R7
+;		R0 = R0-R7
+;		R6 = Restored value
+;		R7 = Restored value
+;		A  = R6
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;               Separate:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restoerd)     Returns  DPS: restored
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SMALL_INTERRUPT_LEAVE_SP
+	EXTERN  ?VB
+	EXTERN	?V0
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SMALL_INTERRUPT_LEAVE_SP
+
+    cfi BLOCK ?SMALL_INTERRUPT_LEAVE_SP USING cfi_common
+    cfi NOFUNCTION
+    cfi A     samevalue
+    cfi CFA_MACHINE  sub(MACHINE_SP,add(add(6,__SIZE_OF_RETADDR__),R7))
+#if (__CORE__ == __CORE_EXTENDED1__)
+    cfi ?RET_EXT  load(1, IDATA, add(CFA_MACHINE, 3))
+    cfi ?RET_HIGH load(1, IDATA, add(CFA_MACHINE, 2))
+    cfi ?RET_LOW  load(1, IDATA, add(CFA_MACHINE, 1))
+#else
+    cfi ?RET_HIGH load(1, IDATA, add(CFA_MACHINE, 2))
+    cfi ?RET_LOW  load(1, IDATA, add(CFA_MACHINE, 1))
+#endif
+
+?SMALL_INTERRUPT_LEAVE_SP:
+#if (__NUMBER_OF_DPTRS__ > 1)
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+	; restore virtual registers
+	MOV	A,#?V0-1
+	ADD	A,R7
+	MOV	R0,A
+Loop:	
+	POP	A
+    cfi CFA_MACHINE  sub(MACHINE_SP,add(add(5,__SIZE_OF_RETADDR__),R7))
+	MOV	@R0,A
+	DEC	R0
+	DJNZ	R7,Loop
+    cfi CFA_MACHINE  sub(MACHINE_SP,add(6,__SIZE_OF_RETADDR__))
+	POP	?VB
+    cfi CFA_MACHINE  sub(MACHINE_SP,add(5,__SIZE_OF_RETADDR__))
+	; restore B, ?VB, ?DPS
+	POP	B
+    cfi CFA_MACHINE  sub(MACHINE_SP,add(4,__SIZE_OF_RETADDR__))
+
+	; restore DPTR (and DPS)
+
+#if (defined(__EXTENDED_DPTR__) && (__CODE_MODEL__ != __CM_FAR__))
+	POP	?DPX
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+        POP     A
+#endif
+
+#if (__CODE_MODEL__ == __CM_FAR__)
+	POP	?DPX
+#endif
+	POP	DPH
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(3,__SIZE_OF_RETADDR__))
+	POP	DPL
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(2,__SIZE_OF_RETADDR__))
+#if (__NUMBER_OF_DPTRS__ > 1)
+        EXTERN  ?DPS
+	MOV	?DPS,A
+#endif
+	; restore PSW and A
+	POP	PSW
+   cfi CFA_MACHINE  sub(MACHINE_SP,add(1,__SIZE_OF_RETADDR__))
+	POP	A
+   cfi CFA_MACHINE  sub(MACHINE_SP, __SIZE_OF_RETADDR__)
+	RETI
+
+    cfi ENDBLOCK ?SMALL_INTERRUPT_LEAVE_SP
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SMALL_INTERRUPT_ENTER_PSP
+;
+;	Description:
+;		Saves register DPL,DPH,(DPX),B,V0,(DPS) plus a specified
+;		number of virtual registers on the PDATA stack.
+;
+;	Register input:
+;		A  = -(#Vregs  + 4/5/6)
+;
+;	Register output:
+;		?PSP   = ?PSP - (-A)
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: none
+;
+;	Stack usage:
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SMALL_INTERRUPT_ENTER_PSP
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?SMALL_INTERRUPT_ENTER_PSP
+	EXTERN  ?VB
+	EXTERN  ?V0
+	EXTERN	?PSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?SMALL_INTERRUPT_ENTER_PSP Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+
+?SMALL_INTERRUPT_ENTER_PSP:
+	ADD	A,?PSP	        ; Allocate space on the stack
+	MOV	R0,A		; R0 = PSPold - nrVreg - 4/5/6
+	XCH	A,?PSP		; A = PSPold
+
+	CLR	C		; Counter = end - start - 4/5/6
+	SUBB	A,R0		; -> A = nrVreg + 4/5/6
+#if ((__NUMBER_OF_DPTRS__ > 1) && (defined(__EXTENDED_DPTR__)))
+	ADD	A,#-6		; -> A = nrVreg
+#elif ((__NUMBER_OF_DPTRS__ > 1) || (defined(__EXTENDED_DPTR__)))
+	ADD	A,#-5		; -> A = nrVreg
+#else
+	ADD	A,#-4		; -> A = nrVreg	
+
+#endif
+	MOV	R7,A		; R7 = Vreg counter
+
+	; Save all the virtual registers
+	MOV	R1,#?V0
+Loop:	MOV	A,@R1
+	INC	R1
+	MOVX	@R0,A
+	INC	R0
+	DJNZ	R7,Loop
+
+        ; save DPS
+#if (__NUMBER_OF_DPTRS__ > 1)	
+	EXTERN	?DPS
+	MOV	A,?DPS
+	MOVX	@R0,A
+        INC     R0
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+
+	MOV	A,DPL
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,DPH
+	MOVX	@R0,A
+	INC	R0
+#if (defined(__EXTENDED_DPTR__))
+	MOV	A,?DPX
+	MOVX	@R0,A
+	INC	R0
+#endif
+	MOV	A,B
+	MOVX	@R0,A
+	INC	R0
+
+	MOV	A,?VB
+	MOVX	@R0,A
+	
+	RET
+
+    cfi ENDBLOCK ?SMALL_INTERRUPT_ENTER_PSP
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?INTERRUPT_ENTER_PSP
+;
+;	Description:
+;		Saves register R0-R7,DPL,DPH,(DPX),B,PSW,V0,(DPS) plus a specified
+;		number of virtual registers on the PDATA stack.
+;
+;               +----------+
+;               |    R0    |
+;               + - - - - -+
+;               |    R1    |
+;               + - - - - -+
+;               |    R2    |
+;               + - - - - -+
+;               |    R3    |
+;               + - - - - -+
+;		|    V0    |
+;		|    :     |
+;		|    Vn    |
+;		+ - - - - -+
+;               |   ?DPS   | (if nr of DPTRs > 1)
+;               + - - - - -+
+;               |   DPL0   |
+;               + - - - - -+
+;               |   DPH0   |
+;               + - - - - -+
+;               |   DPX0   | (if extended DPTR)
+;               + - - - - -+
+;		|    B     |
+;		+ - - - - -+
+;		|    PSW   |
+;		+ - - - - -+
+;		|    ?VB   |
+;		+ - - - - -+
+;		|    R4    |
+;		+ - - - - -+
+;		|    R5    |
+;		+ - - - - -+
+;		|    R6    |
+;		+ - - - - -+
+;		|    R7    | <-- PSP
+;		+----------+
+;
+;	Register input:
+;		A  = -(#Vregs + 13/14/15)
+;
+;	Register output:
+;		?PSP   = ?PSP - (-A)
+;		DPTR   = PC
+;		R0     = Undefined
+;		A      = 0
+;		R6     = 0
+;		CY     = 0
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: none
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?INTERRUPT_ENTER_PSP
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?INTERRUPT_ENTER_PSP
+	EXTERN  ?VB
+	EXTERN  ?V0
+	EXTERN	?PSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?INTERRUPT_ENTER_PSP Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?INTERRUPT_ENTER_PSP:
+	PUSH	PSW
+	PUSH	B
+	MOV	B,R0	
+
+	ADD	A,?PSP	        ; Allocate space on the stack
+	MOV	R0,A		; R0 = PSPold - nrVreg - 11/12
+	XCH	A,?PSP		; A = PSPold
+
+	CLR	C		; Counter = end - start - 11/12
+	SUBB	A,R0		; -> A = nrVreg + 11/12
+
+#if ((__NUMBER_OF_DPTRS__ > 1) && (defined(__EXTENDED_DPTR__)))
+	ADD	A,#-15		; -> A = nrVreg
+#elif ((__NUMBER_OF_DPTRS__ > 1) || (defined(__EXTENDED_DPTR__)))
+	ADD	A,#-14		; -> A = nrVreg
+#else
+	ADD	A,#-13		; -> A = nrVreg	
+
+#endif
+
+	PUSH	A
+
+	; Save R0-R3
+	MOV	A,B		; B = R0
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,R1
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,R2
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,R3
+	MOVX	@R0,A
+	INC	R0
+
+	; Save all the virtual registers
+	POP	A
+	MOV	R3,A
+	MOV	R1,#?V0
+Loop:	MOV	A,@R1
+	INC	R1
+	MOVX	@R0,A
+	INC	R0
+	DJNZ	R3,Loop
+
+        ; save ?DPS
+#if (__NUMBER_OF_DPTRS__ > 1)	
+	EXTERN	?DPS
+	MOV	A,?DPS
+	MOVX	@R0,A
+        INC     R0
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+
+	; save DPL,DPH,(DPX),B and PSW
+	MOV	A,DPL
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,DPH
+	MOVX	@R0,A
+	INC	R0
+#if (defined(__EXTENDED_DPTR__))
+	MOV	A,?DPX
+	MOVX	@R0,A
+	INC	R0
+#endif
+
+	POP	A		; -> A = B
+	MOVX	@R0,A
+	INC	R0
+	POP	A		; -> A = PSW
+	MOVX	@R0,A
+	INC	R0
+
+	; save ?VB
+	MOV	A,?VB
+	MOVX	@R0,A
+	INC	R0
+
+	; Save R4-R7
+	MOV	A,R4
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,R5
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,R6
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,R7
+	MOVX	@R0,A
+
+	RET
+
+    cfi ENDBLOCK ?INTERRUPT_ENTER_PSP
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?INTERRUPT_LEAVE_PSP
+;
+;	Description:
+;		Restore register R0-R7,?VB,B,(?DPS),DPL,DPH,(?DPX)
+;		plus a specified number of virtual
+;		registers from the PDATA stack.
+;
+;	Register input:
+;		R7     = Number of virtual registers to restore.
+;
+;	Register output:
+;		R0     = ?PSP
+;		R6     = Restored value
+;		R7     = Restored value
+;		A      = RETH
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;               Separate:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?INTERRUPT_LEAVE_PSP
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?INTERRUPT_LEAVE_PSP
+	EXTERN  ?VB	
+	EXTERN	?V0
+	EXTERN	?PSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?INTERRUPT_LEAVE_PSP USING cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?INTERRUPT_LEAVE_PSP:
+	MOV	R0,?PSP
+
+	; restore r0-r3
+	MOVX	A,@R0
+	INC	R0
+	PUSH	A		; -> R0 original to idata stack
+	MOVX	A,@R0
+	INC	R0
+	PUSH	A		; -> R1 original to idata stack
+	MOVX	A,@R0
+	INC	R0
+	MOV	R2,A	
+	MOVX	A,@R0
+	INC	R0
+	MOV	R3,A	
+
+	; restore Vregs
+	MOV	R1,#?V0
+Loop:	MOVX	A,@R0
+	INC	R0
+	MOV	@R1,A
+	INC	R1
+	DJNZ	R7,Loop
+
+        ; save ?DPS
+#if (__NUMBER_OF_DPTRS__ > 1)	
+	EXTERN	?DPS
+	MOVX	A,@R0
+	MOV     B,A
+        INC     R0
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+
+	; restore B and PSW
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPL,A	
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPH,A
+#if (defined(__EXTENDED_DPTR__))
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX,A
+#endif
+#if (__NUMBER_OF_DPTRS__ > 1)
+        MOV     ?DPS,B
+#endif
+	MOVX	A,@R0
+	INC	R0
+	MOV	B,A	
+	MOVX	A,@R0
+	INC	R0
+	MOV	PSW,A
+
+	; restore ?VB och ?DPS
+	MOVX	A,@R0
+	INC	R0
+	MOV	?VB,A
+
+	; restore r4-r7
+	MOVX	A,@R0
+	INC	R0
+	MOV	R4,A	
+	MOVX	A,@R0
+	INC	R0
+	MOV	R5,A	
+	MOVX	A,@R0
+	INC	R0
+	MOV	R6,A	
+	MOVX	A,@R0
+	INC	R0
+	MOV	R7,A
+	
+	MOV	?PSP,R0
+
+	POP	A
+	MOV	R1,A
+	POP	A
+	MOV	R0,A
+
+	; restore register A
+	POP	A
+
+	RETI
+
+    cfi ENDBLOCK ?INTERRUPT_LEAVE_PSP
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SMALL_INTERRUPT_LEAVE_PSP
+;
+;	Description:
+;		Restore register ?VB,B,(?DPS),DPL,DPH,(?DPX)
+;		plus a specified number of virtual
+;		registers from the PDATA stack.
+;
+;	Register input:
+;		R7     = Number of virtual registers to restore.
+;
+;	Register output:
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;               Separate:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SMALL_INTERRUPT_LEAVE_PSP
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?SMALL_INTERRUPT_LEAVE_PSP
+	EXTERN  ?VB	
+	EXTERN	?V0
+	EXTERN	?PSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?SMALL_INTERRUPT_LEAVE_PSP USING cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?SMALL_INTERRUPT_LEAVE_PSP:
+	MOV	R0,?PSP
+
+	; restore Vregs
+	MOV	R1,#?V0
+Loop:	MOVX	A,@R0
+	INC	R0
+	MOV	@R1,A
+	INC	R1
+	DJNZ	R7,Loop
+
+        ; restore ?DPS
+#if (__NUMBER_OF_DPTRS__ > 1)	
+	EXTERN	?DPS
+	MOVX	A,@R0
+	MOV     B,A
+        INC     R0
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+	; restore DPL,DPH,(DPX),B
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPL,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPH,A
+#if (defined(__EXTENDED_DPTR__))
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX,A
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+        MOV     ?DPS,B
+#endif
+
+	MOVX	A,@R0
+	INC	R0
+	MOV	B,A
+
+	; restore ?VB och ?DPS
+	MOVX	A,@R0
+	INC	R0
+	MOV	?VB,A
+
+	MOV	?PSP,R0
+
+	; restore PSW and reg A
+	POP	PSW
+	POP	A
+
+	RETI
+
+    cfi ENDBLOCK ?SMALL_INTERRUPT_LEAVE_PSP
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?INTERRUPT_ENTER_XSP
+;
+;	Description:
+;		Saves register R0-R7,(DPX),DPH,DPL,PSW,VB,B,(DPS)
+;		plus a specified number of virtual
+;		registers on the XDATA stack.
+;
+;               +----------+
+;               |    R0    |
+;               + - - - - -+
+;               |    R1    |
+;               + - - - - -+
+;               |    R2    |
+;               + - - - - -+
+;               |    R3    |
+;               + - - - - -+
+;		|    V0    |
+;		|    :     |
+;		|    Vn    |
+;		+ - - - - -+
+;		|    R4    |
+;		+ - - - - -+
+;		|    R5    |
+;		+ - - - - -+
+;		|    R6    |
+;		+ - - - - -+
+;		|    R7    |
+;		+ - - - - -+
+;               |   DPX0   | (if extended DPTR)
+;               + - - - - -+
+;               |   DPH0   |
+;               + - - - - -+
+;               |   DPL0   |
+;               + - - - - -+
+;		|    PSW   |
+;		+ - - - - -+
+;		|    ?VB   |
+;		+ - - - - -+
+;		|    B     |
+;		+ - - - - -+
+;               |   ?DPS   | <-- XSP (if nr of DPTRs > 1)
+;		+----------+
+;
+;	Register input:
+;		A  -(The number of bytes to push + 13/14/15).
+;
+;	Register output:
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage peak	:  5
+;	Stack usage after return: -2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?INTERRUPT_ENTER_XSP
+        RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?INTERRUPT_ENTER_XSP
+	EXTERN  ?V0
+	EXTERN  ?VB
+	EXTERN	?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?INTERRUPT_ENTER_XSP Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?INTERRUPT_ENTER_XSP:
+#if (__NUMBER_OF_DPTRS__ > 1)
+	EXTERN	?DPS
+        PUSH    ?DPS
+        SELECT_DPTR0()
+#endif
+	PUSH	PSW
+
+	ADD	A,XSP_L
+	XCH	A,DPL
+	PUSH	A
+
+	MOV	A,XSP_H
+	ADDC	A,#255
+	XCH	A,DPH
+	PUSH	A
+
+#if ( defined(__EXTENDED_DPTR__))
+	PUSH	?DPX
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+	MOV	A,XSP_L
+	CLR	C
+	SUBB	A,DPL
+
+#if ((defined(__EXTENDED_DPTR__)) && (__NUMBER_OF_DPTRS__ == 1))
+	ADD	A,#-14	; ext1, one dptr
+#elif (defined(__EXTENDED_DPTR__))
+	ADD	A,#-15	; ext1, two dptr
+#elif (__NUMBER_OF_DPTRS__ == 1)
+	ADD	A,#-13	; plain, one dptr
+#else
+	ADD	A,#-14	; plain, two dptr
+#endif
+
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,DPH
+	MOV	XSP_L,DPL
+	POP	0xA8 /* IE */
+
+
+;=======================================;
+;  Preserve R0-R3                     	;
+;=======================================;
+	XCH	A,R0	; R0 = Number of virtual registers to push
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,R1
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,R2
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,R3
+	MOVX	@DPTR,A
+	INC	DPTR
+
+;=======================================;
+;    Move all the virtual registers	;
+;=======================================;
+	MOV	R1,#?V0
+Loop:	MOV	A,@R1
+	INC	R1
+	MOVX	@DPTR,A
+	INC	DPTR
+	DJNZ	R0,Loop
+
+;=======================================;
+;  Preserve R4-R7                     	;
+;=======================================;
+	MOV	A,R4
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,R5
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,R6
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,R7
+	MOVX	@DPTR,A
+	INC	DPTR
+
+;=======================================;
+;  Preserve (DPX),DPH,DPL,PSW,VB,B,(DPS)
+;=======================================;
+#if ( defined(__EXTENDED_DPTR__))
+	POP	A
+	MOVX	@DPTR,A		; Save DPX on the XDATA-stack
+	INC	DPTR
+#endif
+	POP	A
+	MOVX	@DPTR,A		; Save DPH on the XDATA-stack
+	INC	DPTR
+	POP	A
+	MOVX	@DPTR,A		; Save DPL on the XDATA-stack
+	INC	DPTR
+	POP	A
+	MOVX	@DPTR,A		; Save PSW
+	INC	DPTR
+	MOV	A,?VB
+	MOVX	@DPTR,A		; Save the VB
+	INC	DPTR
+	MOV	A,B
+	MOVX	@DPTR,A		; Save the B
+	INC	DPTR
+#if (__NUMBER_OF_DPTRS__ > 1)
+        POP     A
+	MOVX	@DPTR,A		; Save ?DPS
+#endif
+
+	RET
+
+    cfi ENDBLOCK ?INTERRUPT_ENTER_XSP
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SMALL_INTERRUPT_ENTER_XSP
+;
+;	Description:
+;		Saves register (DPX),DPH,DPL,VB,B,(DPS)
+;		plus a specified number of virtual
+;		registers on the XDATA stack.
+;
+;               +----------+
+;		|    V0    |
+;		|    :     |
+;		|    Vn    |
+;		+ - - - - -+
+;               |   DPX0   | (if extended DPTR)
+;               + - - - - -+
+;               |   DPH0   |
+;               + - - - - -+
+;               |   DPL0   |
+;               + - - - - -+
+;		|    ?VB   |
+;		+ - - - - -+
+;		|    B     |
+;		+ - - - - -+
+;               |   ?DPS   | <-- XSP (if nr of DPTRs > 1)
+;		+----------+
+;
+;	Register input:
+;		A  -(The number of bytes to push + 4/5/6).
+;
+;	Register output:
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: 0        Returns  DPS: 0
+;
+;	Stack usage peak	:
+;	Stack usage after return:
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SMALL_INTERRUPT_ENTER_XSP
+    RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SMALL_INTERRUPT_ENTER_XSP
+	EXTERN  ?V0
+	EXTERN  ?VB
+	EXTERN	?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+
+    cfi BLOCK ?SMALL_INTERRUPT_ENTER_XSP Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?SMALL_INTERRUPT_ENTER_XSP:
+#if (__NUMBER_OF_DPTRS__ > 1)
+	EXTERN	?DPS
+        PUSH    ?DPS
+        SELECT_DPTR0()
+#endif
+	ADD	A,XSP_L
+	XCH	A,DPL
+	PUSH	A
+	MOV	A,XSP_H
+	ADDC	A,#255
+	XCH	A,DPH
+	PUSH	A
+#if (defined(__EXTENDED_DPTR__))
+	PUSH	?DPX
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+	MOV	A,XSP_L
+	CLR	C
+	SUBB	A,DPL
+
+#if ((defined(__EXTENDED_DPTR__)) && (__NUMBER_OF_DPTRS__ == 1))
+	ADD	A,#-5	; ext1, one dptr
+#elif (defined(__EXTENDED_DPTR__))
+	ADD	A,#-6	; ext1, two dptr
+#elif (__NUMBER_OF_DPTRS__ == 1)
+	ADD	A,#-4	; plain, one dptr
+#else
+	ADD	A,#-5	; plain, two dptr
+#endif
+	MOV	R0,A	; -> R0 = Number of virtual registers to push
+
+	PUSH	0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_H,DPH
+	MOV	XSP_L,DPL
+	POP	0xA8 /* IE */
+
+;=======================================;
+;    Move all the virtual registers	;
+;=======================================;
+	MOV	R1,#?V0
+Loop:	MOV	A,@R1
+	INC	R1
+	MOVX	@DPTR,A
+	INC	DPTR
+	DJNZ	R0,Loop
+
+;=======================================;
+;  Preserve (DPX),DPH,DPL,PSW,VB,B,(DPS)
+;=======================================;
+#if (defined(__EXTENDED_DPTR__))
+	POP	A
+	MOVX	@DPTR,A		; Save DPX on the XDATA-stack
+	INC	DPTR
+#endif
+	POP	A
+	MOVX	@DPTR,A		; Save DPH on the XDATA-stack
+	INC	DPTR
+	POP	A
+	MOVX	@DPTR,A		; Save DPL on the XDATA-stack
+	INC	DPTR
+	MOV	A,?VB
+	MOVX	@DPTR,A		; Save the VB
+	INC	DPTR
+	MOV	A,B
+	MOVX	@DPTR,A		; Save the B
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	EXTERN	?DPS
+	INC	DPTR
+        POP     A
+	MOVX	@DPTR,A		; Save the DPS
+#endif
+
+	RET
+
+    cfi ENDBLOCK ?SMALL_INTERRUPT_ENTER_XSP
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?INTERRUPT_LEAVE_XSP
+;
+;	Description:
+;		Restore register R6 and R7 plus a specified number of virtual
+;		registers from the machine stack.
+;
+;	Register input:
+;		R7 The number of bytes to pop.
+;
+;	Register output:
+;		R0     = Undefined
+;		DPTR   = Restored value
+;		R6     = Restored value
+;		R7     = Restored value
+;		A      = Undefined
+;		B      = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;               Separate:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;	Stack usage:
+;
+;-----------------------------------------------------------------------------
+	MODULE	?INTERRUPT_LEAVE_XSP
+    RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?INTERRUPT_LEAVE_XSP
+	EXTERN  ?VB
+	EXTERN	?V0
+	EXTERN	?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?INTERRUPT_LEAVE_XSP USING cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?INTERRUPT_LEAVE_XSP:
+#if (__NUMBER_OF_DPTRS__ > 1)
+        SELECT_DPTR0()
+#endif
+#if (defined(__EXTENDED_DPTR__))
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+	MOV	DPH,XSP_H
+	MOV	DPL,XSP_L
+
+
+;=======================================;
+;       Restore the R0-R3.	;
+;=======================================;
+	MOVX	A,@DPTR
+	PUSH	A		; R0 -> idata stack
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	R1,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	R2,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	R3,A
+	INC	DPTR
+
+;=======================================;
+;   Restore all the virtual registers.	;
+;=======================================;
+	MOV	R0,#?V0
+Loop:	MOVX	A,@DPTR
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	DJNZ	R7,Loop
+
+;=======================================;
+;       Restore the R4-R7.	;
+;=======================================;
+	MOVX	A,@DPTR
+	MOV	R4,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	R5,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	R6,A
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	R7,A
+	INC	DPTR
+
+;=======================================;
+;       Restore (DPS),B,VB,PSW,DPL,DPH,(DPX)
+;=======================================;
+#if (defined(__EXTENDED_DPTR__))
+	MOVX	A,@DPTR
+	PUSH	A		; restore DPX -> idata stack
+	INC	DPTR
+#endif
+	MOVX	A,@DPTR
+	PUSH	A		; restore DPH -> idata stack
+	INC	DPTR
+	MOVX	A,@DPTR
+	PUSH	A		; restore DPL -> idata stack
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	PSW,A		; restore PSW
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	?VB,A		; restore VB
+	INC	DPTR
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	B,A		; restore B
+#if (__NUMBER_OF_DPTRS__ > 1)
+	EXTERN	?DPS
+	MOVX	A,@DPTR
+	INC	DPTR
+        PUSH    A
+#endif
+
+	MOV	A,0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_L,DPL
+	MOV	XSP_H,DPH
+	MOV	0xA8 /* IE */,A
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+        POP     A               ; ?DPS
+#endif
+
+	POP	DPL
+	POP	DPH
+#if (defined(__EXTENDED_DPTR__))
+	POP	?DPX
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+        MOV     ?DPS,A
+#endif
+
+	POP	A
+	MOV	R0,A
+
+	; restore reg A
+	POP	A
+
+	RETI
+
+    cfi ENDBLOCK ?INTERRUPT_LEAVE_XSP
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SMALL_INTERRUPT_LEAVE_XSP
+;
+;	Description:
+;		Restore register R6 and R7 plus a specified number of virtual
+;		registers from the machine stack.
+;
+;	Register input:
+;		R7 The number of bytes to pop.
+;
+;	Register output:
+;		R0     = Undefined
+;		DPTR   = Restored value
+;		R6     = Restored value
+;		R7     = Restored value
+;		A      = Undefined
+;		B      = Undefined
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;               Separate:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;	Stack usage:
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SMALL_INTERRUPT_LEAVE_XSP
+    RSEG	XSTACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SMALL_INTERRUPT_LEAVE_XSP
+	EXTERN  ?VB
+	EXTERN	?V0
+	EXTERN	?XSP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?SMALL_INTERRUPT_LEAVE_XSP USING cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?SMALL_INTERRUPT_LEAVE_XSP:
+#if (__NUMBER_OF_DPTRS__ > 1)
+        SELECT_DPTR0()
+#endif
+#if (defined(__EXTENDED_DPTR__))
+	MOV	?DPX,#BYTE3(sfb(XSTACK))
+#endif
+	MOV	DPH,XSP_H
+	MOV	DPL,XSP_L
+
+;=======================================;
+;   Restore all the virtual registers.	;
+;=======================================;
+	MOV	R0,#?V0
+Loop:	MOVX	A,@DPTR
+	MOV	@R0,A
+	INC	R0
+	INC	DPTR
+	DJNZ	R7,Loop
+
+;=======================================;
+;       Restore (DPS),B,VB,PSW,DPL,DPH,(DPX)
+;=======================================;
+#if (defined(__EXTENDED_DPTR__))
+	MOVX	A,@DPTR
+	PUSH	A		; restore DPX -> idata stack
+	INC	DPTR
+#endif
+	MOVX	A,@DPTR
+	PUSH	A		; restore DPH -> idata stack
+	INC	DPTR
+	MOVX	A,@DPTR
+	PUSH	A		; restore DPL -> idata stack
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	?VB,A		; restore VB
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	B,A		; restore B
+	INC	DPTR
+#if (__NUMBER_OF_DPTRS__ > 1)
+	EXTERN	?DPS
+	MOVX	A,@DPTR
+	INC	DPTR
+        PUSH    A
+#endif
+
+	MOV	A,0xA8 /* IE */	    ; Preserve the Interrupt Enable register
+	CLR	0xA8.7 /* IE.EA */  ; Disable all interrupts for max 6 cycles
+	MOV	XSP_L,DPL
+	MOV	XSP_H,DPH
+	MOV	0xA8 /* IE */,A
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+        POP     A               ; ?DPS
+#endif
+
+	POP	DPL
+	POP	DPH
+#if (defined(__EXTENDED_DPTR__))
+	POP	?DPX
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+        MOV     ?DPS,A
+#endif
+
+	; restore reg PSW and A
+	POP	PSW
+	POP	A
+
+	RETI
+
+    cfi ENDBLOCK ?SMALL_INTERRUPT_LEAVE_XSP
+	ENDMOD
+
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?INTERRUPT_ENTER_ESP
+;
+;	Description:
+;		Saves registers: R0-R7, PSW, B, VB, DPL, DPH,
+;				 DPX - if extended dptr used
+;				 DPS - if more than one dptr used
+;			  	 V0-V(#Reg A)
+;		on the machine stack.
+;
+;	Register input:
+;		A  = Number of virtual registers to save.
+;
+;	Register output:
+;		SP = SP+(A+11)+ 1 [if #dptrs > 1] + 1 [if extended dptr] - 1 [if core=extended1]
+;		A  = Undefined
+;		R1 = Undefined
+;		R0 = Undefined.
+;		DPTR Is the return address from this function.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?INTERRUPT_ENTER_ESP
+ 	RSEG	EXT_STACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?INTERRUPT_ENTER_ESP
+	EXTERN  ?VB
+	EXTERN  ?V0
+	EXTERN	?ESP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?INTERRUPT_ENTER_ESP Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?INTERRUPT_ENTER_ESP:
+        ; save ?DPS
+#if (__NUMBER_OF_DPTRS__ > 1)
+        EXTERN  ?DPS
+        PUSH    ?DPS
+        SELECT_DPTR0()
+#endif
+	; save DPTR
+#if defined(__EXTENDED_DPTR__)
+	PUSH	?DPX
+#endif
+	PUSH	DPH
+	PUSH	DPL
+
+	; save PSW
+	PUSH	PSW
+
+	; save A and move #virtua; regs to save to R0
+	XCH	A,R0	; loop count in R0
+	PUSH	A
+
+	; exchange return address and (R4):R3:R2
+	CLR	C
+	MOV	A,SP
+#if defined(__EXTENDED_DPTR__)
+  #if (__CORE__ == __CORE_EXTENDED1__)
+    #if (__NUMBER_OF_DPTRS__ > 1)
+        SUBB    A,#8
+    #else
+	SUBB	A,#7
+    #endif
+  #else
+    #if (__NUMBER_OF_DPTRS__ > 1)
+        SUBB    A,#7
+    #else
+	SUBB	A,#6
+    #endif
+  #endif
+	MOV	DPL,A
+	MOV	A,?ESP
+        ANL	A,#0x03         ; Maks out relevant ESP bits.
+	ORL     A,#(HIGH(sfb(EXT_STACK)) & 0xFC)
+	SUBB	A,#0
+	MOV	DPH,A
+	MOV     ?DPX,#BYTE3(sfb(EXT_STACK))
+#else
+  #if (__CORE__ == __CORE_EXTENDED1__)
+    #if (__NUMBER_OF_DPTRS__ > 1)
+        SUBB    A,#7
+    #else
+	SUBB	A,#6
+    #endif
+  #else
+    #if (__NUMBER_OF_DPTRS__ > 1)
+        SUBB    A,#6
+    #else
+	SUBB	A,#5
+    #endif
+  #endif
+	MOV	DPL,A
+	MOV	A,?ESP
+	SUBB	A,#0
+        ANL	A,#0x03         ; Maks out relevant ESP bits.
+	ORL     A,#(HIGH(sfb(EXT_STACK)) & 0xFC)
+	MOV	DPH,A
+#endif
+
+	; DPTR points to return address on stack
+	MOVX	A,@DPTR
+	XCH	A,R2		; R2 = RET_L
+	MOVX	@DPTR,A
+	INC	DPTR
+
+	MOVX	A,@DPTR
+	XCH	A,R3		; R3 = RET_H
+	MOVX	@DPTR,A
+	INC	DPTR
+
+#if (__CORE__ == __CORE_EXTENDED1__)
+	MOVX	A,@DPTR
+	XCH	A,R4		; R4 = RET_X
+	MOVX	@DPTR,A
+#else
+	MOV	A,R4
+	PUSH	A
+#endif
+
+	; Save R regs not already saved
+	MOV	A,R1
+	PUSH	A
+	MOV	A,R5
+	PUSH	A
+	MOV	A,R6
+	PUSH	A
+	MOV	A,R7
+	PUSH	A
+	
+	; save B, VB
+	PUSH	B
+	PUSH	?VB
+
+	; save virtual registers
+	MOV	R1,#?V0
+Loop:	MOV	A,@R1
+	INC	R1	
+	PUSH	A
+	DJNZ	R0,Loop
+
+	; Move (R4):R3:R2 (return address) to DPTR
+	MOV	DPL,R2
+	MOV	DPH,R3
+#if (__CORE__ == __CORE_EXTENDED1__)
+	MOV	?DPX,R4
+#endif
+
+	CLR	A
+	JMP	@A+DPTR
+
+    cfi ENDBLOCK ?INTERRUPT_ENTER_ESP
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SMALL_INTERRUPT_ENTER_ESP
+;
+;	Description:
+;		Saves registers: B, VB, DPL, DPH,
+;				 DPX - if extended dptr used
+;				 DPS - if more than one dptr used
+;			  	 V0-V(#Reg R7)
+;		on the machine stack.
+;
+;	Register input:
+;		R7  = Number of virtual registers to save.
+;
+;	Register output:
+;		SP = SP+(R7+4)+ 1 [if #dptrs > 1] + 1 [if extended dptr]
+;		A  = Undefined
+;		R1 = Undefined
+;		R7 = Undefined.
+;		DPTR Is the return address from this function.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SMALL_INTERRUPT_ENTER_ESP
+	RSEG	EXT_STACK:NOROOT:XDATA
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SMALL_INTERRUPT_ENTER_ESP
+	EXTERN  ?VB
+	EXTERN  ?V0
+	EXTERN	?ESP
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+    cfi BLOCK ?SMALL_INTERRUPT_ENTER_ESP Using cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?SMALL_INTERRUPT_ENTER_ESP:
+#if (__CODE_MODEL__ == __CM_FAR__)
+	POP	A
+	MOV	R4,A
+#endif
+	POP	A
+	MOV	R3,A
+	POP	A
+	MOV	R2,A
+	
+        ; (R4:)R3:R2 holds return address
+	
+	PUSH	B
+	PUSH	?VB
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+        EXTERN  ?DPS
+        PUSH    ?DPS
+        SELECT_DPTR0()
+#endif
+
+	; save DPTR0
+#if defined(__EXTENDED_DPTR__)
+	PUSH	?DPX
+#endif
+	PUSH	DPH
+	PUSH	DPL
+
+	; save virtual registers
+	MOV	R1,#?V0
+Loop:	MOV	A,@R1
+	INC	R1	
+	PUSH	A
+	DJNZ	R7,Loop
+
+#if (__CODE_MODEL__ == __CM_FAR__)
+	MOV	?DPX,R4
+#endif
+	MOV	DPH,R3
+	MOV	DPL,R2
+	CLR	A
+	JMP	@A+DPTR
+
+    cfi ENDBLOCK ?SMALL_INTERRUPT_ENTER_ESP
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?INTERRUPT_LEAVE_ESP
+;
+;	Description:
+;		Restore register R0-R1,A,B,PSW,?VB,?DPS,DPL,DPH,(DPX) plus a specified
+;		number of virtual registers from the machine stack.
+;
+;	Register input:
+;		R7 = Number of virtual registers to restore.
+;
+;	Register output:
+;		SP = SP-R7
+;		R0 = R0-R7
+;		R6 = Restored value
+;		R7 = Restored value
+;		A  = R6
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;               Separate:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?INTERRUPT_LEAVE_ESP
+	EXTERN  ?VB
+	EXTERN	?V0
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?INTERRUPT_LEAVE_ESP
+
+    cfi BLOCK ?INTERRUPT_LEAVE_ESP USING cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?INTERRUPT_LEAVE_ESP:
+#if (__NUMBER_OF_DPTRS__ > 1)
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+	; restore virtual registers
+	MOV	A,#?V0-1
+	ADD	A,R7
+	MOV	R0,A
+Loop:	
+	POP	A
+	MOV	@R0,A
+	DEC	R0
+	DJNZ	R7,Loop
+
+	POP	?VB
+	; restore PSW, B, ?VB,
+	POP	B
+
+	; restore R0-R7
+	POP	A
+	MOV	R7,A
+	POP	A
+	MOV	R6,A
+	POP	A
+	MOV	R5,A
+	POP	A
+	MOV	R1,A
+
+#if (__CORE__ != __CORE_EXTENDED1__)
+	POP	A
+	MOV	R4,A
+#endif
+	POP	A
+	MOV	R0,A
+
+	POP	PSW
+
+	POP	DPL
+	POP	DPH
+
+	; restore DPTR
+#if (defined(__EXTENDED_DPTR__))
+	POP	?DPX
+#endif
+
+        ; restore ?DPS
+#if (__NUMBER_OF_DPTRS__ > 1)
+        EXTERN  ?DPS
+        POP     ?DPS
+#endif
+
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	A
+	MOV	R4,A
+#endif
+	POP	A
+	MOV	R3,A
+	POP	A
+	MOV	R2,A
+
+	; restore A
+	POP	A
+
+	RETI
+
+    cfi ENDBLOCK ?INTERRUPT_LEAVE_ESP
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?SMALL_INTERRUPT_LEAVE_ESP
+;
+;	Description:
+;		This interrupt enter routine shoul dbe used when the
+;		register bank is switched.
+;		Restore registers A,B,PSW,?VB,?DPS,DPL,DPH,(DPX) plus a specified
+;		number of virtual registers from the machine stack.
+;
+;	Register input:
+;		R7 = Number of virtual registers to restore.
+;
+;	Register output:
+;		SP = SP-R7
+;		R0 = R0-R7
+;		R6 = Restored value
+;		R7 = Restored value
+;		A  = R6
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;               Separate:       Requires DPTR: none             Requires DPS: none
+;                               Modifies DPTR: 0 (restored)     Returns  DPS: restored
+;
+;	Stack usage: NA
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SMALL_INTERRUPT_LEAVE_ESP
+	EXTERN  ?VB
+	EXTERN	?V0
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?SMALL_INTERRUPT_LEAVE_ESP
+
+    cfi BLOCK ?SMALL_INTERRUPT_LEAVE_ESP USING cfi_common
+    cfi NOFUNCTION
+    cfi A     Undefined
+
+?SMALL_INTERRUPT_LEAVE_ESP:
+#if (__NUMBER_OF_DPTRS__ > 1)
+#ifdef __DPTR_SHADOWED__
+        SELECT_DPTR0()
+#endif
+#endif
+	; restore virtual registers
+	MOV	A,#?V0-1
+	ADD	A,R7
+	MOV	R0,A
+Loop:	
+	POP	A
+	MOV	@R0,A
+	DEC	R0
+	DJNZ	R7,Loop
+
+	; restore DPTR
+	POP	DPL
+	POP	DPH
+#if (defined(__EXTENDED_DPTR__))
+	POP	?DPX
+#endif
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	EXTERN	?DPS
+	POP	?DPS
+#endif
+
+	POP	?VB
+	POP	B
+
+	; restore PSW and A
+	POP	PSW
+	POP	A
+
+	RETI
+
+    cfi ENDBLOCK ?SMALL_INTERRUPT_LEAVE_ESP
+	ENDMOD
+
+
+	END
+
+	
+;
+;   Revision control system
+;       $Log: iar_stack_enter_leave.s51 $
+;       Revision 1.75  2007/06/07 09:22:10Z  larssu
+;       NOROOT'ify RCODE segments
+;       Revision 1.74  2007/01/22 15:36:14Z  larssu
+;       Revision 1.73  2007/01/05 11:35:55Z  larssu
+;       Revision 1.72  2005/01/26 10:21:32Z  ola
+;       Revision 1.71  2005/01/25 09:16:48Z  ola
+;       Revision 1.70  2004/11/18 15:21:34Z  owi
+;       Revision 1.69  2004/11/16 16:41:08Z  owi
+;       Revision 1.68  2004/11/10 16:31:04Z  owi
+;       Revision 1.67  2004/09/17 12:46:50Z  ola
+;       Revision 1.66  2004/09/07 14:29:42Z  ola
+;       Revision 1.65  2004/08/17 11:26:13Z  owi
+;       Revision 1.64  2004/08/02 10:26:50Z  owi
+;       Revision 1.63  2004/03/15 13:15:30Z  owi
+;       Revision 1.62  2004/01/27 14:01:06Z  owi
+;
+	

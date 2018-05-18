@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Workspace>
+  <ConfigDictionary>
+    
+    
+    
+  <CurrentConfigs><Project>and-stack-ed-15k/Debug on CC1110</Project><Project>and-stack-ed/Build .hex for CC2510</Project><Project>and-stack-ed-1k/Debug on CC1110</Project><Project>da-boot/Debug on CC1110</Project></CurrentConfigs><CurrentProj>and-stack-ed</CurrentProj><OverviewSelected>1</OverviewSelected></ConfigDictionary>
+  <Desktop>
+    <Static>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>243</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+      <Build>
+        
+        
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1215</ColumnWidth1><ColumnWidth2>324</ColumnWidth2><ColumnWidth3>81</ColumnWidth3></Build>
+    </Static>
+    <Windows>
+      
+      
+    <Wnd2>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-16878-19020</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>&lt;ws></ExpandedNode><ExpandedNode>&lt;ws>/and-stack-ed</ExpandedNode><ExpandedNode>&lt;ws>/and-stack-ed-15k</ExpandedNode><ExpandedNode>&lt;ws>/and-stack-ed-15k/hal</ExpandedNode><ExpandedNode>&lt;ws>/and-stack-ed-1k</ExpandedNode><ExpandedNode>&lt;ws>/and-stack-ed-1k/hal</ExpandedNode><ExpandedNode>&lt;ws>/and-stack-ed-1k/main.c</ExpandedNode><ExpandedNode>&lt;ws>/and-stack-ed/Output</ExpandedNode><ExpandedNode>&lt;ws>/and-stack-ed/hal</ExpandedNode><ExpandedNode>&lt;ws>/da-boot</ExpandedNode><ExpandedNode>&lt;ws>/da-boot/hal</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd2><Wnd3>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-2240-19294</Identity>
+            <TabName>Build</TabName>
+            <Factory>Build</Factory>
+            <Session/>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd3></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>E:\Projects8\ED\code\AndStackED\source\main.c</Filename><XPos>0</XPos><YPos>144</YPos><SelStart>6151</SelStart><SelEnd>6151</SelEnd></Tab><ActiveTab>0</ActiveTab><Tab><Factory>TextEditor</Factory><Filename>E:\Projects8\ED\code\AndStackED\source\flash.c</Filename><XPos>0</XPos><YPos>39</YPos><SelStart>1818</SelStart><SelEnd>1818</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\Projects8\ED\code\AndStackED\source\dma.c</Filename><XPos>0</XPos><YPos>102</YPos><SelStart>8271</SelStart><SelEnd>8271</SelEnd></Tab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-0088f8a8><key>iaridepm.enu1</key></Toolbar-0088f8a8></Sizes></Row0></Top><Left><Row0><Sizes><Wnd2><Rect><Top>-2</Top><Left>-2</Left><Bottom>652</Bottom><Right>334</Right><x>-2</x><y>-2</y><xscreen>0</xscreen><yscreen>0</yscreen><sizeHorzCX>0</sizeHorzCX><sizeHorzCY>0</sizeHorzCY><sizeVertCX>200000</sizeVertCX><sizeVertCY>671458</sizeVertCY></Rect></Wnd2></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes><Wnd3><Rect><Top>-2</Top><Left>-2</Left><Bottom>278</Bottom><Right>1682</Right><x>-2</x><y>-2</y><xscreen>1684</xscreen><yscreen>280</yscreen><sizeHorzCX>1002381</sizeHorzCX><sizeHorzCY>287474</sizeHorzCY><sizeVertCX>0</sizeVertCX><sizeVertCY>0</sizeVertCY></Rect></Wnd3></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Workspace>
+
+

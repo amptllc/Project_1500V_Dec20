@@ -1,0 +1,521 @@
+###############################################################################
+#                                                                             #
+# IAR 8051 C/C++ Compiler V7.30B/W32                    06/Apr/2017  13:54:39 #
+# Copyright 2004-2007 IAR Systems. All rights reserved.                       #
+#                                                                             #
+#    Core               =  plain                                              #
+#    Code model         =  near                                               #
+#    Data model         =  large                                              #
+#    Calling convention =  xdata reentrant                                    #
+#    Constant location  =  data                                               #
+#    Dptr setup         =  1,16                                               #
+#    Source file        =  E:\1500V_Test2\ED\code\AndStackED\source\utils.c   #
+#    Command line       =  E:\1500V_Test2\ED\code\AndStackED\source\utils.c   #
+#                          -D NDEBUG -D chip=2510 -D LOWER_IMAGE -D           #
+#                          MidString -D MIDSTRING -lCN                        #
+#                          "E:\1500V_Test2\ED\iar\Build .hex for              #
+#                          CC2510\List\" -lA "E:\1500V_Test2\ED\iar\Build     #
+#                          .hex for CC2510\List\" -o                          #
+#                          "E:\1500V_Test2\ED\iar\Build .hex for              #
+#                          CC2510\Obj\" -e -z9 --core=plain --dptr=16,1       #
+#                          --data_model=large --code_model=near               #
+#                          --calling_convention=xdata_reentrant               #
+#                          --place_constants=data --nr_virtual_regs 32 -I     #
+#                          E:\1500V_Test2\ED\iar\..\CODE\AndStackED\INCLUDE\  #
+#                          -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HAL\INCLU #
+#                          DE\ -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HAL_B #
+#                          UI\INCLUDE\ -I C:\IARSystems-CD-730B\8051\INC\     #
+#    List file          =  E:\1500V_Test2\ED\iar\Build .hex for               #
+#                          CC2510\List\utils.lst                              #
+#    Object file        =  E:\1500V_Test2\ED\iar\Build .hex for               #
+#                          CC2510\Obj\utils.r51                               #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+E:\1500V_Test2\ED\code\AndStackED\source\utils.c
+      1          #include "hal_main.h"
+
+   \                                 In  segment SFR_AN, at 0xa8
+   \   union <unnamed> volatile __sfr _A_IEN0
+   \                     _A_IEN0:
+   \   000000                DS 1
+
+   \                                 In  segment SFR_AN, at 0xc9
+   \   unsigned char volatile __sfr WDCTL
+   \                     WDCTL:
+   \   000000                DS 1
+      2          
+      3          //void reset(void){ WDCTL = 0x8 | 0x3; while( TRUE ) *((BYTE *)0xFFFF) = 0x80; }
+      4          // LBC function reset, Watchdog is enabled and timer interval selected, mark memory as to why reset
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+      5          void reset(void){ while( TRUE ){ WDCTL = 0x8 | 0x3;  *((BYTE *)0xFFFF) = 0x80; } }
+   \                     reset:
+   \   000000   C082         PUSH    DPL
+   \   000002   C083         PUSH    DPH
+   \   000004                ; Saved register size: 2
+   \   000004                ; Auto size: 0
+   \                     ??reset_0:
+   \   000004   75C90B       MOV     0xc9,#0xb
+   \   000007   7480         MOV     A,#-0x80
+   \   000009   90FFFF       MOV     DPTR,#-0x1
+   \   00000C   F0           MOVX    @DPTR,A
+   \   00000D   80F5         SJMP    ??reset_0
+   \   00000F                REQUIRE WDCTL
+      6          
+
+   \                                 In  segment XDATA_Z, align 1, keep-with-next
+      7          INT32 delta = 0;
+   \                     delta:
+   \   000000                DS 4
+   \   000004                REQUIRE __INIT_XDATA_Z
+      8          /******************************************************************************
+      9          * @fn  addDF
+     10          * @brief       This adds function shift to compensate frequency offset
+     11          * Parameters:  frequency shuft
+     12          * @return void
+     13          ******************************************************************************/
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     14          void addDF(INT32 dFreq){
+   \                     addDF:
+   \   000000   74F5         MOV     A,#-0xb
+   \   000002   12....       LCALL   ?FUNC_ENTER_XDATA
+   \   000005                ; Saved register size: 11
+   \   000005                ; Auto size: 4
+   \   000005   74FC         MOV     A,#-0x4
+   \   000007   12....       LCALL   ?ALLOC_XSTACK8
+   \   00000A   8A..         MOV     ?V0 + 0,R2
+   \   00000C   8B..         MOV     ?V0 + 1,R3
+   \   00000E   8C..         MOV     ?V0 + 2,R4
+   \   000010   8D..         MOV     ?V0 + 3,R5
+     15          INT32 freq;
+     16              INT_GLOBAL_ENABLE( INT_OFF );
+   \   000012   C2AF         CLR     0xa8.7
+     17                  //freq = 1L*FREQ0;               freq += 256L*FREQ1;                 freq += 65536L*FREQ2;    
+     18                  ((BYTE *)(&freq))[0] = FREQ0; ((BYTE *)(&freq))[1] = FREQ1; ((BYTE *)(&freq))[2] = FREQ2;
+   \   000014   90DF0B       MOV     DPTR,#-0x20f5
+   \   000017   E0           MOVX    A,@DPTR
+   \   000018   85..82       MOV     DPL,?XSP + 0
+   \   00001B   85..83       MOV     DPH,?XSP + 1
+   \   00001E   F0           MOVX    @DPTR,A
+   \   00001F   90DF0A       MOV     DPTR,#-0x20f6
+   \   000022   E0           MOVX    A,@DPTR
+   \   000023   C0E0         PUSH    A
+   \   000025   7401         MOV     A,#0x1
+   \   000027   12....       LCALL   ?XSTACK_DISP0_8
+   \   00002A   D0E0         POP     A
+   \   00002C   F0           MOVX    @DPTR,A
+   \   00002D   90DF09       MOV     DPTR,#-0x20f7
+   \   000030   E0           MOVX    A,@DPTR
+   \   000031   C0E0         PUSH    A
+   \   000033   7402         MOV     A,#0x2
+   \   000035   12....       LCALL   ?XSTACK_DISP0_8
+   \   000038   D0E0         POP     A
+   \   00003A   F0           MOVX    @DPTR,A
+     19                  //freq = FREQ0; freq |= FREQ1<<8; freq |= ((UINT32)FREQ2)<<16;
+     20                  freq += dFreq;
+   \   00003B   85..82       MOV     DPL,?XSP + 0
+   \   00003E   85..83       MOV     DPH,?XSP + 1
+   \   000041   78..         MOV     R0,#?V0 + 0
+   \   000043   12....       LCALL   ?L_ADD_TO_X
+     21                  //FREQ0 = (BYTE)(freq&0xFF);     FREQ1 = (BYTE)((freq>>8) &0xFF);    FREQ2 = (BYTE)((freq>>16)&0xFF);
+     22                  FREQ0 = ((BYTE *)(&freq))[0]; FREQ1 = ((BYTE *)(&freq))[1]; FREQ2 = ((BYTE *)(&freq))[2];
+   \   000046   85..82       MOV     DPL,?XSP + 0
+   \   000049   85..83       MOV     DPH,?XSP + 1
+   \   00004C   E0           MOVX    A,@DPTR
+   \   00004D   90DF0B       MOV     DPTR,#-0x20f5
+   \   000050   F0           MOVX    @DPTR,A
+   \   000051   7401         MOV     A,#0x1
+   \   000053   12....       LCALL   ?XSTACK_DISP0_8
+   \   000056   E0           MOVX    A,@DPTR
+   \   000057   90DF0A       MOV     DPTR,#-0x20f6
+   \   00005A   F0           MOVX    @DPTR,A
+   \   00005B   7402         MOV     A,#0x2
+   \   00005D   12....       LCALL   ?XSTACK_DISP0_8
+   \   000060   E0           MOVX    A,@DPTR
+   \   000061   90DF09       MOV     DPTR,#-0x20f7
+   \   000064   F0           MOVX    @DPTR,A
+     23                  delta += dFreq;
+   \   000065   90....       MOV     DPTR,#delta
+   \   000068   78..         MOV     R0,#?V0 + 0
+   \   00006A   12....       LCALL   ?L_ADD_TO_X
+     24                  FSCTRL0 = 0; 
+   \   00006D   E4           CLR     A
+   \   00006E   90DF08       MOV     DPTR,#-0x20f8
+   \   000071   F0           MOVX    @DPTR,A
+     25              INT_GLOBAL_ENABLE( INT_ON );
+   \   000072   D2AF         SETB    0xa8.7
+     26          }
+   \   000074   7404         MOV     A,#0x4
+   \   000076   12....       LCALL   ?DEALLOC_XSTACK8
+   \   000079   7F04         MOV     R7,#0x4
+   \   00007B   02....       LJMP    ?FUNC_LEAVE_XDATA
+   \   00007E                REQUIRE _A_IEN0
+     27          
+     28          #define EXT_GND 3
+     29          #define INT_GND 9
+     30          
+     31          // LBC - subtractGround : subtractGround over range of from to to if not EXT_GND or INT_GND
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     32          void substractGround( INT32 *ptr, BYTE from, BYTE to ){
+   \                     substractGround:
+   \   000000   74F3         MOV     A,#-0xd
+   \   000002   12....       LCALL   ?FUNC_ENTER_XDATA
+   \   000005                ; Saved register size: 13
+   \   000005                ; Auto size: 0
+   \   000005   8035         SJMP    ??substractGround_0
+     33          //INT32 acc = ptr[EXT_GND];
+     34              for( ; from < to; from++) if( from != EXT_GND && from != INT_GND ) ptr[from] -= ptr[EXT_GND]; 
+   \                     ??substractGround_1:
+   \   000007   7403         MOV     A,#0x3
+   \   000009   69           XRL     A,R1
+   \   00000A   602F         JZ      ??substractGround_2
+   \   00000C   7409         MOV     A,#0x9
+   \   00000E   69           XRL     A,R1
+   \   00000F   602A         JZ      ??substractGround_2
+   \   000011   EA           MOV     A,R2
+   \   000012   240C         ADD     A,#0xc
+   \   000014   F582         MOV     DPL,A
+   \   000016   EB           MOV     A,R3
+   \   000017   3400         ADDC    A,#0x0
+   \   000019   F583         MOV     DPH,A
+   \   00001B   78..         MOV     R0,#?V0 + 0
+   \   00001D   12....       LCALL   ?L_MOV_X
+   \   000020   89..         MOV     ?V0 + 4,R1
+   \   000022   75..00       MOV     ?V0 + 5,#0x0
+   \   000025   7402         MOV     A,#0x2
+   \   000027   78..         MOV     R0,#?V0 + 4
+   \   000029   12....       LCALL   ?S_SHL
+   \   00002C   EA           MOV     A,R2
+   \   00002D   25..         ADD     A,?V0 + 4
+   \   00002F   F582         MOV     DPL,A
+   \   000031   EB           MOV     A,R3
+   \   000032   35..         ADDC    A,?V0 + 5
+   \   000034   F583         MOV     DPH,A
+   \   000036   78..         MOV     R0,#?V0 + 0
+   \   000038   12....       LCALL   ?L_SUB_FROM_X
+   \                     ??substractGround_2:
+   \   00003B   09           INC     R1
+   \                     ??substractGround_0:
+   \   00003C   E9           MOV     A,R1
+   \   00003D   C3           CLR     C
+   \   00003E   9C           SUBB    A,R4
+   \   00003F   40C6         JC      ??substractGround_1
+     35          }
+   \   000041   7F06         MOV     R7,#0x6
+   \   000043   02....       LJMP    ?FUNC_LEAVE_XDATA
+     36          extern void tickWait( BYTE ms );
+     37          //void secDelay( void ){BYTE cwCnt; for(cwCnt = 0; cwCnt < 10; cwCnt++){ WDCTL = 0xA8;  WDCTL = 0x58; halWait( 100 ); } } // 1 sec delay
+     38          /*
+     39          #define STROBE_TX                    0x03   // Strobe commands for the RFST
+     40          #define RADIO_MODE_UNDEF             0xF0
+     41          void cw( void ){
+     42              PKTCTRL0 = 0x20; PKTLEN = 0x55; RFST = STROBE_TX;
+     43              while( !RFTXRXIF ) asm("NOP");
+     44          }
+     45          */
+     46          //void zerofill( BYTE *ptr, BYTE size){  while( size-- ) *ptr++ = 0; } //mymemset( (BYTE *)ptr, 0, size ); }
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     47          void zerofill( BYTE *ptr, BYTE size){  if( ((UINT16)ptr) > 0x8000) while( size-- ) *ptr++ = 0; } //mymemset( (BYTE *)ptr, 0, size ); }
+   \                     zerofill:
+   \   000000   C082         PUSH    DPL
+   \   000002   C083         PUSH    DPH
+   \   000004                ; Saved register size: 2
+   \   000004                ; Auto size: 0
+   \   000004   C3           CLR     C
+   \   000005   EA           MOV     A,R2
+   \   000006   9401         SUBB    A,#0x1
+   \   000008   EB           MOV     A,R3
+   \   000009   9480         SUBB    A,#-0x80
+   \   00000B   4011         JC      ??zerofill_0
+   \   00000D   800B         SJMP    ??zerofill_1
+   \                     ??zerofill_2:
+   \   00000F   E4           CLR     A
+   \   000010   8A82         MOV     DPL,R2
+   \   000012   8B83         MOV     DPH,R3
+   \   000014   F0           MOVX    @DPTR,A
+   \   000015   A3           INC     DPTR
+   \   000016   AA82         MOV     R2,DPL
+   \   000018   AB83         MOV     R3,DPH
+   \                     ??zerofill_1:
+   \   00001A   E9           MOV     A,R1
+   \   00001B   19           DEC     R1
+   \   00001C   70F1         JNZ     ??zerofill_2
+   \                     ??zerofill_0:
+   \   00001E   D083         POP     DPH
+   \   000020   D082         POP     DPL
+   \   000022   22           RET
+     48          //void mymemset( BYTE *buff,        BYTE what,    BYTE counter ){ while( counter-- ) *buff++ = what; }
+     49          //void mymemcpy( BYTE *destination, BYTE *source, BYTE counter ){ while( counter-- ) *destination++ = *source++; }
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     50          void mymemcpy( BYTE *destination, BYTE *source, BYTE counter ){ if( ((UINT16)destination) > 0x8000) while( counter-- ) *destination++ = *source++; }
+   \                     mymemcpy:
+   \   000000   74F8         MOV     A,#-0x8
+   \   000002   12....       LCALL   ?FUNC_ENTER_XDATA
+   \   000005                ; Saved register size: 8
+   \   000005                ; Auto size: 0
+   \   000005   C3           CLR     C
+   \   000006   EA           MOV     A,R2
+   \   000007   9401         SUBB    A,#0x1
+   \   000009   EB           MOV     A,R3
+   \   00000A   9480         SUBB    A,#-0x80
+   \   00000C   4022         JC      ??mymemcpy_0
+   \   00000E   801C         SJMP    ??mymemcpy_1
+   \                     ??mymemcpy_2:
+   \   000010   8C82         MOV     DPL,R4
+   \   000012   8D83         MOV     DPH,R5
+   \   000014   E0           MOVX    A,@DPTR
+   \   000015   8A82         MOV     DPL,R2
+   \   000017   8B83         MOV     DPH,R3
+   \   000019   F0           MOVX    @DPTR,A
+   \   00001A   8C82         MOV     DPL,R4
+   \   00001C   8D83         MOV     DPH,R5
+   \   00001E   A3           INC     DPTR
+   \   00001F   AC82         MOV     R4,DPL
+   \   000021   AD83         MOV     R5,DPH
+   \   000023   8A82         MOV     DPL,R2
+   \   000025   8B83         MOV     DPH,R3
+   \   000027   A3           INC     DPTR
+   \   000028   AA82         MOV     R2,DPL
+   \   00002A   AB83         MOV     R3,DPH
+   \                     ??mymemcpy_1:
+   \   00002C   E9           MOV     A,R1
+   \   00002D   19           DEC     R1
+   \   00002E   70E0         JNZ     ??mymemcpy_2
+   \                     ??mymemcpy_0:
+   \   000030   7F01         MOV     R7,#0x1
+   \   000032   02....       LJMP    ?FUNC_LEAVE_XDATA
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     51          BOOL mymemcmp( BYTE *destination, BYTE *source, BYTE counter ){ while( counter-- ) if(*destination++ != *source++) return 1; return 0; }
+   \                     mymemcmp:
+   \   000000   74F6         MOV     A,#-0xa
+   \   000002   12....       LCALL   ?FUNC_ENTER_XDATA
+   \   000005                ; Saved register size: 10
+   \   000005                ; Auto size: 0
+   \                     ??mymemcmp_0:
+   \   000005   E9           MOV     A,R1
+   \   000006   19           DEC     R1
+   \   000007   6030         JZ      ??mymemcmp_1
+   \   000009   8A..         MOV     ?V0 + 0,R2
+   \   00000B   8B..         MOV     ?V0 + 1,R3
+   \   00000D   85..82       MOV     DPL,?V0 + 0
+   \   000010   85..83       MOV     DPH,?V0 + 1
+   \   000013   A3           INC     DPTR
+   \   000014   AA82         MOV     R2,DPL
+   \   000016   AB83         MOV     R3,DPH
+   \   000018   EC           MOV     A,R4
+   \   000019   FE           MOV     R6,A
+   \   00001A   ED           MOV     A,R5
+   \   00001B   FF           MOV     R7,A
+   \   00001C   8E82         MOV     DPL,R6
+   \   00001E   8F83         MOV     DPH,R7
+   \   000020   A3           INC     DPTR
+   \   000021   AC82         MOV     R4,DPL
+   \   000023   AD83         MOV     R5,DPH
+   \   000025   85..82       MOV     DPL,?V0 + 0
+   \   000028   85..83       MOV     DPH,?V0 + 1
+   \   00002B   E0           MOVX    A,@DPTR
+   \   00002C   F8           MOV     R0,A
+   \   00002D   8E82         MOV     DPL,R6
+   \   00002F   8F83         MOV     DPH,R7
+   \   000031   E0           MOVX    A,@DPTR
+   \   000032   68           XRL     A,R0
+   \   000033   60D0         JZ      ??mymemcmp_0
+   \   000035   7901         MOV     R1,#0x1
+   \   000037   8002         SJMP    ??mymemcmp_2
+   \                     ??mymemcmp_1:
+   \   000039   7900         MOV     R1,#0x0
+   \                     ??mymemcmp_2:
+   \   00003B   7F03         MOV     R7,#0x3
+   \   00003D   02....       LJMP    ?FUNC_LEAVE_XDATA
+     52          
+     53          // LBC convS and convU convert floats to signed or unsigned 16bit, avoiding overflow
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     54          INT16  convS( float f ){ INT32 t = (INT32)f; if( t > 32767L ) return 32767; else if( t < -32767L ) return -32767; return (INT16) t; }
+   \                     convS:
+   \   000000   74F1         MOV     A,#-0xf
+   \   000002   12....       LCALL   ?FUNC_ENTER_XDATA
+   \   000005                ; Saved register size: 15
+   \   000005                ; Auto size: 0
+   \   000005   8A..         MOV     ?V0 + 0,R2
+   \   000007   8B..         MOV     ?V0 + 1,R3
+   \   000009   8C..         MOV     ?V0 + 2,R4
+   \   00000B   8D..         MOV     ?V0 + 3,R5
+   \   00000D   78..         MOV     R0,#?V0 + 0
+   \   00000F   12....       LCALL   ?FLT_TO_L
+   \   000012   90....       MOV     DPTR,#__Constant_8000
+   \   000015   78..         MOV     R0,#?V0 + 4
+   \   000017   12....       LCALL   ?L_MOV_X
+   \   00001A   78..         MOV     R0,#?V0 + 4
+   \   00001C   79..         MOV     R1,#?V0 + 0
+   \   00001E   12....       LCALL   ?SL_GT
+   \   000021   4006         JC      ??convS_0
+   \   000023   7AFF         MOV     R2,#-0x1
+   \   000025   7B7F         MOV     R3,#0x7f
+   \   000027   801B         SJMP    ??convS_1
+   \                     ??convS_0:
+   \   000029   90....       MOV     DPTR,#__Constant_ffff8001
+   \   00002C   78..         MOV     R0,#?V0 + 4
+   \   00002E   12....       LCALL   ?L_MOV_X
+   \   000031   78..         MOV     R0,#?V0 + 4
+   \   000033   79..         MOV     R1,#?V0 + 0
+   \   000035   12....       LCALL   ?SL_GT
+   \   000038   5006         JNC     ??convS_2
+   \   00003A   7A01         MOV     R2,#0x1
+   \   00003C   7B80         MOV     R3,#-0x80
+   \   00003E   8004         SJMP    ??convS_1
+   \                     ??convS_2:
+   \   000040   AA..         MOV     R2,?V0 + 0
+   \   000042   AB..         MOV     R3,?V0 + 1
+   \                     ??convS_1:
+   \   000044                REQUIRE ?Subroutine0
+   \   000044                ; // Fall through to label ?Subroutine0
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+   \                     ?Subroutine0:
+   \   000000   7F08         MOV     R7,#0x8
+   \   000002   02....       LJMP    ?FUNC_LEAVE_XDATA
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     55          UINT16 convU( float f ){ INT32 t = (INT32)f; if( t > 65535L ) return 65535; else if( t < 0L )      return 0;      return (UINT16)t; }
+   \                     convU:
+   \   000000   74F1         MOV     A,#-0xf
+   \   000002   12....       LCALL   ?FUNC_ENTER_XDATA
+   \   000005                ; Saved register size: 15
+   \   000005                ; Auto size: 0
+   \   000005   8A..         MOV     ?V0 + 0,R2
+   \   000007   8B..         MOV     ?V0 + 1,R3
+   \   000009   8C..         MOV     ?V0 + 2,R4
+   \   00000B   8D..         MOV     ?V0 + 3,R5
+   \   00000D   78..         MOV     R0,#?V0 + 0
+   \   00000F   12....       LCALL   ?FLT_TO_L
+   \   000012   90....       MOV     DPTR,#__Constant_10000
+   \   000015   78..         MOV     R0,#?V0 + 4
+   \   000017   12....       LCALL   ?L_MOV_X
+   \   00001A   78..         MOV     R0,#?V0 + 4
+   \   00001C   79..         MOV     R1,#?V0 + 0
+   \   00001E   12....       LCALL   ?SL_GT
+   \   000021   4006         JC      ??convU_0
+   \   000023   7AFF         MOV     R2,#-0x1
+   \   000025   7BFF         MOV     R3,#-0x1
+   \   000027   801B         SJMP    ??convU_1
+   \                     ??convU_0:
+   \   000029   90....       MOV     DPTR,#__Constant_0
+   \   00002C   78..         MOV     R0,#?V0 + 4
+   \   00002E   12....       LCALL   ?L_MOV_X
+   \   000031   78..         MOV     R0,#?V0 + 4
+   \   000033   79..         MOV     R1,#?V0 + 0
+   \   000035   12....       LCALL   ?SL_GT
+   \   000038   5006         JNC     ??convU_2
+   \   00003A   7A00         MOV     R2,#0x0
+   \   00003C   7B00         MOV     R3,#0x0
+   \   00003E   8004         SJMP    ??convU_1
+   \                     ??convU_2:
+   \   000040   AA..         MOV     R2,?V0 + 0
+   \   000042   AB..         MOV     R3,?V0 + 1
+   \                     ??convU_1:
+   \   000044   80..         SJMP    ?Subroutine0
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+   \                     __Constant_8000:
+   \   000000                DS 4
+   \   000004                REQUIRE `?<Initializer for __Constant_8000>`
+   \   000004                REQUIRE __INIT_XDATA_I
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for __Constant_8000>`:
+   \   000000   00800000     DD 32768
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+   \                     __Constant_ffff8001:
+   \   000000                DS 4
+   \   000004                REQUIRE `?<Initializer for __Constant_ffff8001>`
+   \   000004                REQUIRE __INIT_XDATA_I
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for __Constant_ffff8001>`:
+   \   000000   0180FFFF     DD -32767
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+   \                     __Constant_10000:
+   \   000000                DS 4
+   \   000004                REQUIRE `?<Initializer for __Constant_10000>`
+   \   000004                REQUIRE __INIT_XDATA_I
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for __Constant_10000>`:
+   \   000000   00000100     DD 65536
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+   \                     __Constant_0:
+   \   000000                DS 4
+   \   000004                REQUIRE `?<Initializer for __Constant_0>`
+   \   000004                REQUIRE __INIT_XDATA_I
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for __Constant_0>`:
+   \   000000   00000000     DD 0
+
+   Maximum stack usage in bytes:
+
+     Function        ISTACK PSTACK XSTACK
+     --------        ------ ------ ------
+     addDF               1      0     15
+     convS               0      0     15
+     convU               0      0     15
+     mymemcmp            0      0     10
+     mymemcpy            1      0      8
+     reset               2      0      0
+     substractGround     0      0     13
+     zerofill            3      0      0
+
+
+   Segment part sizes:
+
+     Function/Label                 Bytes
+     --------------                 -----
+     _A_IEN0                           1
+     WDCTL                             1
+     reset                            15
+     delta                             4
+     addDF                           126
+     substractGround                  70
+     zerofill                         35
+     mymemcpy                         53
+     mymemcmp                         64
+     convS                            68
+     ?Subroutine0                      5
+     convU                            70
+     __Constant_8000                   4
+     ?<Initializer for __Constant_8000>
+                                       4
+     __Constant_ffff8001               4
+     ?<Initializer for __Constant_ffff8001>
+                                       4
+     __Constant_10000                  4
+     ?<Initializer for __Constant_10000>
+                                       4
+     __Constant_0                      4
+     ?<Initializer for __Constant_0>
+                                       4
+
+ 
+ 506 bytes in segment NEAR_CODE
+   2 bytes in segment SFR_AN
+  16 bytes in segment XDATA_I
+  16 bytes in segment XDATA_ID
+   4 bytes in segment XDATA_Z
+ 
+ 506 bytes of CODE  memory (+ 16 bytes shared)
+   0 bytes of DATA  memory (+  2 bytes shared)
+   4 bytes of XDATA memory (+ 16 bytes shared)
+
+Errors: none
+Warnings: none

@@ -1,0 +1,766 @@
+///////////////////////////////////////////////////////////////////////////////
+//                                                                            /
+// IAR 8051 C/C++ Compiler V7.30B/W32                   02/Apr/2018  11:06:33 /
+// Copyright 2004-2007 IAR Systems. All rights reserved.                      /
+//                                                                            /
+//    Core               =  plain                                             /
+//    Code model         =  near                                              /
+//    Data model         =  large                                             /
+//    Calling convention =  xdata reentrant                                   /
+//    Constant location  =  data                                              /
+//    Dptr setup         =  1,16                                              /
+//    Source file        =  E:\Project_1500V_dec20\ED\code\AndStackED\source\ /
+//                          flash.c                                           /
+//    Command line       =  E:\Project_1500V_dec20\ED\code\AndStackED\source\ /
+//                          flash.c -D NDEBUG -D chip=2510 -D LOWER_IMAGE -D  /
+//                          MidString -D MIDSTRING -lCN                       /
+//                          "E:\Project_1500V_dec20\ED\iar\Build .hex for     /
+//                          CC2510\List\" -lA "E:\Project_1500V_dec20\ED\iar\ /
+//                          Build .hex for CC2510\List\" -o                   /
+//                          "E:\Project_1500V_dec20\ED\iar\Build .hex for     /
+//                          CC2510\Obj\" -e -z9 --core=plain --dptr=16,1      /
+//                          --data_model=large --code_model=near              /
+//                          --calling_convention=xdata_reentrant              /
+//                          --place_constants=data --nr_virtual_regs 32 -I    /
+//                          E:\Project_1500V_dec20\ED\iar\..\CODE\AndStackED\ /
+//                          INCLUDE\ -I E:\Project_1500V_dec20\ED\iar\..\CODE /
+//                          \LIBRARY\HAL\INCLUDE\ -I                          /
+//                          E:\Project_1500V_dec20\ED\iar\..\CODE\LIBRARY\HAL /
+//                          _BUI\INCLUDE\ -I C:\IARSystems-CD-730B\8051\INC\  /
+//    List file          =  E:\Project_1500V_dec20\ED\iar\Build .hex for      /
+//                          CC2510\List\flash.s51                             /
+//                                                                            /
+//                                                                            /
+///////////////////////////////////////////////////////////////////////////////
+
+        NAME flash
+
+        RTMODEL "__calling_convention", "xdata_reentrant"
+        RTMODEL "__code_model", "near"
+        RTMODEL "__core", "plain"
+        RTMODEL "__data_model", "large"
+        RTMODEL "__dptr_size", "16"
+        RTMODEL "__extended_stack", "disabled"
+        RTMODEL "__location_for_constants", "data"
+        RTMODEL "__number_of_dptrs", "1"
+        RTMODEL "__rt_version", "1"
+
+        RSEG DOVERLAY:DATA:NOROOT(0)
+        RSEG IOVERLAY:IDATA:NOROOT(0)
+        RSEG ISTACK:IDATA:NOROOT(0)
+        RSEG PSTACK:XDATA:NOROOT(0)
+        RSEG XSTACK:XDATA:NOROOT(0)
+
+        EXTERN ?FUNC_ENTER_XDATA
+        EXTERN ?FUNC_LEAVE_XDATA
+        EXTERN ?US_SHR
+        EXTERN ?V0
+        EXTERN __INIT_XDATA_I
+        EXTERN __INIT_XDATA_Z
+
+        PUBWEAK DMAARM
+        PUBWEAK DMAIRQ
+        PUBWEAK FADDRH
+        PUBWEAK FADDRL
+        PUBWEAK FWT
+        PUBWEAK IEN2
+        PUBWEAK _A_IEN0
+        PUBWEAK _A_IEN1
+        PUBLIC buff
+        PUBLIC firstTime
+        PUBLIC flashCallback
+        FUNCTION flashCallback,021203H
+        ARGFRAME XSTACK, 0, STACK
+        LOCFRAME ISTACK, 2, STACK
+        PUBLIC initiateTransfer
+        FUNCTION initiateTransfer,021203H
+        ARGFRAME XSTACK, 0, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        LOCFRAME XSTACK, 10, STACK
+        PUBLIC refreshTheFlash
+        FUNCTION refreshTheFlash,021203H
+        ARGFRAME XSTACK, 0, STACK
+        LOCFRAME ISTACK, 2, STACK
+        PUBLIC refreshing
+        PUBLIC transfer
+        
+        CFI Names cfiNames0
+        CFI StackFrame CFA_SP SP DATA
+        CFI StackFrame CFA_PSP16 PSP16 XDATA
+        CFI StackFrame CFA_XSP16 XSP16 XDATA
+        CFI StaticOverlayFrame CFA_IOVERLAY IOVERLAY
+        CFI StaticOverlayFrame CFA_DOVERLAY DOVERLAY
+        CFI Resource `PSW.CY`:1, `B.BR0`:1, `B.BR1`:1, `B.BR2`:1, `B.BR3`:1
+        CFI Resource `B.BR4`:1, `B.BR5`:1, `B.BR6`:1, `B.BR7`:1, `VB.BR8`:1
+        CFI Resource `VB.BR9`:1, `VB.BR10`:1, `VB.BR11`:1, `VB.BR12`:1
+        CFI Resource `VB.BR13`:1, `VB.BR14`:1, `VB.BR15`:1, VB:8, B:8, A:8
+        CFI Resource PSW:8, DPL0:8, DPH0:8, R0:8, R1:8, R2:8, R3:8, R4:8, R5:8
+        CFI Resource R6:8, R7:8, V0:8, V1:8, V2:8, V3:8, V4:8, V5:8, V6:8, V7:8
+        CFI Resource V8:8, V9:8, V10:8, V11:8, V12:8, V13:8, V14:8, V15:8
+        CFI Resource V16:8, V17:8, V18:8, V19:8, V20:8, V21:8, V22:8, V23:8
+        CFI Resource V24:8, V25:8, V26:8, V27:8, V28:8, V29:8, V30:8, V31:8
+        CFI Resource SP:8, PSPH:8, PSPL:8, PSP16:16, XSPH:8, XSPL:8, XSP16:16
+        CFI VirtualResource ?RET:16, ?RET_HIGH:8, ?RET_LOW:8
+        CFI ResourceParts PSP16 PSPH, PSPL
+        CFI ResourceParts XSP16 XSPH, XSPL
+        CFI ResourceParts ?RET ?RET_HIGH, ?RET_LOW
+        CFI EndNames cfiNames0
+        
+        CFI Common cfiCommon0 Using cfiNames0
+        CFI CodeAlign 1
+        CFI DataAlign -1
+        CFI ReturnAddress ?RET CODE
+        CFI CFA_DOVERLAY Used
+        CFI CFA_IOVERLAY Used
+        CFI CFA_SP SP+-2
+        CFI CFA_PSP16 PSP16+0
+        CFI CFA_XSP16 XSP16+0
+        CFI `PSW.CY` SameValue
+        CFI `B.BR0` SameValue
+        CFI `B.BR1` SameValue
+        CFI `B.BR2` SameValue
+        CFI `B.BR3` SameValue
+        CFI `B.BR4` SameValue
+        CFI `B.BR5` SameValue
+        CFI `B.BR6` SameValue
+        CFI `B.BR7` SameValue
+        CFI `VB.BR8` SameValue
+        CFI `VB.BR9` SameValue
+        CFI `VB.BR10` SameValue
+        CFI `VB.BR11` SameValue
+        CFI `VB.BR12` SameValue
+        CFI `VB.BR13` SameValue
+        CFI `VB.BR14` SameValue
+        CFI `VB.BR15` SameValue
+        CFI VB SameValue
+        CFI B Undefined
+        CFI A Undefined
+        CFI PSW SameValue
+        CFI DPL0 SameValue
+        CFI DPH0 SameValue
+        CFI R0 Undefined
+        CFI R1 Undefined
+        CFI R2 Undefined
+        CFI R3 Undefined
+        CFI R4 Undefined
+        CFI R5 Undefined
+        CFI R6 SameValue
+        CFI R7 SameValue
+        CFI V0 SameValue
+        CFI V1 SameValue
+        CFI V2 SameValue
+        CFI V3 SameValue
+        CFI V4 SameValue
+        CFI V5 SameValue
+        CFI V6 SameValue
+        CFI V7 SameValue
+        CFI V8 SameValue
+        CFI V9 SameValue
+        CFI V10 SameValue
+        CFI V11 SameValue
+        CFI V12 SameValue
+        CFI V13 SameValue
+        CFI V14 SameValue
+        CFI V15 SameValue
+        CFI V16 SameValue
+        CFI V17 SameValue
+        CFI V18 SameValue
+        CFI V19 SameValue
+        CFI V20 SameValue
+        CFI V21 SameValue
+        CFI V22 SameValue
+        CFI V23 SameValue
+        CFI V24 SameValue
+        CFI V25 SameValue
+        CFI V26 SameValue
+        CFI V27 SameValue
+        CFI V28 SameValue
+        CFI V29 SameValue
+        CFI V30 SameValue
+        CFI V31 SameValue
+        CFI PSPH Undefined
+        CFI PSPL Undefined
+        CFI XSPH Undefined
+        CFI XSPL Undefined
+        CFI ?RET Concat
+        CFI ?RET_HIGH Frame(CFA_SP, 2)
+        CFI ?RET_LOW Frame(CFA_SP, 1)
+        CFI EndCommon cfiCommon0
+        
+        
+        CFI Common cfiCommon1 Using cfiNames0
+        CFI CodeAlign 1
+        CFI DataAlign -1
+        CFI ReturnAddress ?RET CODE
+        CFI CFA_DOVERLAY Used
+        CFI CFA_IOVERLAY Used
+        CFI CFA_SP SP+-2
+        CFI CFA_PSP16 PSP16+0
+        CFI CFA_XSP16 XSP16+0
+        CFI `PSW.CY` SameValue
+        CFI `B.BR0` SameValue
+        CFI `B.BR1` SameValue
+        CFI `B.BR2` SameValue
+        CFI `B.BR3` SameValue
+        CFI `B.BR4` SameValue
+        CFI `B.BR5` SameValue
+        CFI `B.BR6` SameValue
+        CFI `B.BR7` SameValue
+        CFI `VB.BR8` SameValue
+        CFI `VB.BR9` SameValue
+        CFI `VB.BR10` SameValue
+        CFI `VB.BR11` SameValue
+        CFI `VB.BR12` SameValue
+        CFI `VB.BR13` SameValue
+        CFI `VB.BR14` SameValue
+        CFI `VB.BR15` SameValue
+        CFI VB SameValue
+        CFI B SameValue
+        CFI A SameValue
+        CFI PSW SameValue
+        CFI DPL0 SameValue
+        CFI DPH0 SameValue
+        CFI R0 SameValue
+        CFI R1 SameValue
+        CFI R2 SameValue
+        CFI R3 SameValue
+        CFI R4 SameValue
+        CFI R5 SameValue
+        CFI R6 SameValue
+        CFI R7 SameValue
+        CFI V0 SameValue
+        CFI V1 SameValue
+        CFI V2 SameValue
+        CFI V3 SameValue
+        CFI V4 SameValue
+        CFI V5 SameValue
+        CFI V6 SameValue
+        CFI V7 SameValue
+        CFI V8 SameValue
+        CFI V9 SameValue
+        CFI V10 SameValue
+        CFI V11 SameValue
+        CFI V12 SameValue
+        CFI V13 SameValue
+        CFI V14 SameValue
+        CFI V15 SameValue
+        CFI V16 SameValue
+        CFI V17 SameValue
+        CFI V18 SameValue
+        CFI V19 SameValue
+        CFI V20 SameValue
+        CFI V21 SameValue
+        CFI V22 SameValue
+        CFI V23 SameValue
+        CFI V24 SameValue
+        CFI V25 SameValue
+        CFI V26 SameValue
+        CFI V27 SameValue
+        CFI V28 SameValue
+        CFI V29 SameValue
+        CFI V30 SameValue
+        CFI V31 SameValue
+        CFI PSPH Undefined
+        CFI PSPL Undefined
+        CFI XSPH Undefined
+        CFI XSPL Undefined
+        CFI ?RET Concat
+        CFI ?RET_HIGH Frame(CFA_SP, 2)
+        CFI ?RET_LOW Frame(CFA_SP, 1)
+        CFI EndCommon cfiCommon1
+        
+        EXTERN waitForClearThePage
+        FUNCTION waitForClearThePage,0202H
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 10, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        EXTERN halFlashDmaTrigger
+        FUNCTION halFlashDmaTrigger,0202H
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 10, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        EXTERN mymemcpy
+        FUNCTION mymemcpy,0202H
+        ARGFRAME ISTACK, 2, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 0, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        EXTERN dmaConfig
+
+// E:\Project_1500V_dec20\ED\code\AndStackED\source\flash.c
+//    1 #include "ioCC2510.h"
+
+        ASEGN SFR_AN:DATA:NOROOT,09aH
+// unsigned char volatile __sfr IEN2
+IEN2:
+        DS 1
+
+        ASEGN SFR_AN:DATA:NOROOT,0a8H
+// union <unnamed> volatile __sfr _A_IEN0
+_A_IEN0:
+        DS 1
+
+        ASEGN SFR_AN:DATA:NOROOT,0abH
+// unsigned char volatile __sfr FWT
+FWT:
+        DS 1
+
+        ASEGN SFR_AN:DATA:NOROOT,0acH
+// unsigned char volatile __sfr FADDRL
+FADDRL:
+        DS 1
+
+        ASEGN SFR_AN:DATA:NOROOT,0adH
+// unsigned char volatile __sfr FADDRH
+FADDRH:
+        DS 1
+
+        ASEGN SFR_AN:DATA:NOROOT,0b8H
+// union <unnamed> volatile __sfr _A_IEN1
+_A_IEN1:
+        DS 1
+
+        ASEGN SFR_AN:DATA:NOROOT,0d1H
+// unsigned char volatile __sfr DMAIRQ
+DMAIRQ:
+        DS 1
+
+        ASEGN SFR_AN:DATA:NOROOT,0d6H
+// unsigned char volatile __sfr DMAARM
+DMAARM:
+        DS 1
+//    2 
+//    3 #include "hal_main.h"
+//    4 #include "main.h"
+//    5 
+//    6 //#include <string.h>
+//    7 
+//    8 #define PAGEADDR 0x7C00
+//    9 #define PAGELEN  256
+//   10 #define BARRIER  0xAA
+//   11 
+//   12 extern void mymemcpy( BYTE *destination, BYTE *source, BYTE counter);
+//   13 /*
+//   14 BOOL readTheLatest(BYTE *ptr, BYTE len ){ 
+//   15 BYTE *addr = (BYTE *)PAGEADDR; // NO Round Buffer
+//   16     if( addr[0]!=BARRIER || addr[1]!=BARRIER ) return FALSE; 
+//   17     mymemcpy( ptr, addr, len ); 
+//   18     return TRUE;
+//   19 }
+//   20 */
+//   21 /*
+//   22 void clearThePage(BYTE page){ 
+//   23     while( FCTL & 0x80 ) asm("NOP;");
+//   24     INT_GLOBAL_ENABLE(FALSE);
+//   25     //asm( "C1: MOV A, FCTL;  JB ACC.7, C1;" );
+//   26     FADDRH = page; FWT = 0x21; FCTL |= 1; asm("NOP");
+//   27     //asm( "MOV FWT,  #21h; MOV FCTL, #01h; NOP; " );
+//   28     INT_GLOBAL_ENABLE(TRUE);
+//   29     //asm( "C2: MOV A, FCTL; NOP; JB ACC.7, C2;" );
+//   30     while( FCTL & 0x80 ) asm("NOP;");
+//   31 }
+//   32 */
+//   33 
+
+        RSEG XDATA_Z:XDATA:NOROOT(0)
+//   34 BOOL refreshing = FALSE, firstTime = TRUE, transfer = FALSE;
+refreshing:
+        DS 1
+        REQUIRE __INIT_XDATA_Z
+
+        RSEG XDATA_I:XDATA:NOROOT(0)
+        DATA
+firstTime:
+        DS 1
+        REQUIRE `?<Initializer for firstTime>`
+        REQUIRE __INIT_XDATA_I
+
+        RSEG XDATA_Z:XDATA:NOROOT(0)
+transfer:
+        DS 1
+        REQUIRE __INIT_XDATA_Z
+
+        RSEG XDATA_Z:XDATA:NOROOT(0)
+//   35 static UINT16 refreshAddr = 0;
+refreshAddr:
+        DS 2
+        REQUIRE __INIT_XDATA_Z
+//   36 extern DMA_DESC dmaConfig[3];   
+//   37 /*
+//   38 BOOL initiateTransfer(BYTE *ptr, BYTE *addr, BYTE len){
+//   39     if( transfer ) return FALSE;
+//   40     
+//   41     SET_WORD(dmaConfig[2].SRCADDRH,  dmaConfig[2].SRCADDRL,  ptr);     // Source: ptr
+//   42     //SET_WORD(dmaConfig[2].LENH,      dmaConfig[2].LENL, len);          // Sets the maximum transfer count allowed (length byte + data)
+//   43     if( len & 1 ) len++;
+//   44     dmaConfig[2].LENL = len;
+//   45     
+//   46     //SET_WORD(DMA1CFGH, DMA1CFGL,     &dmaConfig[1]);                       
+//   47     FADDRH = (((UINT16)addr)>>9) & 0xFF;    FADDRL = (((UINT16)addr)>>1) & 0xFF;  // setup flash address
+//   48 
+//   49     / *
+//   50     FWT = 0x21;    // 2A 
+//   51     DMAIRQ &= 4;
+//   52     DMAARM = DMAARM_CHANNEL2;                                                    // arm dma channel
+//   53     * /
+//   54     DMAIRQ &= ~4;
+//   55     flashDmaSetup();
+//   56     HAL_INT_ENABLE(INUM_DMA, INT_ON);    
+//   57     transfer = TRUE;
+//   58      
+//   59     halFlashDmaTrigger(); 
+//   60 
+//   61     //while( transfer ) halWait( 1 );
+//   62     return TRUE;
+//   63 }
+//   64 */
+
+        RSEG NEAR_CODE:CODE:NOROOT(0)
+//   65 BOOL initiateTransfer(BYTE *ptr, BYTE *addr, BYTE len){
+initiateTransfer:
+        CFI Block cfiBlock0 Using cfiCommon0
+        CFI Function initiateTransfer
+        FUNCALL initiateTransfer, waitForClearThePage
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 10, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 10, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL initiateTransfer, halFlashDmaTrigger
+        LOCFRAME ISTACK, 0, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 10, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 0, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 10, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        MOV     A,#-0xa
+        LCALL   ?FUNC_ENTER_XDATA
+        CFI DPH0 load(1, XDATA, add(CFA_XSP16, literal(-1)))
+        CFI DPL0 load(1, XDATA, add(CFA_XSP16, literal(-2)))
+        CFI ?RET_HIGH load(1, XDATA, add(CFA_XSP16, literal(-3)))
+        CFI ?RET_LOW load(1, XDATA, add(CFA_XSP16, literal(-4)))
+        CFI R7 load(1, XDATA, add(CFA_XSP16, literal(-5)))
+        CFI V2 load(1, XDATA, add(CFA_XSP16, literal(-6)))
+        CFI V1 load(1, XDATA, add(CFA_XSP16, literal(-7)))
+        CFI V0 load(1, XDATA, add(CFA_XSP16, literal(-8)))
+        CFI VB load(1, XDATA, add(CFA_XSP16, literal(-9)))
+        CFI R6 load(1, XDATA, add(CFA_XSP16, literal(-10)))
+        CFI CFA_SP SP+0
+        CFI CFA_XSP16 add(XSP16, 10)
+        ; Saved register size: 10
+        ; Auto size: 0
+        MOV     A,R2
+        MOV     R6,A
+        MOV     A,R3
+        MOV     R7,A
+        MOV     ?V0 + 0,R4
+        MOV     ?V0 + 1,R5
+        MOV     ?V0 + 2,R1
+//   66     //if( transfer ) return FALSE;
+//   67     waitForClearThePage();
+        ; Setup parameters for call to function waitForClearThePage
+        LCALL   waitForClearThePage
+//   68     //P1_4 = 0; // debug statement for measuring save PB time
+//   69     FWT = 0x2A;
+        MOV     0xab,#0x2a
+//   70     SET_WORD(dmaConfig[2].SRCADDRH,  dmaConfig[2].SRCADDRL, (UINT16)ptr);
+        MOV     A,R7
+        MOV     DPTR,#(dmaConfig + 16)
+        MOVX    @DPTR,A
+        MOV     A,R6
+        MOV     DPTR,#(dmaConfig + 17)
+        MOVX    @DPTR,A
+//   71     SET_WORD(dmaConfig[2].LENH,      dmaConfig[2].LENL,     len );                // Sets the maximum transfer count allowed (length byte + data)
+        MOV     DPTR,#(dmaConfig + 20)
+        MOVX    A,@DPTR
+        ANL     A,#0xe0
+        MOVX    @DPTR,A
+        MOV     A,?V0 + 2
+        MOV     DPTR,#(dmaConfig + 21)
+        MOVX    @DPTR,A
+//   72     FADDRH = (((UINT16)addr)>>9) & 0xFF;    FADDRL = (((UINT16)addr)>>1) & 0xFF;  // setup flash address
+        MOV     R2,?V0 + 0
+        MOV     R3,?V0 + 1
+        MOV     A,#0x9
+        MOV     R0,#?V0 + 0
+        LCALL   ?US_SHR
+        MOV     A,?V0 + 0
+        MOV     0xad,A
+        MOV     A,R3
+        CLR     C
+        RRC     A
+        MOV     A,R2
+        RRC     A
+        MOV     0xac,A
+//   73     DMAIRQ &= ~4;                                                                 // damn important
+        ANL     0xd1,#0xfb
+//   74     HAL_INT_ENABLE(INUM_DMA, INT_ON);
+        SETB    0xb8.0
+//   75     //HAL_INT_ENABLE(INUM_RF,  INT_OFF);
+//   76     DMAARM = DMAARM_CHANNEL2;                                                    // arm dma channel
+        MOV     0xd6,#0x4
+//   77     //transfer = TRUE;
+//   78     halFlashDmaTrigger(); 
+        ; Setup parameters for call to function halFlashDmaTrigger
+        LCALL   halFlashDmaTrigger
+//   79     return TRUE;
+        MOV     R1,#0x1
+        MOV     R7,#0x3
+        LJMP    ?FUNC_LEAVE_XDATA
+        CFI EndBlock cfiBlock0
+        REQUIRE IEN2
+        REQUIRE _A_IEN0
+        REQUIRE FWT
+        REQUIRE FADDRL
+        REQUIRE FADDRH
+        REQUIRE _A_IEN1
+        REQUIRE DMAIRQ
+        REQUIRE DMAARM
+//   80 }
+//   81 /*
+//   82 void writeTheLatest(BYTE *ptr, BYTE len){
+//   83     clearThePage( (PAGEADDR>>9)&0xFF ); 
+//   84     //halWait( 40 );
+//   85     initiateTransfer( ptr, (BYTE *)PAGEADDR, len );
+//   86 }
+//   87 */
+//   88 #define RLEN 0x80
+//   89 
+
+        RSEG XDATA_Z:XDATA:NOROOT(0)
+//   90 BYTE buff[ RLEN ];
+buff:
+        DS 128
+        REQUIRE __INIT_XDATA_Z
+//   91 /* comment it to avoid flash refresh */
+
+        RSEG NEAR_CODE:CODE:NOROOT(0)
+//   92 void refreshTheFlash(void){ 
+refreshTheFlash:
+        CFI Block cfiBlock1 Using cfiCommon0
+        CFI Function refreshTheFlash
+        FUNCALL refreshTheFlash, mymemcpy
+        LOCFRAME ISTACK, 2, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 0, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 2, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 0, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL refreshTheFlash, initiateTransfer
+        LOCFRAME ISTACK, 2, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 0, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 2, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 0, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        PUSH    DPL
+        CFI DPL0 Frame(CFA_SP, 3)
+        CFI CFA_SP SP+-3
+        PUSH    DPH
+        CFI DPH0 Frame(CFA_SP, 4)
+        CFI CFA_SP SP+-4
+        ; Saved register size: 2
+        ; Auto size: 0
+//   93     refreshAddr = 0; 
+        MOV     DPTR,#refreshAddr
+        CLR     A
+        MOVX    @DPTR,A
+        INC     DPTR
+        MOVX    @DPTR,A
+//   94     mymemcpy( buff, (BYTE *)refreshAddr, RLEN );
+        ; Setup parameters for call to function mymemcpy
+        MOV     R1,#-0x80
+        MOV     R4,A
+        LCALL   ?Subroutine0
+        CFI EndBlock cfiBlock1
+//   95     refreshing = initiateTransfer( (BYTE *)buff, (BYTE *)refreshAddr, RLEN );
+//   96 }
+??CrossCallReturnLabel_0:
+        REQUIRE ?Subroutine1
+        ; // Fall through to label ?Subroutine1
+
+        RSEG NEAR_CODE:CODE:NOROOT(0)
+?Subroutine1:
+        CFI Block cfiBlock2 Using cfiCommon0
+        CFI NoFunction
+        CFI CFA_SP SP+-4
+        CFI DPL0 Frame(CFA_SP, 3)
+        CFI DPH0 Frame(CFA_SP, 4)
+        POP     DPH
+        CFI CFA_SP SP+-3
+        CFI DPH0 SameValue
+        POP     DPL
+        CFI CFA_SP SP+-2
+        CFI DPL0 SameValue
+        RET
+        CFI EndBlock cfiBlock2
+//   97 /* till here */
+
+        RSEG NEAR_CODE:CODE:NOROOT(0)
+//   98 void flashCallback(void){
+flashCallback:
+        CFI Block cfiBlock3 Using cfiCommon0
+        CFI Function flashCallback
+        FUNCALL flashCallback, mymemcpy
+        LOCFRAME ISTACK, 2, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 0, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 2, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 0, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        FUNCALL flashCallback, initiateTransfer
+        LOCFRAME ISTACK, 2, STACK
+        LOCFRAME PSTACK, 0, STACK
+        LOCFRAME XSTACK, 0, STACK
+        LOCFRAME IOVERLAY, 0, STATIC
+        LOCFRAME DOVERLAY, 0, STATIC
+        ARGFRAME ISTACK, 2, STACK
+        ARGFRAME PSTACK, 0, STACK
+        ARGFRAME XSTACK, 0, STACK
+        ARGFRAME IOVERLAY, 0, STATIC
+        ARGFRAME DOVERLAY, 0, STATIC
+        PUSH    DPL
+        CFI DPL0 Frame(CFA_SP, 3)
+        CFI CFA_SP SP+-3
+        PUSH    DPH
+        CFI DPH0 Frame(CFA_SP, 4)
+        CFI CFA_SP SP+-4
+        ; Saved register size: 2
+        ; Auto size: 0
+//   99     HAL_INT_ENABLE(INUM_DMA, INT_OFF);
+        CLR     0xb8.0
+//  100     //transfer = FALSE;   
+//  101     /* comment it to avoid flash refresh */
+//  102     if( refreshing ){
+        MOV     DPTR,#refreshing
+        MOVX    A,@DPTR
+        JZ      ??CrossCallReturnLabel_1
+//  103         refreshAddr += RLEN; 
+        MOV     DPTR,#refreshAddr
+        MOVX    A,@DPTR
+        ADD     A,#-0x80
+        MOVX    @DPTR,A
+        INC     DPTR
+        MOVX    A,@DPTR
+        ADDC    A,#0x0
+        MOVX    @DPTR,A
+//  104         refreshing  = FALSE; 
+        CLR     A
+        MOV     DPTR,#refreshing
+        MOVX    @DPTR,A
+//  105         if( refreshAddr < 0x8000 ){
+        CLR     C
+        MOV     DPTR,#(refreshAddr + 1)
+        MOVX    A,@DPTR
+        SUBB    A,#-0x80
+        JNC     ??CrossCallReturnLabel_1
+//  106             mymemcpy( buff, (BYTE *)refreshAddr, RLEN & 0xFF );
+        ; Setup parameters for call to function mymemcpy
+        MOV     R1,#-0x80
+        MOV     DPTR,#refreshAddr
+        MOVX    A,@DPTR
+        MOV     R4,A
+        INC     DPTR
+        MOVX    A,@DPTR
+        LCALL   ?Subroutine0
+//  107             refreshing = initiateTransfer( buff, (BYTE *)refreshAddr, RLEN & 0xFF );
+//  108         }
+//  109     }
+//  110     /* till here */
+//  111     //if( !transfer ) ((BOOL*)0xF520)[Kick] = TRUE;
+//  112     //HAL_INT_ENABLE(INUM_RF,  INT_ON);
+//  113 }
+??CrossCallReturnLabel_1:
+        SJMP    ?Subroutine1
+        CFI EndBlock cfiBlock3
+        REQUIRE IEN2
+        REQUIRE _A_IEN0
+        REQUIRE _A_IEN1
+
+        RSEG NEAR_CODE:CODE:NOROOT(0)
+?Subroutine0:
+        CFI Block cfiCond4 Using cfiCommon0
+        CFI NoFunction
+        CFI Conditional ??CrossCallReturnLabel_0
+        CFI DPL0 Frame(CFA_SP, 3)
+        CFI DPH0 Frame(CFA_SP, 4)
+        CFI CFA_SP SP+-4
+        CFI Block cfiCond5 Using cfiCommon0
+        CFI (cfiCond5) NoFunction
+        CFI (cfiCond5) Conditional ??CrossCallReturnLabel_1
+        CFI (cfiCond5) DPL0 Frame(CFA_SP, 3)
+        CFI (cfiCond5) DPH0 Frame(CFA_SP, 4)
+        CFI (cfiCond5) CFA_SP SP+-4
+        CFI Block cfiPicker6 Using cfiCommon1
+        CFI (cfiPicker6) NoFunction
+        CFI (cfiPicker6) Picker
+        MOV     R5,A
+        MOV     R2,#(buff & 0xff)
+        MOV     R3,#((buff >> 8) & 0xff)
+        LCALL   mymemcpy
+        ; Setup parameters for call to function initiateTransfer
+        ; Setup parameters for call to function initiateTransfer
+        MOV     R1,#-0x80
+        MOV     DPTR,#refreshAddr
+        MOVX    A,@DPTR
+        MOV     R4,A
+        INC     DPTR
+        MOVX    A,@DPTR
+        MOV     R5,A
+        MOV     R2,#(buff & 0xff)
+        MOV     R3,#((buff >> 8) & 0xff)
+        LCALL   initiateTransfer
+        MOV     A,R1
+        MOV     DPTR,#refreshing
+        MOVX    @DPTR,A
+        RET
+        CFI EndBlock cfiCond4
+        CFI EndBlock cfiCond5
+        CFI EndBlock cfiPicker6
+
+        RSEG XDATA_ID:CODE:NOROOT(0)
+        DATA
+`?<Initializer for firstTime>`:
+        DB 1
+
+        END
+// 
+// 189 bytes in segment NEAR_CODE
+//   8 bytes in segment SFR_AN
+//   1 byte  in segment XDATA_I
+//   1 byte  in segment XDATA_ID
+// 132 bytes in segment XDATA_Z
+// 
+// 190 bytes of CODE  memory
+//   0 bytes of DATA  memory (+ 8 bytes shared)
+// 133 bytes of XDATA memory
+//
+//Errors: none
+//Warnings: none

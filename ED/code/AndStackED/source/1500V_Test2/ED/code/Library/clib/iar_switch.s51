@@ -1,0 +1,1749 @@
+;----------------------------------------------------------------------------
+;
+;	File:		iar_switch.s03
+;
+;	Version:	6.00
+;
+;	Created:	09/Aug/02 IOLW [6.00]
+;
+;
+;	Description:	This file contains all decodings of table type
+;			switches. The types of switches can be unsigned
+;			char, unsigned short and unsigned long.
+;
+;                       Depending on datamodel and codemodel different type
+;                       of code are generated.
+;
+;                       The FAR directive tells the size of lables in the
+;                       tables are 3 bytes.
+;
+;       REVISON INFORMATION                                 
+;                                                           
+;       $Revision: 1.26 $
+;                                                           
+;       Log information is available at the end of this file
+;
+;----------------------------------------------------------------------------
+
+#include "iar_common.h"
+#include "iar_switch.h"
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Decoder for character switches
+;                  ?UC_SWITCH_DENSE
+;	           ?UC_JMP_IF_IN_RANGE
+;	           ?UC_JMP_IF_VALUE
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?UC_SWITCH_DENSE
+;
+;	Description: Decodes a dense table (with lables in it).
+;                    Handles tables with 256 elements.
+;
+;	Register input:
+;               A:    Switch register
+;
+;	Register output:
+;               DPTR: Undefined
+;               A:    Undefined
+;               PSW:  Undefined
+;               B:    Undefined
+;
+;	Stack input:
+;               Byte 1: Return address Low = Table address Low
+;               Byte 2: Return address High = Table address High
+;             ( Byte 3: Return address Ext = Table address Ext )
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: none             Requires DPS: 0
+;                               Modifies DPTR: 0                Returns  DPS: 0
+;
+;	Stack usage: 8
+;
+;	Note: The return value in stack is a pointer to the switch table
+;	      and is replaced by the case label before returning from this.
+;	      function.
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UC_SWITCH_DENSE
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?DPX
+	PUBLIC	?UC_SWITCH_DENSE
+        cfi BLOCK ?UC_SWITCH_DENSE USING cfi_common
+        cfi NOFUNCTION
+
+?UC_SWITCH_DENSE:
+#if (__CODE_MODEL__ == __CM_FAR__)
+	POP	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_EXT DPX0
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL           ; DPTR now holds the address of the table.
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+
+;;;;;;;;;;;; Normalize value and check bounds
+	XCH	A,B               ; B = switch value
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = start
+	INC	DPTR
+    cfi invalid
+	XCH	A,B               ; A = switch value, B = start
+
+	CLR	C
+	SUBB	A,B               ; A = Normalized value
+	MOV	B,A
+
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	CLR	C
+	SUBB	A,B               ; Test if normalized value > (N - 1)
+	JC      NOT_IN_TABLE
+	MOV	A,B
+	INC	A                 ; Skips the default label (who has index 0 in table)
+	SJMP	IN_TABLE
+
+NOT_IN_TABLE:
+	CLR	A                 ; Map all other values to index 0 in the table
+IN_TABLE:
+
+	; Here A contains index in table
+
+;;;;;;;;;;;; Calculate index address in table
+	MOV	B,#3
+	MUL	AB
+	ADD	A,DPL
+	MOV	DPL,A
+	MOV	A,B
+	ADDC	A,DPH
+	MOV	DPH,A
+	CLR	A
+	ADDC	A,?DPX
+	MOV	?DPX,A
+
+;;;;;;;;;;;; Read value from table and jump
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+	RET
+    cfi valid
+
+#else
+
+#if ( defined(__EXTENDED_DPTR__))
+	MOV	?DPX,#0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL           ; DPTR now holds the address of the table.
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+	
+;;;;;;;;;;;; Normalize value and check bounds
+	XCH	A,B               ; B = switch value
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = start
+	INC	DPTR
+    cfi invalid
+	XCH	A,B               ; A = switch value, B = start
+
+	CLR	C
+	SUBB	A,B               ; A = Normalized value
+	MOV	B,A
+
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	CLR	C
+	SUBB	A,B               ; Test if normalized value > (N - 1)
+	JC      GREATER_THAN
+	MOV	A,B
+	INC	A                 ; Skips the default label (who has index 0 in table)
+	SJMP	LESS_THAN
+
+GREATER_THAN:
+	CLR	A                 ; Map all other values to index 0 in the table
+LESS_THAN:
+
+	; Here A contains index in table
+
+;;;;;;;;;;;; Calculate index address in table
+	MOV	B,#2
+	MUL	AB
+	ADD	A,DPL
+	MOV	DPL,A
+	MOV	A,B
+	ADDC	A,DPH
+	MOV	DPH,A
+
+;;;;;;;;;;;; Read value from table and jump
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	RET
+#endif
+    cfi valid
+        cfi ENDBLOCK ?UC_SWITCH_DENSE
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?US_SWITCH_DENSE
+;
+;	Description: Decodes a dense table (with lables in it).
+;                    Handles tables with 256 elements.
+;
+;	Register input:
+;		@R0  Switch register
+;
+;	Register output:
+;               DPTR: Undefined
+;               A:    Undefined
+;               B:    Undefined
+;               PSW:  Undefined
+;
+;	Stack input:
+;               Byte 1: Return address Low = Table address Low
+;               Byte 2: Return address High = Table address High
+;             ( Byte 3: Return address Ext = Table address Ext )
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: none             Requires DPS: 0
+;                               Modifies DPTR: 0                Returns  DPS: 0
+;
+;	Stack usage: 8
+;
+;	Note: The return value in stack is a pointer to the switch table
+;	      and is replaced by the case label before returning from this.
+;	      function.
+;
+;-----------------------------------------------------------------------------
+	MODULE	?US_SWITCH_DENSE
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?DPX
+	PUBLIC	?US_SWITCH_DENSE
+        cfi BLOCK ?US_SWITCH_DENSE USING cfi_common
+        cfi NOFUNCTION
+?US_SWITCH_DENSE:
+#if (__CODE_MODEL__ == __CM_FAR__)
+	POP	?DPX
+    cfi ?RET_EXT DPX0
+    cfi CFA_MACHINE MACHINE_SP - 2
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL           ; DPTR now holds the address of the table.
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+	MOV	A,R1
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+
+;;;;;;;;;;;; Normalize value and check bounds
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = startL
+	INC	DPTR
+    cfi invalid
+
+    ; @R0 points at lowest byte
+	CLR	C
+	MOV	B,@R0
+	XCH	A,B
+	SUBB	A,B
+	MOV	R1,A               ; R1 = Normalized value
+	INC	R0
+
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = startH
+	INC	DPTR
+
+    ; @R0 points at lowest byte
+	MOV	B,@R0
+	XCH	A,B
+	SUBB	A,B
+	JNZ	NOT_IN_TABLE_1
+
+    ; The high byte must be 0
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	CLR	C
+	SUBB	A,R1               ; Test if normalized value > (N - 1)
+	JC      NOT_IN_TABLE_2
+	MOV	A,R1
+	INC	A                 ; Skips the default label (who has index 0 in table)
+	SJMP	IN_TABLE
+
+NOT_IN_TABLE_1:
+	INC	DPTR
+NOT_IN_TABLE_2:
+	CLR	A                 ; Map all other values to index 0 in the table
+IN_TABLE:
+
+	; Here A contains index in table
+
+;;;;;;;;;;;; Calculate index address in table
+	MOV	B,#3
+	MUL	AB
+	ADD	A,DPL
+	MOV	DPL,A
+	MOV	A,B
+	ADDC	A,DPH
+	MOV	DPH,A
+	CLR	A
+	ADDC	A,?DPX
+	MOV	?DPX,A
+
+	POP	A
+	MOV	R1,A
+    cfi CFA_MACHINE MACHINE_SP - 0
+
+;;;;;;;;;;;; Read value from table and jump
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+	RET
+    cfi valid
+
+#else
+
+#if ( defined(__EXTENDED_DPTR__))
+	MOV	?DPX,#0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL           ; DPTR now holds the address of the table.
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+	MOV	A,R1
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	
+;;;;;;;;;;;; Normalize value and check bounds
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = startL
+	INC	DPTR
+    cfi invalid
+
+    ; @R0 points at lowest byte
+	CLR	C
+	MOV	B,@R0
+	XCH	A,B
+	SUBB	A,B
+	MOV	R1,A              ; R1 = Normalized value
+	INC	R0
+
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = startH
+	INC	DPTR
+
+    ; @R0 points at lowest byte
+	MOV	B,@R0
+	XCH	A,B
+	SUBB	A,B
+	JNZ	NOT_IN_TABLE_1
+
+    ; The high byte must be 0
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	CLR	C
+	SUBB	A,R1               ; Test if normalized value > (N - 1)
+	JC      NOT_IN_TABLE_2
+	MOV	A,R1
+	INC	A                 ; Skips the default label (who has index 0 in table)
+	SJMP	IN_TABLE
+
+NOT_IN_TABLE_1:
+	INC	DPTR
+NOT_IN_TABLE_2:
+	CLR	A                 ; Map all other values to index 0 in the table
+IN_TABLE:
+
+	; Here A contains index in table
+
+;;;;;;;;;;;; Calculate index address in table
+	MOV	B,#2
+	MUL	AB
+	ADD	A,DPL
+	MOV	DPL,A
+	MOV	A,B
+	ADDC	A,DPH
+	MOV	DPH,A
+
+	POP	A
+	MOV	R1,A
+    cfi CFA_MACHINE MACHINE_SP - 0
+
+;;;;;;;;;;;; Read value from table and jump
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	RET
+    cfi valid
+#endif
+        cfi ENDBLOCK ?US_SWITCH_DENSE
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?UL_SWITCH_DENSE
+;
+;	Description: Decodes a dense table (with lables in it).
+;                    Handles tables with 256 elements.
+;
+;	Register input:
+;		@R0  Switch register
+;
+;	Register output:
+;               DPTR: Undefined
+;               A:    Undefined
+;               B:    Undefined
+;               PSW:  Undefined
+;
+;	Stack input:
+;               Byte 1: Return address Low = Table address Low
+;               Byte 2: Return address High = Table address High
+;             ( Byte 3: Return address Ext = Table address Ext )
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: none             Requires DPS: 0
+;                               Modifies DPTR: 0                Returns  DPS: 0
+;
+;	Stack usage: 8
+;
+;	Note: The return value in stack is a pointer to the switch table
+;	      and is replaced by the case label before returning from this.
+;	      function.
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UL_SWITCH_DENSE
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?DPX
+	PUBLIC	?UL_SWITCH_DENSE
+        cfi BLOCK ?UL_SWITCH_DENSE USING cfi_common
+        cfi NOFUNCTION
+?UL_SWITCH_DENSE:
+#if (__CODE_MODEL__ == __CM_FAR__)
+	POP	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_EXT DPX0
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL           ; DPTR now holds the address of the table.
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+	MOV	A,R1
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+
+;;;;;;;;;;;; Normalize value and check bounds
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = BYTE0(start)
+	INC	DPTR
+    cfi invalid
+
+    ; @R0 points at BYTE0(switchreg)
+	CLR	C
+	MOV	R1,A
+	MOV	A,@R0
+	SUBB	A,R1
+	MOV	R1,A               ; R1 = Normalized value
+	INC	R0
+
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = BYTE1(start)
+	INC	DPTR
+
+    ; @R0 points at BYTE1(switchreg)
+	MOV	B,@R0
+	XCH	A,B
+	SUBB	A,B
+	JNZ	NOT_IN_TABLE_1
+	INC	R0
+
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = BYTE2(start)
+	INC	DPTR
+
+    ; @R0 points at BYTE2(switchreg)
+	MOV	B,@R0
+	XCH	A,B
+	SUBB	A,B
+	JNZ	NOT_IN_TABLE_2
+	INC	R0
+
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = BYTE3(start)
+	INC	DPTR
+
+    ; @R0 points at BYTE3(switchreg)
+	MOV	B,@R0
+	XCH	A,B
+	SUBB	A,B
+	JNZ	NOT_IN_TABLE_3
+	INC	R0
+
+    ; The high byte must be 0
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	CLR	C
+	SUBB	A,R1               ; Test if normalized value > (N - 1)
+	JC      NOT_IN_TABLE_4
+	MOV	A,R1
+	INC	A                 ; Skips the default label (who has index 0 in table)
+	SJMP	IN_TABLE
+
+NOT_IN_TABLE_1:
+	INC	DPTR
+NOT_IN_TABLE_2:
+	INC	DPTR
+NOT_IN_TABLE_3:
+	INC	DPTR
+NOT_IN_TABLE_4:
+	CLR	A                 ; Map all other values to index 0 in the table
+IN_TABLE:
+
+	; Here A contains index in table
+
+;;;;;;;;;;;; Calculate index address in table
+	MOV	B,#3
+	MUL	AB
+	ADD	A,DPL
+	MOV	DPL,A
+	MOV	A,B
+	ADDC	A,DPH
+	MOV	DPH,A
+	CLR	A
+	ADDC	A,?DPX
+	MOV	?DPX,A
+
+
+	POP	A
+	MOV	R1,A
+    cfi CFA_MACHINE MACHINE_SP - 0
+
+;;;;;;;;;;;; Read value from table and jump
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+	RET
+    cfi valid
+
+#else
+
+#if ( defined(__EXTENDED_DPTR__))
+	MOV	?DPX,#0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL           ; DPTR now holds the address of the table.
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+	MOV	A,R1
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+
+;;;;;;;;;;;; Normalize value and check bounds
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = BYTE0(start)
+	INC	DPTR
+    cfi invalid
+
+    ; @R0 points at BYTE0(switchreg)
+	CLR	C
+	MOV	B,@R0
+	XCH	A,B
+	SUBB	A,B
+	MOV	R1,A               ; R1 = Normalized value
+	INC	R0
+
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = BYTE1(start)
+	INC	DPTR
+
+    ; @R0 points at BYTE1(switchreg)
+	MOV	B,@R0
+	XCH	A,B
+	SUBB	A,B
+	JNZ	NOT_IN_TABLE_1
+	INC	R0
+
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = BYTE2(start)
+	INC	DPTR
+
+    ; @R0 points at BYTE2(switchreg)
+	MOV	B,@R0
+	XCH	A,B
+	SUBB	A,B
+	JNZ	NOT_IN_TABLE_2
+	INC	R0
+
+	CLR	A
+	MOVC	A,@A+DPTR         ; A = BYTE3(start)
+	INC	DPTR
+
+    ; @R0 points at BYTE3(switchreg)
+	MOV	B,@R0
+	XCH	A,B
+	SUBB	A,B
+	JNZ	NOT_IN_TABLE_3
+	INC	R0
+
+    ; The high byte must be 0
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	CLR	C
+	SUBB	A,R1               ; Test if normalized value > (N - 1)
+	JC      NOT_IN_TABLE_4
+	MOV	A,R1
+	INC	A                 ; Skips the default label (who has index 0 in table)
+	SJMP	IN_TABLE
+
+NOT_IN_TABLE_1:
+	INC	DPTR
+NOT_IN_TABLE_2:
+	INC	DPTR
+NOT_IN_TABLE_3:
+	INC	DPTR
+NOT_IN_TABLE_4:
+	CLR	A                 ; Map all other values to index 0 in the table
+IN_TABLE:
+
+	; Here A contains index in table
+
+;;;;;;;;;;;; Calculate index address in table
+	MOV	B,#2
+	MUL	AB
+	ADD	A,DPL
+	MOV	DPL,A
+	MOV	A,B
+	ADDC	A,DPH
+	MOV	DPH,A
+
+	POP	A
+	MOV	R1,A
+    cfi CFA_MACHINE MACHINE_SP - 0
+
+;;;;;;;;;;;; Read value from table and jump
+	CLR	A
+	MOVC	A,@A+DPTR
+	INC	DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	CLR	A
+	MOVC	A,@A+DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	RET
+    cfi valid
+#endif
+        cfi ENDBLOCK ?UL_SWITCH_DENSE
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Decoder for character switches
+;                  ?UC_SWITCH_SPARSE
+;	           ?UC_JMP_IF_IN_RANGE
+;	           ?UC_JMP_IF_VALUE
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?UC_SWITCH_SPARSE
+;
+;	Description: Decodes a sparse table (with lables in it).
+;
+;	Register input:
+;               A:    Switch register
+;
+;	Register output:
+;               DPTR: Undefined
+;               PSW:  Undefined
+;               A:    Undefined
+;
+;	Stack input:
+;               Byte 1: Return address Low = Table address Low
+;               Byte 2: Return address High = Table address High
+;             ( Byte 3: Return address Ext = Table address Ext )
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none             Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: none             Requires DPS: 0
+;                               Modifies DPTR: 0                Returns  DPS: 0
+;
+;	Stack usage: 8
+;
+;	Note: The return value in stack is a pointer to the switch table
+;	      and is replaced by the case label before returning from this.
+;	      function.
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UC_SWITCH_SPARSE
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?UC_JMP_IF_IN_RANGE
+	EXTERN  ?UC_JMP_IF_VALUE
+	EXTERN  ?DPX
+	PUBLIC	?UC_SWITCH_SPARSE
+	PUBLIC	?UC_SWITCH_SPARSE_LEAVE
+        cfi BLOCK ?UC_SWITCH_SPARSE_LEAVE USING cfi_common
+        cfi NOFUNCTION
+?UC_SWITCH_SPARSE:
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_EXT DPX0
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL           ; DPTR now holds the address of the table.
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+#else
+#if ( defined(__EXTENDED_DPTR__))
+	MOV	?DPX,#0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL           ; DPTR now holds the address of the table.
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+#endif
+	XCH	A,R4          ; R4 now holds the switch value;
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+    
+    cfi invalid
+check_ranges:
+	CLR     A
+	MOVC    A, @A+DPTR    ; A now hold the nr of ranges in the table to check.
+        INC     DPTR
+	JZ      check_values
+check_ranges_loop:
+	CALL    ?UC_JMP_IF_IN_RANGE
+        DEC     A
+        JNZ     check_ranges_loop
+check_values:
+	CLR     A
+	MOVC    A, @A + DPTR      ; A now hold the nr of values in the table to check.
+        INC     DPTR
+	JZ      ?UC_SWITCH_SPARSE_LEAVE
+check_values_loop:
+	CALL    ?UC_JMP_IF_VALUE
+        DEC     A
+        JNZ     check_values_loop
+
+?UC_SWITCH_SPARSE_LEAVE:          ; DPTR points at the table entry containing the label to jump to.
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 0
+	MOV	R4,A
+
+#if (__CORE__ == __CORE_EXTENDED1__)
+        CLR     A
+	MOVC    A, @A+DPTR        ; Low address of the label.
+	INC     DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+        CLR     A
+	MOVC    A, @A+DPTR        ; High address of the label.
+	INC     DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2        
+        CLR     A
+	MOVC    A, @A+DPTR        ; Ext address of the label.
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+#else
+        CLR     A
+	MOVC    A, @A+DPTR        ; Low address of the label.
+	INC     DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+        CLR     A
+	MOVC    A, @A+DPTR        ; High address of the label.
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2        
+#endif
+#if (__CORE__ == __CORE_EXTENDED2__)
+	EXTERN  ?RESTORE_MCB
+	LCALL	?RESTORE_MCB
+#endif
+	RET
+    cfi valid
+        cfi ENDBLOCK ?UC_SWITCH_SPARSE_LEAVE
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?UC_JMP_IF_IN_RANGE
+;
+;	Description: 
+;
+;	Register input:
+;		R4   Switch register
+;		DPTR Address to the current entry in the switch-table
+;
+;	Register output:
+;		DPTR Address to the next entry in the switch table
+;               A    Is destroyed if match, otherwise A is restored.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;	Stack usage: 3
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UC_JMP_IF_IN_RANGE
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?UC_JMP_IF_IN_RANGE
+	EXTERN  ?UC_SWITCH_SPARSE_LEAVE
+        cfi BLOCK ?UC_JMP_IF_IN_RANGE USING cfi_common
+        cfi NOFUNCTION
+    cfi invalid
+?UC_JMP_IF_IN_RANGE:
+        ; Enter
+	PUSH    A
+#if (__CORE__ == __CORE_EXTENDED1__)
+    cfi CFA_MACHINE MACHINE_SP - 4
+#else
+    cfi CFA_MACHINE MACHINE_SP - 3
+#endif
+        ; Test  range_min <= SwitchReg
+	CLR     A
+	MOVC    A, @A+DPTR
+        INC     DPTR
+        SETB    C
+        SUBB    A,R4
+        JNC     skip_max
+        
+        ; Test  range_max >= SwitchReg
+	CLR     A
+	MOVC    A, @A+DPTR
+        INC     DPTR
+        CLR     C
+        SUBB    A,R4
+        JC      failed_leave
+        
+matched_leave:
+        POP     A
+#if (__CORE__ == __CORE_EXTENDED1__)
+        POP     A
+        POP     A
+        POP     A
+#else
+        POP     A
+        POP     A
+#endif
+#if (__CORE__ == __CORE_EXTENDED2__)
+	EXTERN	?MEXSP
+	DEC	?MEXSP 		; This is safe because ?UC_SWITCH_SPARSE_LEAVE and ?UC_JMP_IF_VALUE is in same bank.
+#endif
+        LJMP    ?UC_SWITCH_SPARSE_LEAVE
+skip_max:
+        INC     DPTR
+failed_leave:
+
+#if (__CORE__ == __CORE_EXTENDED1__)
+        INC     DPTR
+#endif
+        INC     DPTR
+        INC     DPTR              ; skip label entry
+        POP     A                 ; Preserve A to caller.
+    cfi CFA_MACHINE MACHINE_SP - 2
+        RET
+    cfi valid
+        cfi ENDBLOCK ?UC_JMP_IF_IN_RANGE        
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?UC_JMP_IF_VALUE
+;
+;	Description: 
+;
+;	Register input:
+;		R4   Switch register
+;		DPTR Address to the current entry in the switch-table
+;
+;	Register output:
+;		DPTR Address to the next entry in the switch table
+;               A    Is destroyed if match, otherwise A is restored.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;	Stack usage: 1
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UC_JMP_IF_VALUE
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?UC_JMP_IF_VALUE
+	EXTERN  ?UC_SWITCH_SPARSE_LEAVE
+    cfi BLOCK ?UC_JMP_IF_VALUE USING cfi_common
+    cfi NOFUNCTION
+    cfi invalid
+?UC_JMP_IF_VALUE:
+?UC_JMP_IF_VALUE_CFI_INVALID_BEGINS:
+        ; Enter
+	PUSH    A
+    cfi CFA_MACHINE MACHINE_SP - 3
+
+        CLR     A	
+	MOVC    A, @A+DPTR       ; A now hold the table value.
+        INC     DPTR
+        XRL     A,R4
+        JNZ     normal_leave
+        ; Leave
+matched_leave:
+        POP     A
+#if (__CORE__ == __CORE_EXTENDED1__)
+        POP     A
+        POP     A
+        POP     A
+#else
+        POP     A
+        POP     A
+#endif
+#if (__CORE__ == __CORE_EXTENDED2__)
+	EXTERN	?MEXSP
+	DEC	?MEXSP 		; This is safe because ?UC_SWITCH_SPARSE_LEAVE and ?UC_JMP_IF_VALUE is in same bank.
+#endif
+	LJMP    ?UC_SWITCH_SPARSE_LEAVE
+normal_leave:
+#if (__CORE__ == __CORE_EXTENDED1__)
+        INC     DPTR
+#endif
+        INC     DPTR
+        INC     DPTR              ; skip label entry
+        POP     A
+    cfi CFA_MACHINE MACHINE_SP - 2
+        RET
+?UC_JMP_IF_VALUE_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?UC_JMP_IF_VALUE        
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Decoder for short switches
+;                  ?US_SWITCH_SPARSE
+;	           ?US_JMP_IF_IN_RANGE
+;	           ?US_JMP_IF_VALUE
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?US_SWITCH_SPARSE
+;
+;	Description: Decodes a sparse table (with lables in it).
+;
+;	Register input:
+;		@R0  Switch register [2 bytes]
+;
+;	Register output:
+;               DPTR: Undefined
+;               A:    Undefined
+;
+;	Stack input:
+;               Byte 1: Return address Low = Table address Low
+;               Byte 2: Return address High = Table address High
+;             ( Byte 3: Return address Ext = Table address Ext )
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;	Stack usage: 2
+;
+;	Note: The return value in stack is a pointer to the switch table
+;	      and is replaced by the case label before returning from this.
+;	      function.
+;
+;-----------------------------------------------------------------------------
+	MODULE	?US_SWITCH_SPARSE
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?US_JMP_IF_IN_RANGE
+	EXTERN  ?US_JMP_IF_VALUE
+	EXTERN  ?DPX
+	PUBLIC	?US_SWITCH_SPARSE
+	PUBLIC	?US_SWITCH_SPARSE_LEAVE
+    cfi BLOCK ?US_SWITCH_SPARSE USING cfi_common
+    cfi NOFUNCTION
+?US_SWITCH_SPARSE:
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_EXT DPX0
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+#else
+#if ( defined(__EXTENDED_DPTR__))
+	MOV	?DPX,#0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+#endif
+	MOV	A,R4
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	MOV	A,R5
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi invalid
+?US_SWITCH_SPARSE_CFI_INVALID_BEGINS:
+check_ranges:
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R4,A
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R5,A             ;  R45 = loopcounter (nr of ranges in table)
+loop_start:
+	MOV	A,R5
+	ORL	A,R4
+	JZ      check_values
+	CALL    ?US_JMP_IF_IN_RANGE
+	MOV	A,R4
+	ADD	A,#-1
+	MOV	R4,A
+	MOV	A,R5
+	ADDC	A,#-1
+	MOV	R5,A             ; R45 = R45 - 1
+	SJMP	loop_start
+
+check_values:
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R4,A
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R5,A             ;  R45 = loopcounter (nr of values in table)
+loop2_start:
+	MOV	A,R5
+	ORL	A,R4
+	JZ      ?US_SWITCH_SPARSE_LEAVE
+	CALL    ?US_JMP_IF_VALUE
+	MOV	A,R4
+	ADD	A,#-1
+	MOV	R4,A
+	MOV	A,R5
+	ADDC	A,#-1
+	MOV	R5,A             ; R45 = R45 - 1
+	SJMP	loop2_start
+    
+?US_SWITCH_SPARSE_LEAVE:
+; Put the label found in the table on stack. DPTR points at the
+; table entry containing the label to jump to.
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	MOV	R5,A
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 0
+	MOV	R4,A
+#if (__CORE__ == __CORE_EXTENDED1__)
+        CLR     A
+	MOVC    A, @A + DPTR      ; Low address of the label.
+	INC     DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+        CLR     A
+	MOVC    A, @A + DPTR      ; Low address of the label.
+	INC     DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+        CLR     A
+	MOVC    A, @A + DPTR      ; Low address of the label.
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+#else
+        CLR     A
+	MOVC    A, @A + DPTR      ; Low address of the label.
+	INC     DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+        CLR     A
+	MOVC    A, @A + DPTR      ; Low address of the label.
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+#endif
+#if (__CORE__ == __CORE_EXTENDED2__)
+	EXTERN  ?RESTORE_MCB
+	LCALL	?RESTORE_MCB
+#endif
+	RET
+?US_SWITCH_SPARSE_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?US_SWITCH_SPARSE
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?US_JMP_IF_IN_RANGE
+;
+;	Description: 
+;
+;	Register input:
+;		@R0  Switch register
+;		DPTR Address to the current entry in the switch-table
+;
+;	Register output:
+;		R0   Is not changed
+;		DPTR Address to the next entry in the switch table
+;               A    Is destroyed if match, otherwise A is restored.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;	Stack usage: 4
+;
+;-----------------------------------------------------------------------------
+	MODULE	?US_JMP_IF_IN_RANGE
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?US_JMP_IF_IN_RANGE
+	EXTERN  ?US_SWITCH_SPARSE_LEAVE
+    cfi BLOCK ?US_JMP_IF_IN_RANGE USING cfi_common
+    cfi NOFUNCTION
+    cfi invalid
+?US_JMP_IF_IN_RANGE_CFI_INVALID_BEGINS:
+?US_JMP_IF_IN_RANGE:
+        ; Enter
+	PUSH    A
+
+        ; Test  range_min <= SwitchReg
+
+	US_GT_C()
+
+        JC      is_greater
+        S_EQ_C()
+        JNZ     skip_max
+is_greater:
+        INC     DPTR
+        INC     DPTR
+
+        ; Test range_max <= SwitchReg
+
+	US_GT_C()
+
+        INC     DPTR
+        INC     DPTR
+        JC      failed_leave
+
+matched_leave:
+        POP     A
+#if (__CORE__ == __CORE_EXTENDED1__)
+        POP     A
+        POP     A
+        POP     A
+#else
+        POP     A
+        POP     A
+#endif
+#if (__CORE__ == __CORE_EXTENDED2__)
+	EXTERN	?MEXSP
+	DEC	?MEXSP 		; This is safe because ?UC_SWITCH_SPARSE_LEAVE and ?UC_JMP_IF_VALUE is in same bank.
+#endif
+        LJMP    ?US_SWITCH_SPARSE_LEAVE
+
+skip_max:
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+failed_leave:
+#if (__CORE__ == __CORE_EXTENDED1__)
+        INC     DPTR
+#endif
+        INC     DPTR
+        INC     DPTR              ; skip label entry
+        POP     A
+        RET
+    cfi valid
+?US_JMP_IF_IN_RANGE_CFI_INVALID_ENDS:
+    cfi ENDBLOCK ?US_JMP_IF_IN_RANGE        
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?US_JMP_IF_VALUE
+;
+;	Description: 
+;
+;	Register input:
+;		@R0  Switch register
+;		DPTR Address to the current entry in the switch-table
+;
+;	Register output:
+;		@R0  Switch register
+;		DPTR Address to the next entry in the switch table
+;               A    Is destroyed if match, otherwise A is restored.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;	Stack usage: 4
+;
+;-----------------------------------------------------------------------------
+	MODULE	?US_JMP_IF_VALUE
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?US_JMP_IF_VALUE
+	EXTERN  ?US_SWITCH_SPARSE_LEAVE
+    cfi BLOCK ?US_JMP_IF_VALUE USING cfi_common
+    cfi NOFUNCTION
+    cfi invalid
+?US_JMP_IF_VALUE:
+?US_JMP_IF_VALUE_CFI_INVALID_BEGINS:
+	PUSH    A
+    cfi CFA_MACHINE MACHINE_SP - 3
+	PUSH    B
+    cfi CFA_MACHINE MACHINE_SP - 4
+
+        MOV     B,R0
+
+	S_EQ_C()
+
+        MOV     R0,B
+	INC	DPTR	
+	INC	DPTR	
+        JNZ     failed_leave
+	
+matched_leave:
+        POP     B
+    cfi CFA_MACHINE MACHINE_SP - 14
+        POP     A
+#if (__CORE__ == __CORE_EXTENDED1__)
+        POP     A
+        POP     A
+        POP     A
+#else
+        POP     A
+        POP     A
+#endif
+#if (__CORE__ == __CORE_EXTENDED2__)
+	EXTERN	?MEXSP
+	DEC	?MEXSP 		; This is safe because ?UC_SWITCH_SPARSE_LEAVE and ?UC_JMP_IF_VALUE is in same bank.
+#endif
+        LJMP    ?US_SWITCH_SPARSE_LEAVE
+        
+failed_leave:
+#if (__CORE__ == __CORE_EXTENDED1__)
+        INC     DPTR
+#endif
+        INC     DPTR
+        INC     DPTR              ; skip label entry
+        POP     B
+    cfi CFA_MACHINE MACHINE_SP - 3
+        POP     A
+    cfi CFA_MACHINE MACHINE_SP - 2
+        RET
+?US_JMP_IF_VALUE_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?US_JMP_IF_VALUE
+	ENDMOD	
+	
+;-----------------------------------------------------------------------------
+;
+;	Functions: Decoder for long switches
+;                  ?UL_SWITCH_SPARSE
+;	           ?UL_JMP_IF_IN_RANGE
+;	           ?UL_JMP_IF_VALUE
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?UL_SWITCH_SPARSE
+;
+;	Description: Decodes a sparse table (with lables in it).
+;
+;	Register input:
+;		@R0  Switch register
+;
+;	Register output:
+;               DPTR: Undefined
+;               A:    Undefined
+;
+;	Stack input:
+;               Byte 1: Return address Low = Table address Low
+;               Byte 2: Return address High = Table address High
+;             ( Byte 3: Return address Ext = Table address Ext )
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: 0            Requires DPS: 0
+;                               Modifies DPTR: 0            Returns  DPS: 0
+;
+;
+;	Stack usage: 11
+;
+;	Note: The return value in stack is a pointer to the switch table
+;	      and is replaced by the case label before returning from this.
+;	      function.
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UL_SWITCH_SPARSE
+	RSEG	RCODE:CODE:NOROOT
+	EXTERN  ?UL_JMP_IF_IN_RANGE
+	EXTERN  ?UL_JMP_IF_VALUE
+	EXTERN  ?DPX
+	PUBLIC	?UL_SWITCH_SPARSE
+	PUBLIC	?UL_SWITCH_SPARSE_LEAVE
+        cfi BLOCK ?UL_SWITCH_SPARSE USING cfi_common
+        cfi NOFUNCTION
+?UL_SWITCH_SPARSE:
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+    cfi CFA_MACHINE MACHINE_SP - 2
+    cfi ?RET_EXT DPX0
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+#else
+#if ( defined(__EXTENDED_DPTR__))
+	MOV	?DPX,#0
+#endif
+	POP	DPH
+    cfi CFA_MACHINE MACHINE_SP - 1
+    cfi ?RET_HIGH DPH0
+	POP	DPL
+    cfi CFA_MACHINE MACHINE_SP - 0
+    cfi ?RET_LOW DPL0
+#endif
+	MOV	A,R4
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	MOV	A,R5
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	MOV	A,R6
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+	MOV	A,R7
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 4
+?UL_SWITCH_SPARSE_CFI_INVALID_BEGINS:
+    cfi invalid
+check_ranges:
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R4,A
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R5,A
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R6,A
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R7,A		;  R4567 = loopcounter (nr of ranges in table)
+loop_start:
+	MOV	A,R7
+	ORL	A,R6
+	ORL	A,R5
+	ORL	A,R4
+	JZ      check_values
+	CALL    ?UL_JMP_IF_IN_RANGE
+	MOV	A,R4
+	ADD	A,#-1
+	MOV	R4,A
+	MOV	A,R5
+	ADDC	A,#-1
+	MOV	R5,A
+	MOV	A,R6
+	ADDC	A,#-1
+	MOV	R6,A
+	MOV	A,R7
+	ADDC	A,#-1
+	MOV	R7,A
+	SJMP	loop_start
+
+check_values:
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R4,A
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R5,A
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R6,A
+	CLR     A
+	MOVC    A, @A + DPTR
+        INC     DPTR
+	MOV	R7,A		;  R4567 = loopcounter (nr of values in table)
+loop2_start:
+	MOV	A,R7
+	ORL	A,R6
+	ORL	A,R5
+	ORL	A,R4
+	JZ      ?UL_SWITCH_SPARSE_LEAVE
+	CALL    ?UL_JMP_IF_VALUE
+	MOV	A,R4
+	ADD	A,#-1
+	MOV	R4,A
+	MOV	A,R5
+	ADDC	A,#-1
+	MOV	R5,A
+	MOV	A,R6
+	ADDC	A,#-1
+	MOV	R6,A
+	MOV	A,R7
+	ADDC	A,#-1
+	MOV	R7,A
+	SJMP	loop2_start
+    
+?UL_SWITCH_SPARSE_LEAVE:
+; Put the label found in the table on stack. DPTR points at the
+; table entry containing the label to jump to.
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+	MOV	R7,A
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+	MOV	R6,A
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+	MOV	R5,A
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - 0
+	MOV	R4,A
+
+#if (__CORE__ == __CORE_EXTENDED1__)
+        CLR     A
+	MOVC    A, @A + DPTR      ; Low address of the label.
+	INC     DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+        CLR     A
+	MOVC    A, @A + DPTR      ; Low address of the label.
+	INC     DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+        CLR     A
+	MOVC    A, @A + DPTR      ; Low address of the label.
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 3
+#else
+        CLR     A
+	MOVC    A, @A + DPTR      ; Low address of the label.
+	INC     DPTR
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 1
+        CLR     A
+	MOVC    A, @A + DPTR      ; Low address of the label.
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP - 2
+#endif
+#if (__CORE__ == __CORE_EXTENDED2__)
+	EXTERN  ?RESTORE_MCB
+	LCALL	?RESTORE_MCB
+#endif
+	RET
+?UL_SWITCH_SPARSE_CFI_INVALID_ENDS:
+    cfi valid
+    cfi ENDBLOCK ?UL_SWITCH_SPARSE
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?UL_JMP_IF_IN_RANGE
+;
+;	Description: 
+;
+;	Register input:
+;		@R0  Switch register
+;		DPTR Address to the current entry in the switch-table
+;
+;	Register output:
+;		R0   Is not changed
+;		DPTR Address to the next entry in the switch table
+;               A    Is destroyed if match, otherwise A is restored.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;
+;	Stack usage: 4
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UL_JMP_IF_IN_RANGE
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?UL_JMP_IF_IN_RANGE
+	EXTERN  ?UL_SWITCH_SPARSE_LEAVE
+	EXTERN  ?UL_GT_C
+	EXTERN  ?L_EQ_C
+    cfi BLOCK ?UL_JMP_IF_IN_RANGE USING cfi_common
+    cfi NOFUNCTION
+    cfi invalid
+?UL_JMP_IF_IN_RANGE_CFI_INVALID_BEGINS:
+?UL_JMP_IF_IN_RANGE:
+        ; Enter
+	PUSH    A
+	PUSH    B
+	MOV	B,R0          ; Save address of switch register.
+        ; Test  range_min <= SwitchReg
+	CALL	?UL_GT_C
+	MOV	R0,B          ; Restore switch register address
+	JC      is_greater
+	CALL	?L_EQ_C       ; ?L_EQ_C makes R0 undefined.
+	MOV	R0,B          ; Restore switch register address
+	JNZ     skip_max
+is_greater:
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+
+        ; Test range_max <= SwitchReg
+
+	CALL	?UL_GT_C
+	MOV	R0,B          ; Restore switch register address
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+        JC      failed_leave
+
+matched_leave:
+        POP     B
+        POP     A
+#if (__CORE__ == __CORE_EXTENDED1__)
+        POP     A
+        POP     A
+        POP     A
+#else
+        POP     A
+        POP     A
+#endif
+#if (__CORE__ == __CORE_EXTENDED2__)
+	EXTERN	?MEXSP
+	DEC	?MEXSP 		; This is safe because ?UC_SWITCH_SPARSE_LEAVE and ?UC_JMP_IF_VALUE is in same bank.
+#endif
+        LJMP    ?UL_SWITCH_SPARSE_LEAVE
+	
+skip_max:
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+        INC     DPTR
+failed_leave:
+#if (__CORE__ == __CORE_EXTENDED1__)
+        INC     DPTR
+#endif
+        INC     DPTR
+        INC     DPTR              ; skip label entry
+        POP     B
+        POP     A
+        RET
+    cfi valid
+?UL_JMP_IF_IN_RANGE_CFI_INVALID_ENDS:
+        cfi ENDBLOCK ?UL_JMP_IF_IN_RANGE        
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?UL_JMP_IF_VALUE
+;
+;	Description: 
+;
+;	Register input:
+;		@R0  Switch register
+;		DPTR Address to the current entry in the switch-table
+;
+;	Register output:
+;		@R0  Switch register
+;		DPTR Address to the next entry in the switch table
+;               A    Is destroyed if match, otherwise A is restored.
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;               Separate:       Requires DPTR: DPTRx            Requires DPS: DPTRx
+;                               Modifies DPTR: DPTRx            Returns  DPS: DPTRx
+;
+;	Stack usage: 4
+;
+;-----------------------------------------------------------------------------
+	MODULE	?UL_JMP_IF_VALUE
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?UL_JMP_IF_VALUE
+	EXTERN  ?UL_SWITCH_SPARSE_LEAVE
+	EXTERN  ?L_EQ_C
+    cfi BLOCK ?UL_JMP_IF_VALUE USING cfi_common
+    cfi NOFUNCTION
+    cfi invalid
+?UL_JMP_IF_VALUE:
+?UL_JMP_IF_VALUE_CFI_INVALID_BEGINS:
+	PUSH    A
+	PUSH    B
+
+	MOV	B,R0          ; Save address of switch register.
+	CALL	?L_EQ_C       ; ?L_EQ_C makes R0 undefined.
+	MOV	R0,B          ; Restore switch register address
+	INC	DPTR	
+	INC	DPTR	
+	INC	DPTR	
+	INC	DPTR	
+        JNZ     failed_leave
+	
+matched_leave:
+        POP     B
+        POP     A
+#if (__CORE__ == __CORE_EXTENDED1__)
+        POP     A
+        POP     A
+        POP     A
+#else
+        POP     A
+        POP     A
+#endif
+#if (__CORE__ == __CORE_EXTENDED2__)
+	EXTERN	?MEXSP
+	DEC	?MEXSP 		; This is safe because ?UC_SWITCH_SPARSE_LEAVE and ?UC_JMP_IF_VALUE is in same bank.
+#endif
+        LJMP    ?UL_SWITCH_SPARSE_LEAVE
+        
+failed_leave:
+#if (__CORE__ == __CORE_EXTENDED1__)
+        INC     DPTR
+#endif
+        INC     DPTR
+        INC     DPTR              ; skip label entry
+        POP     B
+        POP     A
+        RET
+    cfi valid
+?UL_JMP_IF_VALUE_CFI_INVALID_ENDS:
+    cfi ENDBLOCK ?UL_JMP_IF_VALUE
+	ENDMOD	
+
+	END
+
+;
+;   Revision control system
+;       $Id: iar_switch.s51 1.26 2007/06/07 09:22:15Z larssu Exp $
+;       $Log: iar_switch.s51 $
+;       Revision 1.26  2007/06/07 09:22:15Z  larssu
+;       NOROOT'ify RCODE segments
+;       Revision 1.25  2007/01/26 14:11:36Z  larssu
+;       Revision 1.24  2007/01/22 15:36:15Z  larssu
+;       Revision 1.23  2004/11/18 11:36:37Z  owi
+;       Revision 1.22  2004/11/16 16:41:09Z  owi
+;       Revision 1.21  2004/11/10 16:31:05Z  owi
+;       Revision 1.20  2004/08/02 10:28:06Z  owi
+;       Revision 1.19  2004/02/02 17:54:07Z  owi
+;       Revision 1.18  2003/11/28 14:33:48Z  owi
+;

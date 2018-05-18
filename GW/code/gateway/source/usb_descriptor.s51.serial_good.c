@@ -1,0 +1,196 @@
+/*
++------------------------------------------------------------------------------
+|  Copyright 2004-2007 Texas Instruments Incorporated. All rights reserved.
+|
+|  IMPORTANT: Your use of this Software is limited to those specific rights
+|  granted under the terms of a software license agreement between the user who
+|  downloaded the software, his/her employer (which must be your employer) and
+|  Texas Instruments Incorporated (the "License"). You may not use this Software
+|  unless you agree to abide by the terms of the License. The License limits
+|  your use, and you acknowledge, that the Software may not be modified, copied
+|  or distributed unless embedded on a Texas Instruments microcontroller or used
+|  solely and exclusively in conjunction with a Texas Instruments radio
+|  frequency transceiver, which is integrated into your product. Other than for
+|  the foregoing purpose, you may not use, reproduce, copy, prepare derivative
+|  works of, modify, distribute, perform, display or sell this Software and/or
+|  its documentation for any purpose.
+|
+|  YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
+|  PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+|  INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
+|  NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
+|  TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
+|  NEGLIGENCE, STRICT LIABILITY, CONTRIBUTION, BREACH OF WARRANTY, OR OTHER
+|  LEGAL EQUITABLE THEORY ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES INCLUDING
+|  BUT NOT LIMITED TO ANY INCIDENTAL, SPECIAL, INDIRECT, PUNITIVE OR
+|  CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF PROCUREMENT OF
+|  SUBSTITUTE GOODS, TECHNOLOGY, SERVICES, OR ANY CLAIMS BY THIRD PARTIES
+|  (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF), OR OTHER SIMILAR COSTS.
+|
+|  Should you have any questions regarding your right to use this Software,
+|  contact Texas Instruments Incorporated at www.TI.com.
+|
++------------------------------------------------------------------------------
+|The default USB descriptor defines a minimum configuration, with no endpoints 
+|apart from EP0. The application can define 3 IN and OUT endpoints, and override 
+|the configuration and interface descriptor (only one of each). 
+|The device and string descriptors are locked.                        
++------------------------------------------------------------------------------*/
+
+#define ASM_FILE
+#include "\include\usb_descriptor.h"
+#include "usb_cdc.h"
+
+                MODULE  usb_descriptor
+
+                RSEG    RCODE
+
+                PUBLIC pUsbDescStart;
+                PUBLIC pUsbDescEnd;
+                PUBLIC pUsbDescLut;
+                PUBLIC pUsbDescLutEnd;
+                PUBLIC pUsbDblbufLut;
+
+;;-------------------------------------------------------------------------------------------------------
+;; USB descriptors
+pUsbDescStart:
+deviceDesc:     ; Device descriptor
+                DB deviceDescEnd - deviceDesc
+                DB DESC_TYPE_DEVICE ; bDescriptorType
+                DB 10H, 01H         ; bcdUSB
+                DB 00H       ; bDeviceClass
+                DB 00H              ; bDeviceSubClass
+                DB 00H              ; bDeviceProtocol
+                DB EP0_PACKET_SIZE
+                DB 0A0H, 11H        ; idVendor
+                DB 32H, 02H         ; idProduct
+                DB 77H, 77H         ; bcdDevice
+                DB 01H              ; iManufacturer
+                DB 02H              ; iProduct
+                DB 03H              ; iSerialNumber
+                DB 01H              ; bNumConfigurations
+deviceDescEnd:
+
+config1LengthStart:
+configDesc:     ; Configuration descriptor
+                DB configDescEnd - configDesc
+                DB DESC_TYPE_CONFIG ; bDescriptorType
+                DB config1LengthEnd - config1LengthStart, 00H
+                DB 01               ; NumInterfaces
+                DB 01H              ; bConfigurationValue
+                DB 00H              ; iConfiguration
+                DB 80H              ; bmAttributes
+                DB 20H              ; MaxPower
+configDescEnd:
+
+interface1Desc: ; Interface descriptor
+                DB interface1DescEnd - interface1Desc
+                DB DESC_TYPE_INTERFACE    ; Interface descriptor type
+                DB 00H                    ; Interface Number
+                DB 00H                    ; Alternate Setting Number
+                DB 02H                    ; Number of endpoints in this intf
+                DB DATA_INTF              ; Class code
+                DB 00H                    ; Subclass code
+                DB NO_PROTOCOL            ; Protocol code
+                DB 00H                    ; Interface string index
+interface1DescEnd:
+
+endpoint1Desc:  ; Endpoint descriptor (EP4 OUT)
+                DB endpoint1DescEnd - endpoint1Desc
+                DB DESC_TYPE_ENDPOINT     ; bDescriptorType
+                DB 85H                    ; bEndpointAddress
+                DB EP_ATTR_BULK            ; bmAttributes
+                DB 40H, 00H               ; wMaxPacketSize
+                DB 08H                    ; bInterval
+endpoint1DescEnd:
+
+endpoint2Desc:  ; Endpoint descriptor (EP5 IN)
+                DB endpoint2DescEnd - endpoint2Desc
+                DB DESC_TYPE_ENDPOINT     ; bDescriptorType
+                DB 05H                    ; bEndpointAddress
+                DB EP_ATTR_BULK           ; bmAttributes
+                DB 00H, 01H               ; wMaxPacketSize
+                DB 01H                    ; bInterval
+endpoint2DescEnd:
+config1LengthEnd:
+;;-------------------------------------------------------------------------------------------------------
+;; String descriptors
+string0Desc:    ; Language ID
+                DB string0DescEnd - string0Desc
+                DB DESC_TYPE_STRING       ; bDescriptorType
+                DB 09H
+                DB 04H
+string0DescEnd:
+
+string1Desc:    ; Manufacturer
+                DB string1DescEnd - string1Desc
+                DB DESC_TYPE_STRING       ; bDescriptorType
+                DB 'A', 0
+                DB 'N', 0
+                DB 'D', 0
+                DB ' ', 0
+                DB 'S', 0
+                DB 'O', 0
+                DB 'L', 0
+                DB 'A', 0
+                DB 'R', 0
+string1DescEnd:
+
+string2Desc:    ; Product
+                DB string2DescEnd - string2Desc
+                DB DESC_TYPE_STRING       ; bDescriptorType
+                DB 'G', 0
+                DB 'A', 0
+                DB 'T', 0
+                DB 'E', 0
+                DB 'W', 0
+                DB 'A', 0
+                DB 'Y', 0
+string2DescEnd:
+
+string3Desc:    ; Serial number
+                DB string3DescEnd - string3Desc
+                DB DESC_TYPE_STRING       ; bDescriptorType
+                DB '0', 0
+                DB '1', 0
+                DB '2', 0
+                DB '3', 0
+                DB '4', 0
+                DB '5', 0
+                DB '6', 0
+                DB '7', 0
+                DB '8', 0
+                DB '9', 0
+string3DescEnd:
+
+pUsbDescEnd:
+;;-------------------------------------------------------------------------------------------------------
+
+
+;;-------------------------------------------------------------------------------------------------------
+;; Look-up table for descriptors that are not returned through requests for DSC_DEVICE, DSC_CONFIG or
+;; DSC_STRING (e.g. HID report descriptors)
+pUsbDescLut:
+pUsbDescLutEnd:
+;;-------------------------------------------------------------------------------------------------------
+
+
+;;-------------------------------------------------------------------------------------------------------
+;; Look-up table for double buffer settings (one set of bit masks for each defined interface)
+pUsbDblbufLut:  DW interface1Desc   ; pInterface
+                DB 00H              ; inMask
+                DB 00H              ; outMask
+;;-------------------------------------------------------------------------------------------------------
+
+
+                END;
+
+
+/*******************************************************************************************************
+ * Revision history:
+ *
+ * $Log: usb_descriptor.a51,v $
+ *
+ *******************************************************************************************************/
+
+

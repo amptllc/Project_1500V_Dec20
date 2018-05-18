@@ -1,0 +1,419 @@
+###############################################################################
+#                                                                             #
+# IAR 8051 C/C++ Compiler V7.30B/W32                    06/Apr/2017  13:54:36 #
+# Copyright 2004-2007 IAR Systems. All rights reserved.                       #
+#                                                                             #
+#    Core               =  plain                                              #
+#    Code model         =  near                                               #
+#    Data model         =  large                                              #
+#    Calling convention =  xdata reentrant                                    #
+#    Constant location  =  data                                               #
+#    Dptr setup         =  1,16                                               #
+#    Source file        =  E:\1500V_Test2\ED\code\AndStackED\source\flash.c   #
+#    Command line       =  E:\1500V_Test2\ED\code\AndStackED\source\flash.c   #
+#                          -D NDEBUG -D chip=2510 -D LOWER_IMAGE -D           #
+#                          MidString -D MIDSTRING -lCN                        #
+#                          "E:\1500V_Test2\ED\iar\Build .hex for              #
+#                          CC2510\List\" -lA "E:\1500V_Test2\ED\iar\Build     #
+#                          .hex for CC2510\List\" -o                          #
+#                          "E:\1500V_Test2\ED\iar\Build .hex for              #
+#                          CC2510\Obj\" -e -z9 --core=plain --dptr=16,1       #
+#                          --data_model=large --code_model=near               #
+#                          --calling_convention=xdata_reentrant               #
+#                          --place_constants=data --nr_virtual_regs 32 -I     #
+#                          E:\1500V_Test2\ED\iar\..\CODE\AndStackED\INCLUDE\  #
+#                          -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HAL\INCLU #
+#                          DE\ -I E:\1500V_Test2\ED\iar\..\CODE\LIBRARY\HAL_B #
+#                          UI\INCLUDE\ -I C:\IARSystems-CD-730B\8051\INC\     #
+#    List file          =  E:\1500V_Test2\ED\iar\Build .hex for               #
+#                          CC2510\List\flash.lst                              #
+#    Object file        =  E:\1500V_Test2\ED\iar\Build .hex for               #
+#                          CC2510\Obj\flash.r51                               #
+#                                                                             #
+#                                                                             #
+###############################################################################
+
+E:\1500V_Test2\ED\code\AndStackED\source\flash.c
+      1          #include "ioCC2510.h"
+
+   \                                 In  segment SFR_AN, at 0x9a
+   \   unsigned char volatile __sfr IEN2
+   \                     IEN2:
+   \   000000                DS 1
+
+   \                                 In  segment SFR_AN, at 0xa8
+   \   union <unnamed> volatile __sfr _A_IEN0
+   \                     _A_IEN0:
+   \   000000                DS 1
+
+   \                                 In  segment SFR_AN, at 0xab
+   \   unsigned char volatile __sfr FWT
+   \                     FWT:
+   \   000000                DS 1
+
+   \                                 In  segment SFR_AN, at 0xac
+   \   unsigned char volatile __sfr FADDRL
+   \                     FADDRL:
+   \   000000                DS 1
+
+   \                                 In  segment SFR_AN, at 0xad
+   \   unsigned char volatile __sfr FADDRH
+   \                     FADDRH:
+   \   000000                DS 1
+
+   \                                 In  segment SFR_AN, at 0xb8
+   \   union <unnamed> volatile __sfr _A_IEN1
+   \                     _A_IEN1:
+   \   000000                DS 1
+
+   \                                 In  segment SFR_AN, at 0xd1
+   \   unsigned char volatile __sfr DMAIRQ
+   \                     DMAIRQ:
+   \   000000                DS 1
+
+   \                                 In  segment SFR_AN, at 0xd6
+   \   unsigned char volatile __sfr DMAARM
+   \                     DMAARM:
+   \   000000                DS 1
+      2          
+      3          #include "hal_main.h"
+      4          #include "main.h"
+      5          
+      6          //#include <string.h>
+      7          
+      8          #define PAGEADDR 0x7C00
+      9          #define PAGELEN  256
+     10          #define BARRIER  0xAA
+     11          
+     12          extern void mymemcpy( BYTE *destination, BYTE *source, BYTE counter);
+     13          /*
+     14          BOOL readTheLatest(BYTE *ptr, BYTE len ){ 
+     15          BYTE *addr = (BYTE *)PAGEADDR; // NO Round Buffer
+     16              if( addr[0]!=BARRIER || addr[1]!=BARRIER ) return FALSE; 
+     17              mymemcpy( ptr, addr, len ); 
+     18              return TRUE;
+     19          }
+     20          */
+     21          /*
+     22          void clearThePage(BYTE page){ 
+     23              while( FCTL & 0x80 ) asm("NOP;");
+     24              INT_GLOBAL_ENABLE(FALSE);
+     25              //asm( "C1: MOV A, FCTL;  JB ACC.7, C1;" );
+     26              FADDRH = page; FWT = 0x21; FCTL |= 1; asm("NOP");
+     27              //asm( "MOV FWT,  #21h; MOV FCTL, #01h; NOP; " );
+     28              INT_GLOBAL_ENABLE(TRUE);
+     29              //asm( "C2: MOV A, FCTL; NOP; JB ACC.7, C2;" );
+     30              while( FCTL & 0x80 ) asm("NOP;");
+     31          }
+     32          */
+     33          
+
+   \                                 In  segment XDATA_Z, align 1, keep-with-next
+     34          BOOL refreshing = FALSE, firstTime = TRUE, transfer = FALSE;
+   \                     refreshing:
+   \   000000                DS 1
+   \   000001                REQUIRE __INIT_XDATA_Z
+
+   \                                 In  segment XDATA_I, align 1, keep-with-next
+   \                     firstTime:
+   \   000000                DS 1
+   \   000001                REQUIRE `?<Initializer for firstTime>`
+   \   000001                REQUIRE __INIT_XDATA_I
+
+   \                                 In  segment XDATA_Z, align 1, keep-with-next
+   \                     transfer:
+   \   000000                DS 1
+   \   000001                REQUIRE __INIT_XDATA_Z
+
+   \                                 In  segment XDATA_Z, align 1, keep-with-next
+     35          static UINT16 refreshAddr = 0;
+   \                     refreshAddr:
+   \   000000                DS 2
+   \   000002                REQUIRE __INIT_XDATA_Z
+     36          extern DMA_DESC dmaConfig[3];   
+     37          /*
+     38          BOOL initiateTransfer(BYTE *ptr, BYTE *addr, BYTE len){
+     39              if( transfer ) return FALSE;
+     40              
+     41              SET_WORD(dmaConfig[2].SRCADDRH,  dmaConfig[2].SRCADDRL,  ptr);     // Source: ptr
+     42              //SET_WORD(dmaConfig[2].LENH,      dmaConfig[2].LENL, len);          // Sets the maximum transfer count allowed (length byte + data)
+     43              if( len & 1 ) len++;
+     44              dmaConfig[2].LENL = len;
+     45              
+     46              //SET_WORD(DMA1CFGH, DMA1CFGL,     &dmaConfig[1]);                       
+     47              FADDRH = (((UINT16)addr)>>9) & 0xFF;    FADDRL = (((UINT16)addr)>>1) & 0xFF;  // setup flash address
+     48          
+     49              / *
+     50              FWT = 0x21;    // 2A 
+     51              DMAIRQ &= 4;
+     52              DMAARM = DMAARM_CHANNEL2;                                                    // arm dma channel
+     53              * /
+     54              DMAIRQ &= ~4;
+     55              flashDmaSetup();
+     56              HAL_INT_ENABLE(INUM_DMA, INT_ON);    
+     57              transfer = TRUE;
+     58               
+     59              halFlashDmaTrigger(); 
+     60          
+     61              //while( transfer ) halWait( 1 );
+     62              return TRUE;
+     63          }
+     64          */
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     65          BOOL initiateTransfer(BYTE *ptr, BYTE *addr, BYTE len){
+   \                     initiateTransfer:
+   \   000000   74F6         MOV     A,#-0xa
+   \   000002   12....       LCALL   ?FUNC_ENTER_XDATA
+   \   000005                ; Saved register size: 10
+   \   000005                ; Auto size: 0
+   \   000005   EA           MOV     A,R2
+   \   000006   FE           MOV     R6,A
+   \   000007   EB           MOV     A,R3
+   \   000008   FF           MOV     R7,A
+   \   000009   8C..         MOV     ?V0 + 0,R4
+   \   00000B   8D..         MOV     ?V0 + 1,R5
+   \   00000D   89..         MOV     ?V0 + 2,R1
+     66              //if( transfer ) return FALSE;
+     67              waitForClearThePage();
+   \   00000F                ; Setup parameters for call to function waitForClearThePage
+   \   00000F   12....       LCALL   waitForClearThePage
+     68              //P1_4 = 0; // debug statement for measuring save PB time
+     69              FWT = 0x2A;
+   \   000012   75AB2A       MOV     0xab,#0x2a
+     70              SET_WORD(dmaConfig[2].SRCADDRH,  dmaConfig[2].SRCADDRL, (UINT16)ptr);
+   \   000015   EF           MOV     A,R7
+   \   000016   90....       MOV     DPTR,#(dmaConfig + 16)
+   \   000019   F0           MOVX    @DPTR,A
+   \   00001A   EE           MOV     A,R6
+   \   00001B   90....       MOV     DPTR,#(dmaConfig + 17)
+   \   00001E   F0           MOVX    @DPTR,A
+     71              SET_WORD(dmaConfig[2].LENH,      dmaConfig[2].LENL,     len );                // Sets the maximum transfer count allowed (length byte + data)
+   \   00001F   90....       MOV     DPTR,#(dmaConfig + 20)
+   \   000022   E0           MOVX    A,@DPTR
+   \   000023   54E0         ANL     A,#0xe0
+   \   000025   F0           MOVX    @DPTR,A
+   \   000026   E5..         MOV     A,?V0 + 2
+   \   000028   90....       MOV     DPTR,#(dmaConfig + 21)
+   \   00002B   F0           MOVX    @DPTR,A
+     72              FADDRH = (((UINT16)addr)>>9) & 0xFF;    FADDRL = (((UINT16)addr)>>1) & 0xFF;  // setup flash address
+   \   00002C   AA..         MOV     R2,?V0 + 0
+   \   00002E   AB..         MOV     R3,?V0 + 1
+   \   000030   7409         MOV     A,#0x9
+   \   000032   78..         MOV     R0,#?V0 + 0
+   \   000034   12....       LCALL   ?US_SHR
+   \   000037   E5..         MOV     A,?V0 + 0
+   \   000039   F5AD         MOV     0xad,A
+   \   00003B   EB           MOV     A,R3
+   \   00003C   C3           CLR     C
+   \   00003D   13           RRC     A
+   \   00003E   EA           MOV     A,R2
+   \   00003F   13           RRC     A
+   \   000040   F5AC         MOV     0xac,A
+     73              DMAIRQ &= ~4;                                                                 // damn important
+   \   000042   53D1FB       ANL     0xd1,#0xfb
+     74              HAL_INT_ENABLE(INUM_DMA, INT_ON);
+   \   000045   D2B8         SETB    0xb8.0
+     75              //HAL_INT_ENABLE(INUM_RF,  INT_OFF);
+     76              DMAARM = DMAARM_CHANNEL2;                                                    // arm dma channel
+   \   000047   75D604       MOV     0xd6,#0x4
+     77              //transfer = TRUE;
+     78              halFlashDmaTrigger(); 
+   \   00004A                ; Setup parameters for call to function halFlashDmaTrigger
+   \   00004A   12....       LCALL   halFlashDmaTrigger
+     79              return TRUE;
+   \   00004D   7901         MOV     R1,#0x1
+   \   00004F   7F03         MOV     R7,#0x3
+   \   000051   02....       LJMP    ?FUNC_LEAVE_XDATA
+   \   000054                REQUIRE IEN2
+   \   000054                REQUIRE _A_IEN0
+   \   000054                REQUIRE FWT
+   \   000054                REQUIRE FADDRL
+   \   000054                REQUIRE FADDRH
+   \   000054                REQUIRE _A_IEN1
+   \   000054                REQUIRE DMAIRQ
+   \   000054                REQUIRE DMAARM
+     80          }
+     81          /*
+     82          void writeTheLatest(BYTE *ptr, BYTE len){
+     83              clearThePage( (PAGEADDR>>9)&0xFF ); 
+     84              //halWait( 40 );
+     85              initiateTransfer( ptr, (BYTE *)PAGEADDR, len );
+     86          }
+     87          */
+     88          #define RLEN 0x80
+     89          
+
+   \                                 In  segment XDATA_Z, align 1, keep-with-next
+     90          BYTE buff[ RLEN ];
+   \                     buff:
+   \   000000                DS 128
+   \   000080                REQUIRE __INIT_XDATA_Z
+     91          /* comment it to avoid flash refresh */
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     92          void refreshTheFlash(void){ 
+   \                     refreshTheFlash:
+   \   000000   C082         PUSH    DPL
+   \   000002   C083         PUSH    DPH
+   \   000004                ; Saved register size: 2
+   \   000004                ; Auto size: 0
+     93              refreshAddr = 0; 
+   \   000004   90....       MOV     DPTR,#refreshAddr
+   \   000007   E4           CLR     A
+   \   000008   F0           MOVX    @DPTR,A
+   \   000009   A3           INC     DPTR
+   \   00000A   F0           MOVX    @DPTR,A
+     94              mymemcpy( buff, (BYTE *)refreshAddr, RLEN );
+   \   00000B                ; Setup parameters for call to function mymemcpy
+   \   00000B   7980         MOV     R1,#-0x80
+   \   00000D   FC           MOV     R4,A
+   \   00000E   12....       LCALL   ?Subroutine0
+     95              refreshing = initiateTransfer( (BYTE *)buff, (BYTE *)refreshAddr, RLEN );
+     96          }
+   \                     ??CrossCallReturnLabel_0:
+   \   000011                REQUIRE ?Subroutine1
+   \   000011                ; // Fall through to label ?Subroutine1
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+   \                     ?Subroutine1:
+   \   000000   D083         POP     DPH
+   \   000002   D082         POP     DPL
+   \   000004   22           RET
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+   \                     ?Subroutine0:
+   \   000000   FD           MOV     R5,A
+   \   000001   7A..         MOV     R2,#(buff & 0xff)
+   \   000003   7B..         MOV     R3,#((buff >> 8) & 0xff)
+   \   000005   12....       LCALL   mymemcpy
+   \   000008                ; Setup parameters for call to function initiateTransfer
+   \   000008                ; Setup parameters for call to function initiateTransfer
+   \   000008   7980         MOV     R1,#-0x80
+   \   00000A   90....       MOV     DPTR,#refreshAddr
+   \   00000D   E0           MOVX    A,@DPTR
+   \   00000E   FC           MOV     R4,A
+   \   00000F   A3           INC     DPTR
+   \   000010   E0           MOVX    A,@DPTR
+   \   000011   FD           MOV     R5,A
+   \   000012   7A..         MOV     R2,#(buff & 0xff)
+   \   000014   7B..         MOV     R3,#((buff >> 8) & 0xff)
+   \   000016   12....       LCALL   initiateTransfer
+   \   000019   E9           MOV     A,R1
+   \   00001A   90....       MOV     DPTR,#refreshing
+   \   00001D   F0           MOVX    @DPTR,A
+   \   00001E   22           RET
+     97          /* till here */
+
+   \                                 In  segment NEAR_CODE, align 1, keep-with-next
+     98          void flashCallback(void){
+   \                     flashCallback:
+   \   000000   C082         PUSH    DPL
+   \   000002   C083         PUSH    DPH
+   \   000004                ; Saved register size: 2
+   \   000004                ; Auto size: 0
+     99              HAL_INT_ENABLE(INUM_DMA, INT_OFF);
+   \   000004   C2B8         CLR     0xb8.0
+    100              //transfer = FALSE;   
+    101              /* comment it to avoid flash refresh */
+    102              if( refreshing ){
+   \   000006   90....       MOV     DPTR,#refreshing
+   \   000009   E0           MOVX    A,@DPTR
+   \   00000A   6026         JZ      ??CrossCallReturnLabel_1
+    103                  refreshAddr += RLEN; 
+   \   00000C   90....       MOV     DPTR,#refreshAddr
+   \   00000F   E0           MOVX    A,@DPTR
+   \   000010   2480         ADD     A,#-0x80
+   \   000012   F0           MOVX    @DPTR,A
+   \   000013   A3           INC     DPTR
+   \   000014   E0           MOVX    A,@DPTR
+   \   000015   3400         ADDC    A,#0x0
+   \   000017   F0           MOVX    @DPTR,A
+    104                  refreshing  = FALSE; 
+   \   000018   E4           CLR     A
+   \   000019   90....       MOV     DPTR,#refreshing
+   \   00001C   F0           MOVX    @DPTR,A
+    105                  if( refreshAddr < 0x8000 ){
+   \   00001D   C3           CLR     C
+   \   00001E   90....       MOV     DPTR,#(refreshAddr + 1)
+   \   000021   E0           MOVX    A,@DPTR
+   \   000022   9480         SUBB    A,#-0x80
+   \   000024   500C         JNC     ??CrossCallReturnLabel_1
+    106                      mymemcpy( buff, (BYTE *)refreshAddr, RLEN & 0xFF );
+   \   000026                ; Setup parameters for call to function mymemcpy
+   \   000026   7980         MOV     R1,#-0x80
+   \   000028   90....       MOV     DPTR,#refreshAddr
+   \   00002B   E0           MOVX    A,@DPTR
+   \   00002C   FC           MOV     R4,A
+   \   00002D   A3           INC     DPTR
+   \   00002E   E0           MOVX    A,@DPTR
+   \   00002F   12....       LCALL   ?Subroutine0
+    107                      refreshing = initiateTransfer( buff, (BYTE *)refreshAddr, RLEN & 0xFF );
+    108                  }
+    109              }
+    110              /* till here */
+    111              //if( !transfer ) ((BOOL*)0xF520)[Kick] = TRUE;
+    112              //HAL_INT_ENABLE(INUM_RF,  INT_ON);
+    113          }
+   \                     ??CrossCallReturnLabel_1:
+   \   000032   80..         SJMP    ?Subroutine1
+   \   000034                REQUIRE IEN2
+   \   000034                REQUIRE _A_IEN0
+   \   000034                REQUIRE _A_IEN1
+
+   \                                 In  segment XDATA_ID, align 1, keep-with-next
+   \                     `?<Initializer for firstTime>`:
+   \   000000   01           DB 1
+
+   Maximum stack usage in bytes:
+
+     Function                 ISTACK PSTACK XSTACK
+     --------                 ------ ------ ------
+     flashCallback                2      0      0
+       -> mymemcpy                4      0      0
+       -> initiateTransfer        4      0      0
+     initiateTransfer             0      0     10
+       -> waitForClearThePage     0      0     20
+       -> halFlashDmaTrigger      0      0     20
+     refreshTheFlash              2      0      0
+       -> mymemcpy                4      0      0
+       -> initiateTransfer        4      0      0
+
+
+   Segment part sizes:
+
+     Function/Label               Bytes
+     --------------               -----
+     IEN2                            1
+     _A_IEN0                         1
+     FWT                             1
+     FADDRL                          1
+     FADDRH                          1
+     _A_IEN1                         1
+     DMAIRQ                          1
+     DMAARM                          1
+     refreshing                      1
+     firstTime                       1
+     transfer                        1
+     refreshAddr                     2
+     initiateTransfer               84
+     buff                          128
+     refreshTheFlash                17
+     ?Subroutine1                    5
+     ?Subroutine0                   31
+     flashCallback                  52
+     ?<Initializer for firstTime>    1
+
+ 
+ 189 bytes in segment NEAR_CODE
+   8 bytes in segment SFR_AN
+   1 byte  in segment XDATA_I
+   1 byte  in segment XDATA_ID
+ 132 bytes in segment XDATA_Z
+ 
+ 190 bytes of CODE  memory
+   0 bytes of DATA  memory (+ 8 bytes shared)
+ 133 bytes of XDATA memory
+
+Errors: none
+Warnings: none

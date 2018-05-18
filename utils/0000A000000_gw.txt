@@ -1,0 +1,12 @@
+Gateway
+MAC  Converted on Tue Jan  9 12:18:13 2018
+ version: 21 Apr 2014
+
+boot ../ED/hex/ny-boot.hex radio ../GW_BOU/hex/gw.hex 
+serial number:0000A000000
+MAC 000000000000
+dFk -0.000627 0.0469 0.253 -123
+Tk 0.435 625
+Channel 248
+12kbod YES Hopping NO
+edAddr: 2 gwAddr 1

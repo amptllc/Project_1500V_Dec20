@@ -1,0 +1,331 @@
+################################################################################
+#                                                                              #
+#      IAR Universal Linker V4.60K/386                                         #
+#                                                                              #
+#           Link time     =  31/Jan/2014  15:02:05                             #
+#           Target CPU    =  x51                                               #
+#           List file     =  "E:\ProjectsE\ED\iar\Build .hex for CC2510\List\d #
+#                            ummy.map"                                         #
+#           Output file 1 =  E:\ProjectsE\ED\hex\dummy.hex                     #
+#                            Format: intel-extended, variant: -y(CODE)         #
+#           Command line  =  -y(CODE) -IC:\IARSystems-CD-730B\8051\CONFIG\     #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\cm #
+#                            ain.r51"                                          #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\cs #
+#                            tartup_dummy.r51"                                 #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\du #
+#                            mmy.r51"                                          #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\ia #
+#                            r_char.r51"                                       #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\ia #
+#                            r_compare.r51"                                    #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\ia #
+#                            r_short.r51"                                      #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\ia #
+#                            r_stack.r51"                                      #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\ia #
+#                            r_stack_enter_leave.r51"                          #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\ia #
+#                            r_stack_enter_leave_dptr.r51"                     #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\ia #
+#                            r_stack_parameter.r51"                            #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\ia #
+#                            r_switch.r51"                                     #
+#                            -o E:\ProjectsE\ED\hex\dummy.hex                  #
+#                            -Fintel-extended -l                               #
+#                            "E:\ProjectsE\ED\iar\Build .hex for CC2510\List\d #
+#                            ummy.map"                                         #
+#                            -xesnio -IC:\IARSystems-CD-730B\8051\LIB\ -f      #
+#                            E:\ProjectsE\ED\iar\lnk51ew_cc2510-boot.xcl       #
+#                            (-D_IDATA_START=0xB0 -D_IDATA_END=0xFF            #
+#                            -D_PDATA_START=0xF0B0 -D_PDATA_END=0xF0FF         #
+#                            -D_IXDATA_START=0xF0B0 -D_IXDATA_END=0xF500       #
+#                            -D_XDATA_START=_IXDATA_START                      #
+#                            -D_XDATA_END=_IXDATA_END -D_CODE_START=0x0000     #
+#                            -D_CODE_END=0x3FF -D_NEAR_CODE_END=_CODE_END      #
+#                            -D_TINY_CODE_END=0x47FF                           #
+#                            -D_FIRST_BANK_ADDR=0x10000 -D_NR_OF_BANKS=0x00    #
+#                            -D?REGISTER_BANK=0 -D_REGISTER_BANK_START=0       #
+#                            -D?PBANK_NUMBER=F0 -D?PBANK=93                    #
+#                            -D_BREG_START=0x00 -D?VB=0x20                     #
+#                            -D_FAR_DATA_NR_OF_BANKS=0x0E                      #
+#                            -D_FAR_DATA_START=0x010001                        #
+#                            -D_FAR_DATA_END=0xFFFFFF                          #
+#                            -D_FAR_CODE_START=_CODE_START                     #
+#                            -D_FAR_CODE_END=_CODE_END -f lnk_base.xcl)        #
+#                            (-Z(BIT)BREG=_BREG_START -Z(BIT)BIT_N=0-7F        #
+#                            -Z(DATA)REGISTERS+8=_REGISTER_BANK_START          #
+#                            -Z(DATA)BDATA_Z,BDATA_N,BDATA_I=20-2F             #
+#                            -Z(DATA)VREG+_NR_OF_VIRTUAL_REGISTERS=08-7F       #
+#                            -Z(DATA)PSP,XSP=08-7F -Z(DATA)DOVERLAY=08-7F      #
+#                            -Z(DATA)DATA_I,DATA_Z,DATA_N=08-7F                #
+#                            -U(IDATA)0-7F=(DATA)0-7F                          #
+#                            -Z(IDATA)IDATA_I,IDATA_Z,IDATA_N=08-_IDATA_END    #
+#                            -Z(IDATA)ISTACK+_IDATA_STACK_SIZE#08-_IDATA_END   #
+#                            -Z(IDATA)IOVERLAY=08-FF -Z(CODE)INTVEC=0          #
+#                            -Z(CODE)CSTART=_CODE_START-_CODE_END              #
+#                            -Z(CODE)BANK_RELAYS=_CODE_START                   #
+#                            -Z(CODE)RCODE=_CODE_START-_CODE_END               #
+#                            -Z(CODE)TINY_CODE=_CODE_START-_TINY_CODE_END      #
+#                            -Z(CODE)NEAR_CODE=_CODE_START-_NEAR_CODE_END      #
+#                            -Z(CODE)DIFUNCT=_CODE_START-_CODE_END             #
+#                            -P(CODE)BANKED_CODE=[(_CODEBANK_START+_FIRST_BANK #
+#                            _ADDR)-(_CODEBANK_END+_FIRST_BANK_ADDR)]*_NR_OF_B #
+#                            ANKS+10000                                        #
+#                            -P(CODE)FAR_CODE=[_FAR_CODE_START-_FAR_CODE_END]/ #
+#                            10000                                             #
+#                            -Z(CODE)BIT_ID,BDATA_ID,DATA_ID,IDATA_ID,IXDATA_I #
+#                            D,PDATA_ID,XDATA_ID=_CODE_START-_CODE_END         #
+#                            -Z(CODE)HUGE_ID=_FAR_CODE_START-_FAR_CODE_END     #
+#                            -Z(XDATA)EXT_STACK+_EXTENDED_STACK_SIZE=_EXTENDED #
+#                            _STACK_START-_EXTENDED_STACK_END                  #
+#                            -Z(XDATA)PSTACK+_PDATA_STACK_SIZE=_PDATA_START-_P #
+#                            DATA_END                                          #
+#                            -Z(XDATA)XSTACK+_XDATA_STACK_SIZE=_XDATA_START-_X #
+#                            DATA_END                                          #
+#                            -Z(XDATA)PDATA_N,PDATA_Z,PDATA_I=_PDATA_START-_PD #
+#                            ATA_END                                           #
+#                            -Z(XDATA)IXDATA_N,IXDATA_Z,IXDATA_I=_IXDATA_START #
+#                            -_IXDATA_END                                      #
+#                            -Z(XDATA)XDATA_N,XDATA_Z,XDATA_I=_XDATA_START-_XD #
+#                            ATA_END                                           #
+#                            -Z(XDATA)XDATA_HEAP+_XDATA_HEAP_SIZE=_XDATA_START #
+#                            -_XDATA_END                                       #
+#                            -Z(CODE)XDATA_ROM_C=_CODE_START-_CODE_END         #
+#                            -Z(SPLIT-XDATA)FAR_Z=[_FAR_DATA_START-_FAR_DATA_E #
+#                            ND]/10000                                         #
+#                            -Z(SPLIT-XDATA)FAR_I=[_FAR_DATA_START-_FAR_DATA_E #
+#                            ND]/10000                                         #
+#                            -Z(SPLIT-CODE)FAR_ID=[_FAR_CODE_START-_FAR_CODE_E #
+#                            ND]/10000                                         #
+#                            -Z(SPLIT-XDATA)FAR_HEAP+_FAR_HEAP_SIZE=[_FAR_DATA #
+#                            _START-_FAR_DATA_END]/10000                       #
+#                            -P(XDATA)FAR_N=[_FAR_DATA_START-_FAR_DATA_END]*_F #
+#                            AR_DATA_NR_OF_BANKS+10000                         #
+#                            -P(CONST)FAR_ROM_C=[_FAR_DATA_START-_FAR_DATA_END #
+#                            ]*E+10000                                         #
+#                            -Z(XDATA)HUGE_N,HUGE_Z,HUGE_I=_FAR_DATA_START-_FA #
+#                            R_DATA_END                                        #
+#                            -Z(XDATA)HUGE_HEAP+_HUGE_HEAP_SIZE=_FAR_DATA_STAR #
+#                            T-_FAR_DATA_END                                   #
+#                            -Z(CONST)HUGE_ROM_C=_FAR_DATA_START-_FAR_DATA_END #
+#                            -Z(CODE)CODE_C=_CODE_START-_CODE_END              #
+#                            -P(CODE)FAR_CODE_C=[_FAR_CODE_START-_FAR_CODE_END #
+#                            ]/10000                                           #
+#                            -Z(CODE)HUGE_CODE_C=_FAR_CODE_START-_FAR_CODE_END #
+#                            -Z(CODE)CODE_N=_CODE_START-_CODE_END              #
+#                            -P(CODE)FAR_CODE_N=[_FAR_CODE_START-_FAR_CODE_END #
+#                            ]/10000                                           #
+#                            -Z(CODE)CHECKSUM#_CODE_END -cx51)                 #
+#                            -D_CODEBANK_START=0 -D_CODEBANK_END=0             #
+#                            -D_NR_OF_VIRTUAL_REGISTERS=20 -s                  #
+#                            __program_start -D_IDATA_STACK_SIZE=0x60          #
+#                            -D_EXTENDED_STACK_START=0x00                      #
+#                            -D_EXTENDED_STACK_END=0x00                        #
+#                            -D_EXTENDED_STACK_SIZE=0x00                       #
+#                            -D_PDATA_STACK_SIZE=0xA0                          #
+#                            -D_XDATA_STACK_SIZE=0x100                         #
+#                            -D_XDATA_HEAP_SIZE=0x00 -D_FAR_HEAP_SIZE=0x00     #
+#                            -D_HUGE_HEAP_SIZE=0x00                            #
+#                                                                              #
+#                        Copyright 1987-2007 IAR Systems. All rights reserved. #
+################################################################################
+
+
+
+
+
+                ****************************************
+                *                                      *
+                *           CROSS REFERENCE            *
+                *                                      *
+                ****************************************
+
+       Program entry at : CODE      00000009  Relocatable, from module : CSTARTUP
+
+
+
+
+                ****************************************
+                *                                      *
+                *            RUNTIME MODEL             *
+                *                                      *
+                ****************************************
+
+  __calling_convention     = xdata_reentrant
+  __code_model             = near
+  __core                   = plain
+  __data_model             = large
+  __dptr_size              = 16
+  __extended_stack         = disabled
+  __location_for_constants = data
+  __number_of_dptrs        = 1
+  __rt_version             = 1
+
+                ****************************************
+                *                                      *
+                *              ENTRY LIST              *
+                *                                      *
+                ****************************************
+
+?FILLER_BYTES
+?ABS_ENTRY_MOD
+  _HUGE_HEAP_SIZE                  CODE      00000000 
+  _FAR_HEAP_SIZE                   CODE      00000000 
+  _XDATA_HEAP_SIZE                 CODE      00000000 
+  _XDATA_STACK_SIZE                CODE      00000100 
+  _PDATA_STACK_SIZE                CODE      000000A0 
+  _EXTENDED_STACK_SIZE             CODE      00000000 
+  _EXTENDED_STACK_END              CODE      00000000 
+  _EXTENDED_STACK_START            CODE      00000000 
+  _IDATA_STACK_SIZE                CODE      00000060 
+  _NR_OF_VIRTUAL_REGISTERS         CODE      00000020 
+  _CODEBANK_END                    CODE      00000000 
+  _CODEBANK_START                  CODE      00000000 
+  _FAR_CODE_END                    CODE      000003FF 
+  _FAR_CODE_START                  CODE      00000000 
+  _FAR_DATA_END                    CODE      00FFFFFF 
+  _FAR_DATA_START                  CODE      00010001 
+  _FAR_DATA_NR_OF_BANKS            CODE      0000000E 
+  ?VB                              CODE      00000020 
+  _BREG_START                      CODE      00000000 
+  ?PBANK                           CODE      00000093 
+  ?PBANK_NUMBER                    CODE      000000F0 
+  _REGISTER_BANK_START             CODE      00000000 
+  ?REGISTER_BANK                   CODE      00000000 
+  _NR_OF_BANKS                     CODE      00000000 
+  _FIRST_BANK_ADDR                 CODE      00010000 
+  _TINY_CODE_END                   CODE      000047FF 
+  _NEAR_CODE_END                   CODE      000003FF 
+  _CODE_END                        CODE      000003FF 
+  _CODE_START                      CODE      00000000 
+  _XDATA_END                       CODE      0000F500 
+  _XDATA_START                     CODE      0000F0B0 
+  _IXDATA_END                      CODE      0000F500 
+  _IXDATA_START                    CODE      0000F0B0 
+  _PDATA_END                       CODE      0000F0FF 
+  _PDATA_START                     CODE      0000F0B0 
+  _IDATA_END                       CODE      000000FF 
+  _IDATA_START                     CODE      000000B0 
+?cmain ( E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\cmain.r51 )
+  ?cmain                           CODE      00000003 
+  __low_level_init_call                                 NOT NEEDED
+  __INIT_BDATA_Z                                        NOT NEEDED
+  __INIT_DATA_Z                                         NOT NEEDED
+  __INIT_IDATA_Z                                        NOT NEEDED
+  __INIT_PDATA_Z                                        NOT NEEDED
+  __INIT_XDATA_Z                                        NOT NEEDED
+  __INIT_IXDATA_Z                                       NOT NEEDED
+  __INIT_BDATA_I                                        NOT NEEDED
+  __INIT_DATA_I                                         NOT NEEDED
+  __INIT_IDATA_I                                        NOT NEEDED
+  __INIT_PDATA_I                                        NOT NEEDED
+  __INIT_XDATA_I                                        NOT NEEDED
+  __INIT_IXDATA_I                                       NOT NEEDED
+  ?call_main                       CODE      00000003 
+CSTARTUP ( E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\cstartup_dummy.r51 )
+  ?REGISTERS                       DATA      00000000 
+  ?ISTACK_START                    IDATA     000000A0 
+  ?PSTACK_START                                         NOT NEEDED
+  ?XSTACK_START                                         NOT NEEDED
+  ?EXT_STACK_START                                      NOT NEEDED
+  __program_start                  CODE      00000009 
+  ?RESET_SP                        CODE      0000000C 
+  ?RESET_PSP                                            NOT NEEDED
+  ?RESET_XSP                                            NOT NEEDED
+  ?RESET_CODE_BANK                                      NOT NEEDED
+  ?RESET_PDATA_BANK                                     NOT NEEDED
+VIRTUAL_REGISTERS ( E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\cstartup_dummy.r51 )
+  ?B0                              BIT       00000020.0
+  ?V0                                                   NOT NEEDED
+  ?PSP                                                  NOT NEEDED
+  ?XSP                                                  NOT NEEDED
+?cexit ( E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\cstartup_dummy.r51 )
+  exit                             CODE      00000012 
+  ?C_EXIT                          CODE      00000012 
+  ?ROM_MONITOR_NOPS                CODE      00000012 
+dummy ( E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\dummy.r51 )
+  _A_P1                            DATA      00000090 
+  SLEEP                            DATA      000000BE 
+  CLKCON                           DATA      000000C6 
+  T3CTL                            DATA      000000CB 
+  T3CCTL0                          DATA      000000CC 
+  T3CC0                            DATA      000000CD 
+  T3CCTL1                          DATA      000000CE 
+  T3CC1                            DATA      000000CF 
+  PERCFG                           DATA      000000F1 
+  P1SEL                            DATA      000000F4 
+  P2SEL                            DATA      000000F5 
+  P1DIR                            DATA      000000FE 
+  main                             CODE      00000014 
+iar_stack_enter_leave_dptr ( E:\ProjectsE\ED\iar\Build .hex for CC2510\Obj\iar_stack_enter_leave_dptr.r51 )
+
+
+
+                ****************************************
+                *                                      *
+                *            MODULE SUMMARY            *
+                *                                      *
+                ****************************************
+
+Module               CODE      DATA      IDATA    BIT
+------               ----      ----      -----    ---
+                    (Rel)  (Rel)  (Abs)  (Rel)  (Rel)
+?cexit                  2
+?cmain                  6
+CSTARTUP                9
+  + common              3
+VIRTUAL_REGISTERS                                   8
+dummy                 101            12
+N/A (command line)             8            96
+----------            ---      -     --     --      -
+Total:                118      8     12     96      8
+  + common              3
+
+
+                ****************************************
+                *                                      *
+                *              CALL GRAPH              *
+                *                                      *
+                ****************************************
+
+No call graph information available
+
+
+                ****************************************
+                *                                      *
+                *      SEGMENTS IN ADDRESS ORDER       *
+                *                                      *
+                ****************************************
+
+
+SEGMENT              SPACE    START ADDRESS   END ADDRESS     SIZE  TYPE  ALIGN
+=======              =====    =============   ===========     ====  ====  =====
+INTVEC               CODE          00000000 - 00000002           3   com    0
+CSTART               CODE          00000003 - 00000013          11   rel    0
+NEAR_CODE            CODE          00000014 - 00000078          65   rel    0
+REGISTERS            DATA          00000000 - 00000007           8   rel    0
+BREG                 BIT        00000020.0  -  00000020.7        8   rel    0
+SFR_AN               DATA          00000090 - 00000090           1   rel    0
+                     DATA          000000BE - 000000BE           1 
+                     DATA          000000C6 - 000000C6           1 
+                     DATA          000000CB - 000000CF           5 
+                     DATA          000000F1 - 000000F1           1 
+                     DATA          000000F4 - 000000F5           2 
+                     DATA          000000FE - 000000FE           1 
+ISTACK               IDATA         000000A0 - 000000FF          60   rel    0
+
+                ****************************************
+                *                                      *
+                *        END OF CROSS REFERENCE        *
+                *                                      *
+                ****************************************
+
+ 121 bytes of CODE  memory
+   8 bytes of DATA  memory (+ 12 absolute )
+  96 bytes of IDATA memory
+   8 bits  of BIT   memory
+
+Errors: none
+Warnings: none
+

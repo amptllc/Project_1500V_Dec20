@@ -1,0 +1,526 @@
+;----------------------------------------------------------------------------
+;
+;	File:		short.s03
+;
+;	Version:	6.00
+;
+;	Created:	24/Jun/02 IANB [6.00]
+;
+;
+;	Description:	This file contain operations for both signed and 
+;			unsigned short.
+;
+;       REVISON INFORMATION
+;
+;       $Revision: 1.8 $
+;
+;       Log information is available at the end of this file
+;
+;----------------------------------------------------------------------------
+
+#include "iar_common.h"
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Signed short division and modulus (SDIV    AB)
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?S_DIV_MOD
+;
+;	Description: Signed short division and modulus
+;
+;	Register input:
+;		R1:R0  Dividend
+;		R3:R2  Divisor
+;
+;	Register output:
+;		R1:R0 = R1:R0 / R3:R2
+;		R3:R2 = R1:R0 % R3:R2
+;		A     = Undefined
+;		B     = Undefined
+;		CY    = Undefined
+;
+;	Stack usage: 4
+;
+;-----------------------------------------------------------------------------
+	MODULE	?S_DIV_MOD
+	RSEG	RCODE:CODE:NOROOT
+        CFI BLOCK ?S_DIV_MOD USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI B undefined
+	CFI R0 undefined
+	CFI R1 undefined
+	CFI R2 undefined
+	CFI R3 undefined
+
+	PUBLIC	?S_DIV_MOD
+
+nn:	CLR	C
+	CLR	A
+	SUBB	A,R0
+	MOV	R0,A
+	CLR	A
+	SUBB	A,R1
+	MOV	R1,A
+	LCALL	?US_DIV_MOD
+	SJMP	NegRem
+;
+nx:	CLR	C
+	CLR	A
+	SUBB	A,R2
+	MOV	R2,A
+	CLR	A
+	SUBB	A,R3
+	MOV	R3,A
+	
+	MOV	A,R1
+	JB	ACC.7,nn
+;
+	LCALL	?US_DIV_MOD
+
+	CLR	A
+	SUBB	A,R0
+	MOV	R0,A
+	CLR	A
+	SUBB	A,R1
+	MOV	R1,A
+	RET
+
+pn:	CLR	C
+	CLR	A
+	SUBB	A,R0
+	MOV	R0,A
+	CLR	A
+	SUBB	A,R1
+	MOV	R1,A
+	LCALL	?US_DIV_MOD
+
+	CLR	A
+	SUBB	A,R0
+	MOV	R0,A
+	CLR	A
+	SUBB	A,R1
+	MOV	R1,A
+
+	CLR	C
+NegRem:	CLR	A
+	SUBB	A,R2
+	MOV	R2,A
+	CLR	A
+	SUBB	A,R3
+	MOV	R3,A
+	RET
+
+?S_DIV_MOD:
+
+	MOV	A,R3
+	JB	ACC.7,nx
+;
+	MOV	A,R1
+	JB	ACC.7,pn
+	
+        CFI ENDBLOCK ?S_DIV_MOD
+;
+; Fall through to unsigned division/modulus
+;
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)Signed short division and modulus (SDIV    AB)
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?US_DIV_MOD
+;
+;	Description: Unsigned short division and modulus
+;
+;	Register input:
+;		R1:R0  Dividend
+;		R3:R2  Divisor
+;
+;	Register output:
+;		R1:R0 = R1:R0 / R3:R2
+;		R3:R2 = R1:R0 % R3:R2
+;		A     = Undefined
+;		B     = Undefined
+;		CY    = 0
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?US_DIV_MOD
+        CFI BLOCK ?US_DIV_MOD USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI B undefined
+	CFI R0 undefined
+	CFI R1 undefined
+	CFI R2 undefined
+	CFI R3 undefined
+
+?US_DIV_MOD:
+
+;=======================================;
+;   Try to do a simple 8-bit division.	;
+;=======================================;
+	CJNE	R1,#00,t16
+	CJNE	R3,#00,zero
+
+	MOV	A,R0
+	MOV	B,R2
+	DIV	AB
+	MOV	R0,A
+	MOV	R2,B
+	RET
+
+;=======================================;
+;          Divisor > dividend.		;
+;=======================================;
+zero:	CLR	A
+	MOV	R3,A
+	XCH	A,R0
+	MOV	R2,A
+	RET
+
+;=======================================;
+;    Try to do a 16/8-bit division.	;
+;=======================================;
+t16:	MOV	A,R3
+	JNZ	n16
+
+	MOV	R3,#16		; Set loop counter
+
+Loop8:	XCH	A,R0
+	RLC	A
+	XCH	A,R0
+	XCH	A,R1
+	RLC	A
+	XCH	A,R1
+	RLC	A
+	JNC	Just8
+;
+	CLR	C
+	SUBB	A,R2
+	CLR	C
+	DJNZ	R3,Loop8
+	SJMP	End8
+
+Just8:	SUBB	A,R2
+	JNC	Count8
+
+	ADD	A,R2
+Count8:	DJNZ	R3,Loop8
+
+End8:	XCH	A,R0
+	RLC	A
+	CPL	A
+	XCH	A,R0
+	XCH	A,R1
+	RLC	A
+	CPL	A
+	XCH	A,R1
+	MOV	R2,A
+	RET
+
+;=======================================;
+;          16/16-bit division.		;
+;=======================================;
+n16:	MOV	B,#8		; Set loop counter
+	CLR	A
+
+Loop16:	XCH	A,R0
+	RLC	A
+	XCH	A,R0
+	XCH	A,R1
+	RLC	A
+	XCH	A,R1
+	RLC	A
+	XCH	A,R1
+	SUBB	A,R2
+	XCH	A,R1
+	SUBB	A,R3
+	JNC	Cnt16
+
+	XCH	A,R1
+	ADD	A,R2
+	XCH	A,R1
+	ADDC	A,R3
+Cnt16:	DJNZ	B,Loop16
+
+	MOV	R3,A
+	XCH	A,R0
+	RLC	A
+	CPL	A
+	XCH	A,R0
+	CLR	A
+	XCH	A,R1
+	MOV	R2,A
+	RET
+        CFI ENDBLOCK ?US_DIV_MOD
+
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Signed short shift right (>>)
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?SS_SHR
+;
+;	Description: Shift a signed short object arithmetic right in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in the object
+;		A  Is the number of shifts to be made
+;
+;	Register output:
+;		A  Is zero
+;		CY Is undefined
+;		R0 Is not changed
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?SS_SHR
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?SS_SHR
+	PUBLIC	?SS_SHR_REW
+
+        CFI BLOCK ?SS_SHR_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?SS_SHR_REW:
+	JNZ	start
+	DEC	R0
+	RET
+
+	CFI ENDBLOCK ?SS_SHR_REW
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?SS_SHR USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?SS_SHR:
+	JZ	noshift
+
+shift:
+	INC	R0
+	CFI ENDBLOCK ?SS_SHR
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?SS_SHR_start USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+start:
+	XCH	A,@R0
+	MOV	C,ACC.7
+	RRC	A
+	XCH	A,@R0
+	DEC	R0
+	XCH	A,@R0
+	RRC	A
+	XCH	A,@R0
+
+	DJNZ	ACC,shift
+
+noshift:
+	RET
+
+	CFI ENDBLOCK ?SS_SHR_start
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Unsigned short shift right (>>)
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?US_SHR
+;
+;	Description: Shift a long object right in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in the object
+;		A  Is the number of shifts to be made
+;
+;	Register output:
+;		A  Is zero
+;		CY Is undefined
+;		R0 Is not changed
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?US_SHR		; Replaceable module
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?US_SHR
+	PUBLIC	?US_SHR_REW
+
+        CFI BLOCK ?US_SHR_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?US_SHR_REW:
+	JNZ	start
+	DEC	R0
+	RET
+
+	CFI ENDBLOCK ?US_SHR_REW
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?US_SHR USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?US_SHR:
+	JZ	noshift
+
+shift:
+	INC	R0
+
+	CFI ENDBLOCK ?US_SHR
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT
+        CFI BLOCK ?US_SHR_start USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+
+x:
+start:
+	XCH	A,@R0
+	CLR	C
+	RRC	A
+	XCH	A,@R0
+	DEC	R0
+	XCH	A,@R0
+	RRC	A
+	XCH	A,@R0
+
+	DJNZ	ACC,shift
+
+noshift:
+	RET
+	CFI ENDBLOCK ?US_SHR_start
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: (Un)signed short shift left (<<)
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?S_SHL
+;
+;	Description: Shift a long object left in IDATA
+;
+;	Register input:
+;		R0 Points to LSB in the object
+;		A  Is the number of shifts to be made
+;
+;	Register output:
+;		A    Is zero
+;		CY   Is undefined
+;		R0   Is unchanded
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?S_SHL		; Replaceable module
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?S_SHL
+	PUBLIC	?S_SHL_REW
+
+        CFI BLOCK ?S_SHL USING cfi_common
+        CFI NOFUNCTION	
+	
+	CFI R0 undefined
+
+?S_SHL:
+	JNZ	start
+	RET
+
+	CFI ENDBLOCK ?S_SHL
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?S_SHL_REW USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI R0 undefined
+
+?S_SHL_REW:
+	JZ	noshift
+
+shift:
+	DEC	R0
+
+	CFI ENDBLOCK ?S_SHL_REW
+	REQUIRE	x
+
+	RSEG	RCODE:CODE:NOROOT	
+        CFI BLOCK ?S_SHL_start USING cfi_common
+        CFI NOFUNCTION	
+
+	CFI A undefined
+	CFI R0 undefined
+x:
+start:
+	XCH	A,@R0
+	CLR	C
+	RLC	A
+	XCH	A,@R0
+	INC	R0
+	XCH	A,@R0
+	RLC	A
+	XCH	A,@R0
+	DJNZ	ACC,shift
+	DEC	R0
+
+noshift:
+	RET
+	CFI ENDBLOCK ?S_SHL_start
+	END
+
+;
+;   Revision control system
+;       $Id: iar_short.s51 1.8 2007/06/07 09:22:06Z larssu Exp $
+;       $Log: iar_short.s51 $
+;       Revision 1.8  2007/06/07 09:22:06Z  larssu
+;       NOROOT'ify RCODE segments
+;       Revision 1.7  2004/11/18 11:36:14Z  owi
+;       Revision 1.6  2004/11/10 16:31:04Z  owi
+;       Revision 1.5  2004/03/12 15:46:14Z  owi
+;       Revision 1.4  2003/09/24 08:46:12Z  ola
+;       Revision 1.3  2003/09/23 15:20:21Z  ola
+;       Revision 1.1  2003/09/16 10:53:15Z  ola
+;       Initial revision
+;       Revision 1.1.1.5  2003/08/07 16:48:50Z  ola
+;       Revision 1.1.1.4  2003/05/26 14:10:07Z  owi
+;       Revision 1.1.1.3  2003/03/25 16:27:39Z  owi
+;       Revision 1.1.1.2  2002/11/05 08:53:57Z  owi
+;       Revision 1.1.1.1  2002/06/26 16:05:08Z  owi
+;       Duplicate revision
+;       Revision 1.1  2002/06/26 16:05:08Z  anders
+;       Initial revision
+;

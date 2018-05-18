@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Workspace>
+  <ConfigDictionary>
+    
+    
+    
+  <CurrentConfigs><Project>usb_boot_sector/Build .hex for CC2511 Dongle</Project><Project>radio_gateway/Build .hex for CC2511 Dongle</Project><Project>usb_boot_sector_windows/Build .hex for CC2511 Dongle</Project></CurrentConfigs><CurrentProj>radio_gateway</CurrentProj><OverviewSelected>1</OverviewSelected></ConfigDictionary>
+  <Desktop>
+    <Static>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>229</Column0><Column1>27</Column1><Column2>27</Column2><Column3>27</Column3></ColumnWidths>
+      </Workspace>
+    <Build><PreferedWindows><Position>4</Position><ScreenPosX>339</ScreenPosX><ScreenPosY>525</ScreenPosY><Windows><Window><Factory>Find-in-Files</Factory></Window></Windows></PreferedWindows><ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1215</ColumnWidth1><ColumnWidth2>324</ColumnWidth2><ColumnWidth3>81</ColumnWidth3></Build><Find-in-Files><PreferedWindows><Position>4</Position><ScreenPosX>339</ScreenPosX><ScreenPosY>525</ScreenPosY><Windows><Window><Factory>Build</Factory></Window></Windows></PreferedWindows><ColumnWidth0>580</ColumnWidth0><ColumnWidth1>82</ColumnWidth1><ColumnWidth2>994</ColumnWidth2></Find-in-Files><TerminalIO/><CodeCoveragePlugin/></Static>
+    <Windows>
+      
+    <Wnd2>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-25635-25919</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>&lt;ws></ExpandedNode><ExpandedNode>&lt;ws>/radio_gateway</ExpandedNode><ExpandedNode>&lt;ws>/usb_boot_sector</ExpandedNode><ExpandedNode>&lt;ws>/usb_boot_sector/Interrupt_routines.c</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd2><Wnd3><Tabs><Tab><Identity>TabID-6823-15216</Identity><TabName>Build</TabName><Factory>Build</Factory><Session/></Tab><Tab><Identity>TabID-188-457</Identity><TabName>Find in Files</TabName><Factory>Find-in-Files</Factory><Session/></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd3></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>E:\ProjectsE\GW_bou\code\gateway\source\bou_main.c</Filename><XPos>0</XPos><YPos>77</YPos><SelStart>3982</SelStart><SelEnd>3986</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\ProjectsE\GW_bou\code\gateway\source\main.c</Filename><XPos>0</XPos><YPos>714</YPos><SelStart>22957</SelStart><SelEnd>22957</SelEnd></Tab><ActiveTab>1</ActiveTab><Tab><Factory>TextEditor</Factory><Filename>E:\ProjectsE\GW_bou\code\gateway\include\main.h</Filename><XPos>0</XPos><YPos>168</YPos><SelStart>8768</SelStart><SelEnd>8769</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>E:\ProjectsE\GW_bou\code\gateway\source\Interrupt_routines.c</Filename><XPos>0</XPos><YPos>24</YPos><SelStart>1004</SelStart><SelEnd>1004</SelEnd></Tab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-0088e858><key>iaridepm.enu1</key></Toolbar-0088e858></Sizes></Row0></Top><Left><Row0><Sizes><Wnd2><Rect><Top>-2</Top><Left>-2</Left><Bottom>781</Bottom><Right>303</Right><x>-2</x><y>-2</y><xscreen>75</xscreen><yscreen>81</yscreen><sizeHorzCX>44643</sizeHorzCX><sizeHorzCY>83162</sizeHorzCY><sizeVertCX>181548</sizeVertCX><sizeVertCY>803901</sizeVertCY></Rect></Wnd2></Sizes></Row0></Left><Right><Row0><Sizes/></Row0></Right><Bottom><Row0><Sizes><Wnd3><Rect><Top>-2</Top><Left>-2</Left><Bottom>149</Bottom><Right>1682</Right><x>-2</x><y>-2</y><xscreen>1684</xscreen><yscreen>151</yscreen><sizeHorzCX>1002381</sizeHorzCX><sizeHorzCY>155031</sizeHorzCY><sizeVertCX>44643</sizeVertCX><sizeVertCY>83162</sizeVertCY></Rect></Wnd3></Sizes></Row0></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Workspace>
+
+

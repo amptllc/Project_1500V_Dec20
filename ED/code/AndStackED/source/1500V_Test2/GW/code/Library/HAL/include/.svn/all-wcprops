@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/include
+END
+hal_2511.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/include/hal_2511.h
+END
+hal_power_clk_mgmt.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/include/hal_power_clk_mgmt.h
+END
+hal_adc_mgmt.h
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/include/hal_adc_mgmt.h
+END
+hal_io_mgmt.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/include/hal_io_mgmt.h
+END
+hal_defines.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/include/hal_defines.h
+END
+hal_interrupt_mgmt.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/include/hal_interrupt_mgmt.h
+END
+hal_main.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/repos/stack_gw_6/!svn/ver/1/code/Library/HAL/include/hal_main.h
+END

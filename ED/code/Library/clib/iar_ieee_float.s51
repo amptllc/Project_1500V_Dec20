@@ -1,0 +1,3328 @@
+;	TITL	'8051 - IEEE Floating point arithmetics'
+;-----------------------------------------------------------------------------
+;
+;   Revision control system
+;       $Id: iar_ieee_float.s51 1.28 2007/06/07 09:21:52Z larssu Exp $
+;
+;
+;	File:		iar_ieee_float.s51
+;
+;	Version:	1.00
+;
+;	Created:	2003 by IANB for version 6 of the 8051 C-compiler.
+;
+;	Description:	This file contain the floating point arithmetics
+;			and cast operations. 
+;
+;	Entries:	?FLT_ADD		?FLT_ADD_REW
+;			?FLT_DIV		?FLT_DIV_REW
+;			?FLT_MUL		?FLT_MUL_REW
+;			?FLT_SUB		?FLT_SUB_REW
+;
+;			?FLT_EQ			?FLT_EQ_REW
+;			?FLT_GE			?FLT_GE_REW
+;			?FLT_LT			?FLT_LT_REW
+;
+;			?FLT_TO_L		?FLT_TO_L_REW
+;			?FLT_TO_UL		?FLT_TO_UL_REW
+;			?L_TO_FLT		?L_TO_FLT_REW
+;			?UL_TO_FLT		?UL_TO_FLT_REW
+;
+;			?FLT_TEST_INF		?FLT_TEST_INF_REW
+;			?FLT_TEST_NAN		?FLT_TEST_NAN_REW
+;			?FLT_TEST_ZERO		?FLT_TEST_ZERO_REW
+;
+;			?FLT_TEST_INF_R1	?FLT_TEST_INF_R1_REW
+;			?FLT_TEST_NAN_R1	?FLT_TEST_NAN_R1_REW
+;			?FLT_TEST_ZERO_R1	?FLT_TEST_ZERO_R1_REW
+;
+;-----------------------------------------------------------------------------
+
+#include "iar_common.h"
+
+#define Bias 127
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Cast operations
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?L_TO_FLT
+;	Function: ?UL_TO_FLT
+;
+;	Description: Cast signed/unsigned long to a float.
+;
+;	Register input:
+;		R0 Points to LSB in the source/destination object
+;
+;	Register output:
+;		A    = R1
+;		R0   = R0
+;		CY   = Undefined
+;
+;	Stack usage: 2/4
+;
+;-----------------------------------------------------------------------------
+	MODULE	?L_TO_FLT
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?L_TO_FLT
+	PUBLIC	?L_TO_FLT_REW
+	PUBLIC	?UL_TO_FLT
+	PUBLIC	?UL_TO_FLT_REW
+	EXTERN	?L_NEG_REW
+    cfi BLOCK ?L_TO_FLT USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+
+?L_TO_FLT:
+
+	INC	R0
+	INC	R0
+	INC	R0
+
+    cfi ENDBLOCK ?L_TO_FLT
+	REQUIRE	x
+
+;-----------------------------------------------------
+;
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?L_TO_FLT_REW USING cfi_common
+    cfi NOFUNCTION
+    cfi A undefined
+    cfi R0 undefined
+
+x:
+?L_TO_FLT_REW:
+
+	MOV	A,@R0
+	JNB	ACC.7,?UL_TO_FLT_REW
+	LCALL	?L_NEG_REW
+	LCALL	?UL_TO_FLT_REW
+	INC	R0
+	INC	R0
+	INC	R0
+	XCH	A,@R0
+	ORL	A,#128
+	XCH	A,@R0
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	RET
+
+    cfi ENDBLOCK ?L_TO_FLT_REW
+	REQUIRE	y
+
+;-----------------------------------------------------
+;
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?UL_TO_FLT_REW USING cfi_common
+    cfi NOFUNCTION
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    cfi R2 undefined
+    cfi R3 undefined
+    cfi R4 undefined
+
+?UL_TO_FLT_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?UL_TO_FLT_REW
+	REQUIRE	y
+
+;-----------------------------------------------------
+;
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?UL_TO_FLT USING cfi_common
+    cfi NOFUNCTION
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    cfi R2 undefined
+    cfi R3 undefined
+    cfi R4 undefined
+
+y:
+?UL_TO_FLT:
+
+;
+; Read up the unsigned long value into
+; registers and save the registers
+; original values at the same time
+;
+;  Order of saved registers:
+;  +----+----+----+----+
+;  | R4 | R3 | R2 | R1 |
+;  +----+----+----+----+
+;
+;  The unsigned long value:
+;  +----+----+----+----+
+;  |  A | R4 | R3 | R2 |
+;  +----+----+----+----+
+;
+;
+	MOV	A,R1
+	MOV	R1,#Bias+32-1
+	XCH	A,@R0			; Read LSB and save R1 at its location
+	INC	R0
+	XCH	A,R2
+	XCH	A,@R0
+	INC	R0
+	XCH	A,R3
+	XCH	A,@R0
+	INC	R0
+	XCH	A,R4
+	XCH	A,@R0
+	CLR	C
+	JNZ	enter32
+ 
+just24:	MOV	R1,#Bias+24-1
+	XCH	A,R2			; Shift up a byte
+	XCH	A,R3
+	XCH	A,R4
+	JNZ	enter32
+
+	MOV	R1,#Bias+16-1
+	XCH	A,R3			; Shift up an other byte
+	XCH	A,R4
+	JNZ	enter32
+
+	MOV	R1,#Bias+8-1
+	XCH	A,R4			; Shift up an other byte again
+	JNZ	enter32
+
+	MOV	R1,A			; Ok it is zero so zero out the
+	SJMP	Zero			; exxponent as well and end this.
+
+
+; Shift left until the most significant bit is set
+;
+shift32:
+	XCH	A,R2
+	RLC	A
+	XCH	A,R2
+	XCH	A,R3
+	RLC	A
+	XCH	A,R3
+	XCH	A,R4
+	RLC	A
+	XCH	A,R4
+	RLC	A
+	DEC	R1
+enter32:
+	JNB	ACC.7,shift32
+
+	XCH	A,R4			; Rotate the value one byte left in
+	XCH	A,R3			; order to make R4 MSB
+	XCH	A,R2
+	RLC	A			; Move the guard bit to carry
+	JNC	no_overflow
+	JNZ	round_up		; Round up if there are sticky bits
+	MOV	A,R2
+	JNB	ACC.0,no_round
+
+round_up:
+	CLR	A
+	XCH	A,R2
+	ADDC	A,R2
+	XCH	A,R2
+	XCH	A,R3
+	ADDC	A,R3
+	XCH	A,R3
+	XCH	A,R4
+	ADDC	A,R4
+	XCH	A,R4
+	JNC	no_overflow
+	INC	R1
+
+no_round:
+	CLR	C
+no_overflow:
+	MOV	A,R1
+	RRC	A
+Zero:	XCH	A,@R0			; Store the MSB of the result and
+	XCH	A,R4			; restore register R4.
+	DEC	R0
+
+	RL	A
+	RRC	A
+	XCH	A,@R0			; Store the next byte of the result
+	XCH	A,R3			; and restore register R3.
+	DEC	R0
+
+	XCH	A,@R0			; Store the next byte of the result
+	XCH	A,R2			; and restore register R3.
+	DEC	R0
+
+	XCH	A,@R0			; Store the LSB of the result and
+	MOV	R1,A			; restore register R1.
+	RET
+
+    cfi ENDBLOCK ?UL_TO_FLT
+	ENDMOD
+
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FLT_TO_L
+;	Function: ?FLT_TO_UL
+;
+;	Description: Cast a float to a signed/unsigned long.
+;
+;	Register input:
+;		R0 Points to LSB in the source/destination object
+;
+;	Register output:
+;		A    = Undefined
+;		B.0  = The sign bit of the floating point value
+;		R0   = R0
+;		CY   = Undefined
+;
+;	Stack usage: 4
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_TO_L
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_TO_L
+	PUBLIC	?FLT_TO_L_REW
+	PUBLIC	?FLT_TO_UL
+	PUBLIC	?FLT_TO_UL_REW
+    cfi BLOCK ?FLT_TO_UL_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi R0 undefined
+
+?FLT_TO_UL_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?FLT_TO_UL_REW
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_TO_UL USING cfi_common
+    cfi NOFUNCTION
+
+x:
+?FLT_TO_UL:
+	LCALL	Extract
+	JNB	B.0,WriteBack
+	LCALL	Zero
+	SJMP	WriteBack
+ 
+    cfi ENDBLOCK ?FLT_TO_UL
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_TO_L_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi R0 undefined
+    cfi A undefined
+    cfi R2 undefined
+    cfi R3 undefined
+    cfi R4 undefined
+
+?FLT_TO_L_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?FLT_TO_L_REW
+	REQUIRE	y
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_TO_L USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R2 undefined
+    cfi R3 undefined
+    cfi R4 undefined
+
+y:
+?FLT_TO_L:
+	LCALL	Extract
+	JB	B.0,Negative
+	JNB	ACC.7,WriteBack
+
+	MOV	A,#255
+	MOV	R4,A
+	MOV	R3,A
+	MOV	R2,A
+	MOV	A,#127
+	SJMP	WriteBack
+		
+UnderFlow:
+	CLR	A
+	MOV	R4,A
+	MOV	R3,A
+	MOV	R2,A
+	MOV	A,#128
+	SJMP	WriteBack
+	
+Negative:
+	CJNE	A,#128,NoMaxNeg
+	CJNE	R4,#0,UnderFlow
+	CJNE	R3,#0,UnderFlow
+	SJMP	WriteBack
+
+NoMaxNeg:
+	JNC	UnderFlow
+	MOV	R1,A
+	CLR	A
+	CLR	C
+	SUBB	A,R2
+	MOV	R2,A
+	CLR	A
+	SUBB	A,R3
+	MOV	R3,A
+	CLR	A
+	SUBB	A,R4
+	MOV	R4,A
+	CLR	A
+	SUBB	A,R1
+
+    cfi ENDBLOCK ?FLT_TO_L
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK WriteBack USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    cfi R2 undefined
+    cfi R3 undefined
+    cfi R4 undefined
+
+WriteBack:
+	XCH	A,@R0
+	XCH	A,R4
+	DEC	R0
+
+	XCH	A,@R0
+	XCH	A,R3
+	DEC	R0
+
+	XCH	A,@R0
+	XCH	A,R2
+	DEC	R0
+
+	XCH	A,@R0
+	MOV	R1,A
+	RET
+
+    cfi ENDBLOCK WriteBack
+
+
+;-----------------------------------------
+;
+; Read up the floating point value into
+; registers and save the registers
+; original values at the same time
+;
+;  Order of saved registers:
+;  +----+----+----+----+
+;  | R4 | R3 | R2 | R1 |
+;  +----+----+----+----+
+;
+;  The floating point value as an
+;  appropriate unsigned long value:
+;  +----+----+----+----+
+;  |  A | R4 | R3 | R2 |
+;  +----+----+----+----+
+;
+;  B.0 = Sign-bit
+;
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK Extract USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    cfi R2 undefined
+    cfi R3 undefined
+    cfi R4 undefined
+
+Extract:
+	CLR	A
+	XCH	A,R1
+	XCH	A,@R0			; Read LSB and save R1 at its location
+	INC	R0
+	XCH	A,R2
+	XCH	A,@R0			; Read next byte and save R2
+	INC	R0
+	XCH	A,R3
+	XCH	A,@R0			; Read next byte and save R3
+
+	SETB	C			; Set MS bit in the mantissa and
+	RLC	A			; shift out the LS bit of the 
+	RR	A			; exponent into carry flag.
+	INC	R0
+	XCH	A,R4
+	XCH	A,@R0			; Read MSB and save R4 at its location
+	RLC	A
+	MOV	B.0,C			; Store the sign bit in B.0
+	CLR	C
+	SUBB	A,#Bias
+	JC	Zero
+	
+	SUBB	A,#24
+	JC	ShiftDown
+	XCH	A,R1
+	CJNE	R1,#7,ShiftUp
+
+	XCH	A,R2
+	XCH	A,R3
+	XCH	A,R4
+	RET
+
+ShiftUp:
+	JNC	TooLarge
+	CLR	C
+	INC	R1
+
+shift32:
+	XCH	A,R2
+	RLC	A
+	XCH	A,R2
+	XCH	A,R3
+	RLC	A
+	XCH	A,R3
+	XCH	A,R4
+	RLC	A
+	XCH	A,R4
+	RLC	A
+	DJNZ	R1,shift32
+	RET
+
+;------
+ShiftDown:
+	CPL	A
+	JZ	NoShift
+
+	XCH	A,R1
+	XCH	A,R4
+shift24:
+	CLR	C
+	RRC	A
+	XCH	A,R3
+	RRC	A
+	XCH	A,R3
+	XCH	A,R2
+	RRC	A
+	XCH	A,R2
+	DJNZ	R1,shift24
+
+	XCH	A,R4
+NoShift:
+	RET
+
+;------
+Zero:	CLR	A
+	MOV	R4,A
+	MOV	R3,A
+	MOV	R2,A
+	RET
+
+;------
+TooLarge:
+	DEC	A
+	MOV	R4,A
+	MOV	R3,A
+	MOV	R2,A
+	RET
+
+    cfi ENDBLOCK Extract
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Test operations
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?FLT_TEST_ZERO
+;
+;	Description: Test if a float is zero
+;
+;	Register input:
+;		R0 Points to LSB of the float object
+;
+;	Register output:
+;		A    = 0 if Zero else set
+;		R0   = R0
+;		CY   = The sign bit
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_TEST_ZERO
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_TEST_ZERO
+	PUBLIC	?FLT_TEST_ZERO_REW
+    cfi BLOCK ?FLT_TEST_ZERO USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+
+?FLT_TEST_ZERO:
+
+	INC	R0
+	INC	R0
+	INC	R0
+
+    cfi ENDBLOCK ?FLT_TEST_ZERO
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_TEST_ZERO_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+
+x:
+?FLT_TEST_ZERO_REW:
+
+	MOV	A,@R0
+	CLR	C
+	RLC	A
+	DEC	R0
+	ORL	A,@R0
+	DEC	R0
+	ORL	A,@R0
+	DEC	R0
+	ORL	A,@R0
+	RET
+	
+    cfi ENDBLOCK ?FLT_TEST_ZERO_REW
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FLT_TEST_ZERO_R1
+;
+;	Description: Test if a float is zero
+;
+;	Register input:
+;		R1 Points to LSB of the float object
+;
+;	Register output:
+;		A    = 0 if Zero else set
+;		R1   = R1
+;		CY   = The sign bit
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_TEST_ZERO_R1
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_TEST_ZERO_R1
+	PUBLIC	?FLT_TEST_ZERO_R1_REW
+    cfi BLOCK ?FLT_TEST_ZERO_R1 USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R1 undefined
+
+?FLT_TEST_ZERO_R1:
+
+	INC	R1
+	INC	R1
+	INC	R1
+
+    cfi ENDBLOCK ?FLT_TEST_ZERO_R1
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_TEST_ZERO_R1_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R1 undefined
+
+x:
+?FLT_TEST_ZERO_R1_REW:
+	MOV	A,@R1
+	CLR	C
+	RLC	A
+	DEC	R1
+	ORL	A,@R1
+	DEC	R1
+	ORL	A,@R1
+	DEC	R1
+	ORL	A,@R1
+	RET
+	
+    cfi ENDBLOCK ?FLT_TEST_ZERO_R1_REW
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FLT_TEST_INF
+;
+;	Description: Test if a float is Infinite.
+;
+;		     x == s1111111 10000000 00000000 00000000
+;
+;		     The sign bit is ignored in the compare operation.
+;
+;	Register input:
+;		R0 Points to LSB in the source/destination object
+;
+;	Register output:
+;		A    = 0 if INF else set
+;		R0   = R0 + 3
+;		CY   = The sign bit of the INF else undefined.
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_TEST_INF
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_TEST_INF
+	PUBLIC	?FLT_TEST_INF_REW
+    cfi BLOCK ?FLT_TEST_INF_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A  undefined
+    cfi R0 undefined
+
+?FLT_TEST_INF_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?FLT_TEST_INF_REW
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_TEST_INF USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+
+x:
+?FLT_TEST_INF:
+	
+	MOV	A,@R0
+	INC	R0
+	ORL	A,@R0
+	INC	R0
+	JNZ	NoMatch
+
+	MOV	A,@R0
+	INC	R0
+	CLR	C
+	RLC	A
+	JNZ	NoMatchRet
+
+	MOV	A,@R0
+	RLC	A
+	CPL	A
+	RET
+
+NoMatch:
+	INC	R0
+NoMatchRet:
+	RET
+	
+    cfi ENDBLOCK ?FLT_TEST_INF
+	ENDMOD
+
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FLT_TEST_INF_R1
+;
+;	Description: Test if a float is Infinite.
+;
+;		     x == s1111111 10000000 00000000 00000000
+;
+;		     The sign bit is ignored in the compare operation.
+;
+;	Register input:
+;		R1 Points to LSB in the source/destination object
+;
+;	Register output:
+;		A    = 0 if INF else set
+;		R1   = R1 + 3
+;		CY   = The sign bit of the INF else undefined.
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_TEST_INF_R1
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_TEST_INF_R1
+	PUBLIC	?FLT_TEST_INF_R1_REW
+    cfi BLOCK ?FLT_TEST_INF_R1_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R1 undefined
+	
+?FLT_TEST_INF_R1_REW:
+
+	DEC	R1
+	DEC	R1
+	DEC	R1
+
+    cfi ENDBLOCK ?FLT_TEST_INF_R1_REW
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_TEST_INF_R1 USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R1 undefined
+
+x:
+?FLT_TEST_INF_R1:
+	
+	MOV	A,@R1
+	INC	R1
+	ORL	A,@R1
+	INC	R1
+	JNZ	NoMatch
+
+	MOV	A,@R1
+	INC	R1
+	CLR	C
+	RLC	A
+	JNZ	NoMatchRet
+
+	MOV	A,@R1
+	RLC	A
+	CPL	A
+	RET
+
+NoMatch:
+	INC	R1
+NoMatchRet:
+	RET
+	
+    cfi ENDBLOCK ?FLT_TEST_INF_R1
+	ENDMOD
+
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FLT_TEST_NAN
+;
+;	Description: Test if a float is Not A Number
+;
+;		     x > s1111111 10000000 00000000 00000000
+;
+;		     The sign bit is ignored in the compare operation.
+;
+;	Register input:
+;		R0 Points to LSB in the source/destination object
+;
+;	Register output:
+;		A    = 0 if NAN else set
+;		R0   = R0 + 3
+;		CY   = The sign bit of the NAN else undefined.
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_TEST_NAN
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_TEST_NAN
+	PUBLIC	?FLT_TEST_NAN_REW
+    cfi BLOCK ?FLT_TEST_NAN_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+
+?FLT_TEST_NAN_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?FLT_TEST_NAN_REW
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_TEST_NAN USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+
+x:
+?FLT_TEST_NAN:
+	
+	MOV	A,@R0
+	INC	R0
+	ORL	A,@R0
+	INC	R0
+
+	CLR	C
+	RRC	A
+	ORL	A,@R0
+	INC	R0
+	RLC	A
+	JZ	NoMatch
+
+	MOV	A,@R0
+	RLC	A
+NoMatch:
+	CPL	A
+	RET
+
+    cfi ENDBLOCK ?FLT_TEST_NAN
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FLT_TEST_NAN_R1
+;
+;	Description: Test if a float is Not A Number
+;
+;		     x > s1111111 10000000 00000000 00000000
+;
+;		     The sign bit is ignored in the compare operation.
+;
+;	Register input:
+;		R1 Points to LSB in the source/destination object
+;
+;	Register output:
+;		A    = 0 if NAN else set
+;		R1   = R1 + 3
+;		CY   = The sign bit of the NAN else undefined.
+;
+;	Stack usage: 2
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_TEST_NAN_R1
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_TEST_NAN_R1
+	PUBLIC	?FLT_TEST_NAN_R1_REW
+    cfi BLOCK ?FLT_TEST_NAN_R1_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R1 undefined
+	
+?FLT_TEST_NAN_R1_REW:
+
+	DEC	R1
+	DEC	R1
+	DEC	R1
+
+    cfi ENDBLOCK ?FLT_TEST_NAN_R1_REW
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_TEST_NAN_R1 USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R1 undefined
+
+x:
+?FLT_TEST_NAN_R1:
+	
+	MOV	A,@R1
+	INC	R1
+	ORL	A,@R1
+	INC	R1
+
+	CLR	C
+	RRC	A
+	ORL	A,@R1
+	INC	R1
+	RLC	A
+	JZ	NoMatch
+
+	MOV	A,@R1
+	RLC	A
+NoMatch:
+	CPL	A
+	RET
+
+    cfi ENDBLOCK ?FLT_TEST_NAN_R1
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Floating point compare operations
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?FLT_EQ
+;
+;	Description: Test if two floats are equal
+;
+;	Register input:
+;		R0 Points to LSB in object #1
+;		R1 Points to LSB in object #2
+;
+;	Register output:
+;		A    = Is zero if equal.
+;		R0   = Is undefined
+;		R1   = Is undefined
+;		CY   = Is undefined
+;
+;	Stack usage: 4
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_EQ
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_EQ
+	PUBLIC	?FLT_EQ_REW
+	EXTERN	?FLT_TEST_NAN
+	EXTERN	?FLT_TEST_NAN_R1
+	EXTERN	?FLT_TEST_ZERO_REW
+	EXTERN	?FLT_TEST_ZERO_R1_REW
+    cfi BLOCK ?FLT_EQ_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+?FLT_EQ_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?FLT_EQ_REW
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_EQ USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+x:
+?FLT_EQ:
+	LCALL	?FLT_TEST_NAN
+	JZ	NotEqual
+	LCALL	?FLT_TEST_NAN_R1
+	JZ	NotEqual
+
+	LCALL	?FLT_TEST_ZERO_REW
+	JNZ	NoZero
+	LJMP	?FLT_TEST_ZERO_R1_REW
+
+NoZero:	INC	R0
+	INC	R0
+	INC	R0
+	MOV	A,@R1
+	XRL	A,@R0
+	JNZ	noz
+
+	DEC	R0
+	DEC	R1
+	MOV	A,@R1
+	XRL	A,@R0
+	JNZ	noz
+
+	DEC	R0
+	DEC	R1
+	MOV	A,@R1
+	XRL	A,@R0
+	JNZ	noz
+
+	DEC	R0
+	DEC	R1
+	MOV	A,@R1
+	XRL	A,@R0
+noz:	RET
+
+NotEqual:
+	CPL	A
+	RET
+	
+    cfi ENDBLOCK ?FLT_EQ
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FLT_GE
+;
+;	Description: Test if a float is greater or equal to an other float.
+;
+;	Register input:
+;		R0 Points to LSB in object #1
+;		R1 Points to LSB in object #2
+;
+;	Register output:
+;		A    = Is undefined.
+;		R0   = R0 + 3
+;		R1   = R1 + 3
+;		CY   = 1 if @R0 >= @R1
+;		CY   = 0 if @R0 <  @R1 or if one or both operands are NAN
+;
+;	Stack usage: 5
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_GE
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_GE
+	PUBLIC	?FLT_GE_REW
+	EXTERN	?FLT_TEST_NAN
+	EXTERN	?FLT_TEST_NAN_R1
+	EXTERN	?FLT_TEST_ZERO_REW
+	EXTERN	?FLT_TEST_ZERO_R1_REW
+    cfi BLOCK ?FLT_GE_REW USING cfi_common
+    cfi NOFUNCTION
+	
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+?FLT_GE_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?FLT_GE_REW
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_GE USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+x:
+?FLT_GE:
+	LCALL	?FLT_TEST_NAN		; Test if NAN and count up R0 with 3
+	JZ	NotGE
+	LCALL	?FLT_TEST_NAN_R1	; Test if NAN and count up R1 with 3
+	JZ	NotGE
+
+	LCALL	?FLT_TEST_ZERO_REW
+	JNZ	NoZero
+	LCALL	?FLT_TEST_ZERO_R1_REW	; CY=Signbit of @R1
+	JNZ	Skip
+
+IsGE:	SETB	C
+Skip: 	RET
+
+;------
+
+NoZero:	PUSH	PSW
+    cfi CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 1)
+	LCALL	?FLT_TEST_ZERO_R1_REW
+	JNZ	DoCmp
+	POP	PSW
+    cfi CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	CPL	C
+	RET
+
+NotGE:	CLR	C
+	RET
+
+;------
+    cfi CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 1)
+
+DoCmp:	RLC	A
+	POP	PSW
+    cfi CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	JNC	NoSwap
+
+	JNB	ACC.0,NotGE		; @R0 < @R1
+
+;------
+
+Swap:	CLR	C
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	CPL	C
+	RET
+
+;------
+
+NoSwap:	JB	ACC.0,IsGE		; @R0 > @R1
+
+	MOV	A,@R0
+	SUBB	A,@R1
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	SUBB	A,@R1
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	SUBB	A,@R1
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	SUBB	A,@R1
+	CPL	C
+	RET
+	
+
+    cfi ENDBLOCK ?FLT_GE
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FLT_LT
+;
+;	Description: Test if a float is greater or equal to an other float.
+;
+;	Register input:
+;		R0 Points to LSB in object #1
+;		R1 Points to LSB in object #2
+;
+;	Register output:
+;		A    = Is undefined.
+;		R0   = R0 + 3
+;		R1   = R1 + 3
+;		CY   = 1 if @R0 <  @R1
+;		CY   = 0 if @R0 >= @R1 or if one or both operands are NAN
+;
+;	Stack usage: 5
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_LT
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_LT
+	PUBLIC	?FLT_LT_REW
+	EXTERN	?FLT_TEST_NAN
+	EXTERN	?FLT_TEST_NAN_R1
+	EXTERN	?FLT_TEST_ZERO_REW
+	EXTERN	?FLT_TEST_ZERO_R1_REW
+    cfi BLOCK ?FLT_LT_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+?FLT_LT_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?FLT_LT_REW
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_LT USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi B undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+x:
+?FLT_LT:
+	LCALL	?FLT_TEST_NAN		; Test if NAN and count up R0 with 3
+	JZ	NotLT
+	LCALL	?FLT_TEST_NAN_R1	; Test if NAN and count up R1 with 3
+	JZ	NotLT
+
+	LCALL	?FLT_TEST_ZERO_REW
+	JNZ	NoZero
+	LCALL	?FLT_TEST_ZERO_R1_REW	; CY=Signbit of @R1
+	JZ	NotLT
+	CPL	C
+IsLT:	RET
+
+;------
+
+NoZero:	PUSH	PSW
+    cfi CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 1)
+	LCALL	?FLT_TEST_ZERO_R1_REW
+	JNZ	DoCmp
+	POP	PSW
+    cfi CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	RET
+
+NotLT:	CLR	C
+NotLT2:	RET
+
+;------
+    cfi CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 1)
+
+DoCmp:	RLC	A
+	POP	PSW
+    cfi CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	JNC	NoSwap
+
+	JNB	ACC.0,IsLT		; @R0 < @R1
+
+;------
+
+Swap:	CLR	C
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	INC	R0
+	INC	R1
+	MOV	A,@R1
+	SUBB	A,@R0
+	RET
+
+;------
+
+NoSwap:	JB	ACC.0,NotLT2		; @R0 > @R1
+
+	MOV	A,@R0
+	SUBB	A,@R1
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	SUBB	A,@R1
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	SUBB	A,@R1
+	INC	R0
+	INC	R1
+	MOV	A,@R0
+	SUBB	A,@R1
+	RET
+	
+
+    cfi ENDBLOCK ?FLT_LT
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: Floating point arithmetic operations
+;
+;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;
+;	Function: ?FLT_MUL
+;
+;	Description: Multiply two floats (@R0 = @R0 * @R1)
+;
+;	Register input:
+;		R0 Points to LSB in object #1 (destination)
+;		R1 Points to LSB in object #2
+;
+;	Register output:
+;		A    = Is undefined.		
+;		B    = Is undefined.		
+;		R0   = R0
+;		R1   = R1 + 3
+;		CY   = Is undefined
+;
+;	Stack usage: 6
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_MUL
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_MUL
+	PUBLIC	?FLT_MUL_REW
+	EXTERN	?FLT_TEST_INF
+	EXTERN	?FLT_TEST_INF_REW
+	EXTERN	?FLT_TEST_INF_R1
+	EXTERN	?FLT_TEST_INF_R1_REW
+	EXTERN	?FLT_TEST_NAN
+	EXTERN	?FLT_TEST_NAN_R1
+	EXTERN	?FLT_TEST_ZERO_REW
+	EXTERN	?FLT_TEST_ZERO_R1_REW
+    cfi BLOCK ?FLT_MUL_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi B undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+?FLT_MUL_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?FLT_MUL_REW
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+
+    cfi BLOCK ?FLT_MUL USING cfi_common
+    cfi NOFUNCTION
+    cfi A undefined
+    cfi B undefined
+    cfi R0 undefined
+    cfi R1 undefined
+x:
+?FLT_MUL:
+
+; Skip the operation if one of the operands is NAN
+        NOP
+	LCALL	?FLT_TEST_NAN
+	JZ	AdjustAndReturn
+	LCALL	?FLT_TEST_NAN_R1
+	JZ	ReturnNAN
+
+; Combine the sign bits and store in destination (@R0)
+
+	MOV	A,@R1
+	ANL	A,#128
+	XRL	A,@R0
+	MOV	@R0,A
+
+; Test if destination is an infinite value
+
+	LCALL	?FLT_TEST_INF_REW
+	JNZ	TestSrc
+	
+	LCALL	?FLT_TEST_ZERO_R1_REW
+	JNZ	AdjustAndReturn
+
+	INC	R1
+	INC	R1
+	INC	R1
+
+ReturnNAN:
+	CPL	A
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	RET
+
+; Test if source is an infinite value
+
+TestSrc:
+	LCALL	?FLT_TEST_INF_R1_REW
+	JNZ	NoINF
+
+	LCALL	?FLT_TEST_ZERO_REW
+	INC	R0
+	INC	R0
+	INC	R0
+	JZ	ReturnNAN
+	MOV	A,@R0
+	ORL	A,#127
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,#128
+	DEC	R0
+	CLR	A
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	RET
+
+;------
+; Test if one of the operands is zero
+
+NoINF:	LCALL	?FLT_TEST_ZERO_REW
+	JZ	JustReturn
+	LCALL	?FLT_TEST_ZERO_R1_REW
+	JNZ	DoMul
+
+	CLR	A
+	MOV	@R0,A
+	INC	R0
+	MOV	@R0,A
+	INC	R0
+	MOV	@R0,A
+	INC	R0
+	MOV	A,@R0
+	ANL	A,#128
+	MOV	@R0,A
+
+AdjustAndReturn:
+	INC	R1
+	INC	R1
+	INC	R1
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+JustReturn:
+	RET	
+
+
+DoMul:	MOV	A,R2
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 1)
+    cfi R2 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 1, 1)
+	MOV	A,R3
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 2)
+    cfi R3 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 2, 1)
+	MOV	A,R4
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 3)
+    cfi R4 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 3, 1)
+	MOV	A,R5
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 4)
+    cfi R5 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 4, 1)
+
+;			   S2 S1 S0
+;		         * D2 D1 D0
+;		           -----------
+;			      S0*D0	1.
+;			   S1*D0	3.
+;			   S0*D1	2.
+;			S2*D0		4.
+;			S1*D1		5.
+;			S0*D2		6.
+;		     S2*D1		8.
+;		     S1*D2		7.
+;		+ S2*D2			9.
+;	       -----------------------
+;	       =  M5 M4 M3 M2 M1 M0
+
+
+	MOV	A,@R0
+	MOV	B,@R1
+	MUL	AB		; S0*D0
+	MOV	R3,A
+	MOV	R4,B
+
+;	R3 = M0
+;	R4 = M1
+
+	INC	R0
+	MOV	A,@R0
+	MOV	B,@R1
+	MUL	AB		; S0*D1
+	ADD	A,R4
+	MOV	R4,A
+	CLR	A
+	ADDC	A,B
+	MOV	R2,A
+
+;	R3 = M0
+;	R4 = M1
+;	R2 = M2
+
+	DEC	R0
+	INC	R1
+	MOV	A,@R0
+	MOV	B,@R1
+	MUL	AB		; S1*D0
+	ADD	A,R4
+	ORL	A,R3		; Collect sticky bits
+	JZ	Skip
+	MOV	A,#1
+
+Skip:	XCH	A,R2
+	ADDC	A,B
+	MOV	R4,A
+	CLR	A
+	RLC	A
+	MOV	R3,A
+
+;	R2 = M1 (sticky bits)
+;	R4 = M2
+;	R3 = M3
+
+	INC	R1
+	MOV	A,@R0
+	MOV	B,@R1
+	SETB	B.7
+	MUL	AB		; S2*D0
+	ADD	A,R4
+	XCH	A,R3
+	ADDC	A,B
+	MOV	R4,A
+
+;	R2 = M1 (sticky bits)
+;	R3 = M2
+;	R4 = M3
+
+	DEC	R1
+	INC	R0
+	MOV	A,@R0
+	MOV	B,@R1
+	MUL	AB		; S1*D1
+	ADD	A,R3
+	XCH	A,R4
+	ADDC	A,B
+	MOV	R3,A
+	CLR	A
+	RLC	A
+	MOV	R5,A
+
+;	R2 = M1 (sticky bits)
+;	R4 = M2
+;	R3 = M3
+;	R5 = M4
+
+	INC	R0
+	DEC	R1
+	MOV	A,@R0
+	MOV	B,@R1
+	SETB	ACC.7
+	MUL	AB		; S0*D2
+	ADD	A,R4
+	ORL	A,R2
+	XCH	A,R3
+	ADDC	A,B
+	XCH	A,R5
+	ADDC	A,#0
+	MOV	R4,A
+
+;	R3 = M2 (sticky bits, guard bit & possible result)
+;	R5 = M3
+;	R4 = M4
+
+	INC	R1
+	MOV	A,@R0
+	MOV	B,@R1
+	SETB	ACC.7
+	MUL	AB		; S1*D2
+	ADD	A,R5
+	XCH	A,R4
+	ADDC	A,B
+	MOV	R5,A
+	CLR	A
+	RLC	A
+	MOV	R2,A	
+
+;	R3 = M2 (sticky bits, guard bit & possible result)
+;	R4 = M3
+;	R5 = M4
+;	R2 = M5
+
+	INC	R1
+	DEC	R0
+	MOV	A,@R0
+	MOV	B,@R1
+	SETB	B.7
+	MUL	AB		; S2*D1
+	ADD	A,R4
+	XCH	A,R5
+	ADDC	A,B
+	XCH	A,R2
+	ADDC	A,#0
+	MOV	R4,A
+
+;	R3 = M2 (sticky bits, guard bit & possible result)
+;	R5 = M3
+;	R2 = M4
+;	R4 = M5
+
+	INC	R0
+	MOV	A,@R0
+	MOV	B,@R1
+	SETB	ACC.7
+	SETB	B.7
+	MUL	AB		; S2*D2
+	ADD	A,R2
+	XCH	A,R4
+	ADDC	A,B
+
+;	R3 = M2 (sticky bits, guard bit & possible result)
+;	R5 = M3
+;	R4 = M4
+;	A  = M5
+;	CY = 0
+
+	MOV	R2,#126
+	JB	ACC.7,NoShift
+
+;
+; Shift up the mantissa if the ms bit is not set
+;
+	INC	R2
+	XCH	A,R3
+	RLC	A
+	XCH	A,R3
+	XCH	A,R5
+	RLC	A
+	XCH	A,R5
+	XCH	A,R4
+	RLC	A
+	XCH	A,R4
+	RLC	A
+
+NoShift:
+	XCH	A,R3		; Here we know that CY=0
+	RLC	A
+	JNC	NoRoundUp
+	JNZ	RoundUp
+	MOV	A,R5
+	JNB	ACC.0,NoRoundUp
+
+RoundUp:
+	SETB	B.1
+	CLR	A
+	XCH	A,R5
+	ADDC	A,R5
+	XCH	A,R5
+	XCH	A,R4
+	ADDC	A,R4
+	XCH	A,R4
+	ADDC	A,R3
+	JNC	ClrMsb
+	DJNZ	R2,CalcExp	; This is always jump true!
+
+NoRoundUp:
+	CLR	B.1
+	MOV	A,R3
+ClrMsb:
+	ANL	A,#127
+
+;	R2 = Adjustment value for the exponent (127 or 126)
+;	R5 = M3
+;	R4 = M4
+;	A  = M5
+;	CY = 0
+
+CalcExp:
+	XCH	A,@R0
+	RLC	A
+	INC	R0
+	MOV	A,@R0
+	RLC	A
+	MOV	B.0,C
+
+	MOV	R3,A
+	MOV	A,@R1
+	RLC	A
+	INC	R1
+	MOV	A,@R1
+	RLC	A
+	CLR	C
+
+	SUBB	A,R2
+	JNC	PossibleOverflow
+
+	ADD	A,R3
+	JNZ	TestUnderflow
+
+;
+; Special case when the exponent is zero!
+; Round up if all bits are set...
+;
+	INC	R4
+	INC	R5
+	ORL	A,R4
+	ORL	A,R5
+	JNZ	Zero
+
+	DEC	R0
+	INC	@R0
+	MOV	A,@R0
+	INC	R0
+	CLR	C
+	RLC	A
+	JNZ	Zero
+
+	JB	B.1,Zero	; Do not round up if we have round up before
+	MOV	C,B.0
+	RRC	A
+	MOV	@R0,A
+	CLR	A
+	DEC	R0
+	SJMP	ClrLow
+
+TestUnderflow:
+	JC	PackAndStore
+
+Zero:	CLR	A
+	MOV	@R0,A
+	JNB	B.0,NoNeg
+	MOV	@R0,#128
+
+NoNeg:	DEC	R0
+	MOV	@R0,A
+ClrLow:	DEC	R0
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	SJMP	PopAndReturn
+
+PossibleOverflow:
+	SETB	C
+	ADDC	A,R3
+	DEC	A
+	JNC	PackAndStore
+
+	MOV	A,#255
+	MOV	C,B.0
+	RRC	A
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,#128
+	CLR	A
+	DEC	R0
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	SJMP	PopAndReturn		
+
+PackAndStore:
+	MOV	C,B.0
+	RRC	A
+	MOV	@R0,A
+	DEC	R0
+	MOV	A,@R0
+	RLC	A
+	RR	A
+	MOV	@R0,A
+	DEC	R0
+	MOV	A,R4
+	MOV	@R0,A
+	DEC	R0
+	MOV	A,R5
+	MOV	@R0,A
+
+PopAndReturn:
+
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 3)
+	MOV	R5,A
+    cfi R5 samevalue
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 2)
+	MOV	R4,A
+    cfi R4 samevalue
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 1)
+	MOV	R3,A
+    cfi R3 samevalue
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	MOV	R2,A
+    cfi R2 samevalue
+	RET
+	
+    cfi ENDBLOCK ?FLT_MUL
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FLT_SUB
+;
+;	Description: Subtract a float from another (@R0 = @R0 - @R1)
+;
+;	Register input:
+;		R0 Points to LSB in object #1 (destination)
+;		R1 Points to LSB in object #2
+;
+;	Register output:
+;		A    = Is undefined.		
+;		B    = Is undefined.		
+;		R0   = R0
+;		R1   = R1 + 3
+;		CY   = Is undefined
+;
+;	Stack usage: 6
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_ADD
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_ADD
+	PUBLIC	?FLT_ADD_REW
+	PUBLIC	?FLT_SUB
+	PUBLIC	?FLT_SUB_REW
+	EXTERN	?FLT_TEST_INF
+	EXTERN	?FLT_TEST_INF_REW
+	EXTERN	?FLT_TEST_INF_R1
+	EXTERN	?FLT_TEST_INF_R1_REW
+	EXTERN	?FLT_TEST_NAN
+	EXTERN	?FLT_TEST_NAN_R1
+	EXTERN	?FLT_TEST_ZERO_REW
+	EXTERN	?FLT_TEST_ZERO_R1_REW
+    cfi BLOCK ?FLT_SUB_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi B undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+?FLT_SUB_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?FLT_SUB_REW
+	REQUIRE	?FLT_SUB
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_SUB USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi B undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+?FLT_SUB:
+	LCALL	?FLT_TEST_NAN_R1
+	JZ	AdjustAndReturnNAN
+
+	LCALL	?FLT_TEST_NAN
+	JZ	AdjustAndReturn
+	
+	MOV	A,R1
+	XRL	A,R0
+	JNZ	NoZero
+;
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	RET
+
+NoZero:	MOV	A,#128
+	XRL	A,@R1
+	MOV	@R1,A
+	LCALL	SubEntry
+	INC	R1
+	INC	R1
+	INC	R1
+	MOV	A,#128
+	XRL	A,@R1
+	MOV	@R1,A
+	RET
+
+    cfi ENDBLOCK ?FLT_SUB
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FLT_ADD
+;
+;	Description: Add two floats (@R0 = @R0 + @R1)
+;
+;	Register input:
+;		R0 Points to LSB in object #1 (destination)
+;		R1 Points to LSB in object #2
+;
+;	Register output:
+;		A    = Is undefined.		
+;		B    = Is undefined.		
+;		R0   = R0
+;		R1   = R1
+;		CY   = Is undefined
+;
+;	Stack usage: 6
+;
+;-----------------------------------------------------------------------------
+	RSEG	RCODE:CODE:NOROOT	
+    cfi BLOCK ?FLT_ADD_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi B undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+?FLT_ADD_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?FLT_ADD_REW
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_ADD USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi B undefined
+    cfi R0 undefined
+    cfi R1 undefined
+
+
+x:
+?FLT_ADD:
+	LCALL	?FLT_TEST_NAN
+	JZ	AdjustAndReturn
+	LCALL	?FLT_TEST_NAN_R1
+	JNZ	TestINF
+
+	DEC	R1
+	DEC	R1
+	DEC	R1
+	SJMP	ReturnNAN
+
+;------
+
+SubEntry:
+TestINF:
+	LCALL	?FLT_TEST_INF_REW
+	JNZ	TestSrc
+
+	LCALL	?FLT_TEST_INF_R1_REW
+	CLR	C
+	JNZ	ReturnINF
+
+	MOV	A,@R0
+	XRL	A,@R1
+	RLC	A
+
+ReturnINF:
+	DEC	R1
+	DEC	R1
+	DEC	R1
+	JC	ReturnNAN
+
+AdjustAndReturn:
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	RET
+
+AdjustAndReturnNAN:
+	INC	R0
+	INC	R0
+	INC	R0
+
+ReturnNAN:
+	MOV	A,#255
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	RET
+	
+	
+TestSrc:
+	LCALL	?FLT_TEST_INF_R1_REW
+	JZ	CopySrc
+	
+;------
+
+	LCALL	?FLT_TEST_ZERO_R1_REW
+	JNZ	TestDst
+
+	MOV	B.0,C
+	LCALL	?FLT_TEST_ZERO_REW
+	JNZ	Return
+	JNC	Return
+	JB	B.0,Return
+
+CopyRew:
+	INC	R0
+	INC	R0
+	INC	R0
+	INC	R1
+	INC	R1
+	INC	R1
+CopySrc:
+	MOV	A,@R1
+	MOV	@R0,A
+	DEC	R0
+	DEC	R1
+	MOV	A,@R1
+	MOV	@R0,A
+	DEC	R0
+	DEC	R1
+	MOV	A,@R1
+	MOV	@R0,A
+	DEC	R0
+	DEC	R1
+	MOV	A,@R1
+	MOV	@R0,A
+Return:	RET
+
+TestDst:
+	LCALL	?FLT_TEST_ZERO_REW
+	JZ	CopyRew
+
+;------
+
+	MOV	A,R0
+	XRL	A,R1
+	JNZ	DoAdd
+
+	INC	R0
+	INC	R0
+	MOV	A,@R0
+	ADD	A,#128
+	MOV	@R0,A
+	INC	R0
+	CLR	A
+	ADDC	A,@R0
+	MOV	@R0,A
+	DEC	R0
+	ANL	A,#127
+	CJNE	A,#127,GoBack
+	MOV	A,@R0
+	ANL	A,#128
+	JZ	GoBack
+
+	MOV	@R0,A
+	CLR	A
+	DEC	R0
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	RET
+
+GoBack:	DEC	R0
+	DEC	R0
+	RET
+	
+;-----------------------;
+;   The FLT_ADD core    ;
+;                       ;
+; Use the old float ADD ;
+; while the new one is  ;
+; "getting better".     ;
+;-----------------------;
+DoAdd:
+
+;-----------
+; Old core
+;
+
+	MOV	A,R1
+	XCH	A,@R0
+	XCH	A,R4
+	INC	R0
+	XCH	A,@R0
+	XCH	A,R5
+	INC	R0
+	XCH	A,@R0
+	XCH	A,R6
+	INC	R0
+	XCH	A,@R0
+	XCH	A,R7
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 1)
+    cfi R7 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 1, 1)
+	MOV	A,R0
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 2)
+    cfi R0 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 2, 1)
+	MOV	A,R2
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 3)
+    cfi R2 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 3, 1)
+	MOV	A,R3
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 4)
+    cfi R3 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 4, 1)
+	INC	R1
+	MOV	A,R1
+	MOV	R0,A
+	INC	R1
+	MOV	A,@R1
+	MOV	R2,A
+	INC	R1
+	MOV	A,@R1
+	MOV	R3,A
+	MOV	A,@R0
+	MOV	R1,A
+	DEC	R0
+	MOV	A,@R0
+	MOV	R0,A
+;-+-+-+-+-+-+-+-+-+-+-+-+-+-
+
+;
+;	First swap NOS and TOS if the absolute value of TOS is 
+;	higher than NOS
+;
+
+	CLR	C
+	MOV	A,R4		; abs(NOS) - abs(TOS)
+	SUBB	A,R0
+	MOV	A,R5
+	SUBB	A,R1
+	MOV	A,R6
+	SUBB	A,R2
+	MOV	A,R3
+	CLR	ACC.7
+	MOV	B,A
+	MOV	A,R7
+	CLR	ACC.7
+	SUBB	A,B
+	JNC	NO_SWAP		; Jump if abs(NOS) >= abs(TOS)
+	JZ	NO_SWAP
+
+	MOV	A,R3		; Swap NOS with TOS
+	XCH	A,R7
+	MOV	R3,A
+	MOV	A,R2
+	XCH	A,R6
+	MOV	R2,A
+	MOV	A,R1
+	XCH	A,R5
+	MOV	R1,A
+	MOV	A,R0
+	XCH	A,R4
+	MOV	R0,A
+
+NO_SWAP:
+;
+;	Now we have the knowledge that abs(NOS) >= abs(TOS) !!!
+;
+;
+;       Unpack the incoming operands
+;
+	MOV	A,R2
+	MOV	C,ACC.7		; TOSE LSBit
+	SETB	ACC.7
+	MOV	R2,A	
+	MOV	A,R3
+	RLC	A
+	MOV	R3,A		; TOSE in R3
+	RRC	A	
+	MOV	B,A		; TOSS in B.7
+	
+	MOV	A,R6
+	MOV	C,ACC.7		; NOSE LSBit
+	SETB	ACC.7
+	MOV	R6,A	
+	MOV	A,R7
+	RLC	A
+	MOV	R7,A		; NOSE in R7
+	XCH	A,B
+	RRC	A		; TOSS in A.6 and NOSS in A.7
+	MOV	C,ACC.7	
+	JNB	ACC.6,L0
+	CPL	C
+L0:	RRC	A		
+	XCH	A,B		; TOSS xor NOSS in B.7, NOSS in B.6,
+				; TOSS in B.5, NOSE in A
+	CLR	C
+
+;
+;	Let RESE = NOSE, RESS = NOSS, RESM2 = NOSS ^ TOSS
+;
+	
+	PUSH	ACC
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 5)
+    cfi R3 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 5, 1)
+	PUSH	B
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 6)
+    cfi R3 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 6, 1)
+	MOV	R7,#0
+
+;	Compute the number of shifts to be done before internal add or sub.
+;
+;	Use register R3 for saving no_of_shift
+;
+	
+	CLR	C
+	SUBB	A,R3			; R0 = NOSE - TOSE
+	MOV	R3,A
+	JZ	CHOSE_ADD_OR_SUB	; Jump if no shifting
+;
+;	Under special circumstances we know that the result shall
+;	be equal to NOS, namely:
+;
+;	TOS == 0 (checked out already!)
+;	no_shift >= 25		
+;
+;	So if one of above conditions exist then let RESM = NOSM and exit
+;
+
+	SUBB	A,#24
+	JZ	L20
+	JC	L21
+
+	POP	ACC			; Load RESE,RESS
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 5)
+	RL	A
+	MOV	R1,A
+	POP	ACC
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 4)
+	MOV	R0,A
+	LJMP	?F_PACK_L02
+;
+;	Now we have to compute the mantissa result. To do this we have
+;	a knowledge of how many potenses it's differ between NOS and TOS,
+;	If we shifts TOS that number to the right (in RESM, 4-bytes) a 
+;	simple add or sub between NOSM and RESM can be done:
+;
+;	Use the following registers for RESM R1:R2:R3:R4
+;
+
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 6)
+L20:
+;
+;	24 bit shift. Special case!!!
+;
+
+	MOV	B,R2
+	MOV	A,R1
+	ORL	A,R0
+	JZ	L200
+	SETB	B.0
+	CLR	A
+L200:	
+	MOV	R7,B
+	MOV	R2,A
+	MOV	R1,A
+	MOV	R0,A
+	SJMP	CHOSE_ADD_OR_SUB
+
+L21:
+	MOV	A,R3
+	JNB	ACC.4,L22
+;
+;	16 bit shift
+;
+
+	MOV	B,R1
+	MOV	A,R2
+	JZ	L210
+	SETB	B.0
+	CLR	A
+L210:
+	MOV	R7,B
+	MOV	R1,A
+	XCH	A,R2
+	MOV	R0,A
+
+L22:
+	MOV	A,R3
+	JNB	ACC.3,L23
+;
+;	8 bit shift
+;
+
+	MOV	B,R0
+	MOV	A,R7
+	JZ	L220
+	SETB	B.0
+L220:
+	MOV	R7,B
+	CLR	A
+	XCH	A,R2
+	XCH	A,R1
+	MOV	R0,A
+
+L23:
+	MOV	A,R3
+	ANL	A,#7
+	JZ	CHOSE_ADD_OR_SUB
+	MOV	R3,A
+;
+;	TOSM >> X
+;
+
+SHIFT_LOOP:
+	CLR	C
+	MOV	A,R2
+	RRC	A
+	MOV	R2,A
+	MOV	A,R1
+	RRC	A
+	MOV	R1,A
+	MOV	A,R0
+	RRC	A
+	MOV	R0,A
+	MOV	A,R7
+	RRC	A
+	JNC	L24
+	SETB	ACC.0
+L24:	MOV	R7,A
+	DJNZ	R3,SHIFT_LOOP
+;
+;	Now we have loaded RESM in registers with NOSM in right place.
+;	If TOSS == NOSS then an internal add is to be done, else sub !
+;
+
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 6)
+CHOSE_ADD_OR_SUB:
+	POP	ACC			; Get NOSS xor TOSS
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 5)
+	PUSH	ACC
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 6)
+    cfi R3 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 6, 1)
+	JNB	ACC.7,DO_ADD		; If equal do an add
+;
+; Do the subtraction
+;
+
+	CLR	C
+	CLR	A
+	SUBB	A,R7
+	MOV	R7,A
+	MOV	B,A
+	MOV	A,R4
+	SUBB	A,R0
+	MOV	R4,A
+	ORL	B,A
+	MOV	A,R5
+	SUBB	A,R1
+	MOV	R5,A
+	ORL	B,A
+	MOV	A,R6
+	SUBB	A,R2
+	MOV	R6,A
+	ORL	B,A
+
+	POP	ACC			; Get RESS
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 5)
+	MOV	R1,A
+	POP	ACC			; Get RESE
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 4)
+	MOV	R0,A
+	MOV	A,B
+
+	JZ	AddEnd			; Return zero
+SUB_ADJ:
+	MOV	A,R1			; Get correct sign in R1.7
+	RL	A
+	MOV	R1,A
+
+	MOV	A,R6
+LLL:
+	JB	ACC.7,?F_ROUND_L02	; Jump if no change in RESE
+LL:
+	DJNZ	R0,SUB_SHIFT		; RESE--
+	SJMP	?F_UNDERFLOW_L02
+
+SUB_SHIFT:
+	CLR	C
+	MOV	A,R7
+	RLC	A
+	MOV	R7,A
+	MOV	A,R4
+	RLC	A
+	MOV	R4,A
+	MOV	A,R5
+	RLC	A
+	MOV	R5,A
+	MOV	A,R6
+	RLC	A
+	MOV	R6,A
+	SJMP	LLL
+;
+; Do the addition
+;
+
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 6)
+DO_ADD:	
+	MOV	A,R4
+	ADD	A,R0
+	MOV	R4,A
+	MOV	A,R5
+	ADDC	A,R1
+	MOV	R5,A
+	MOV	A,R6
+	ADDC	A,R2
+	MOV	R6,A
+
+	POP	ACC			; Get RESS
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 5)
+	RL	A
+	MOV	R1,A
+	POP	ACC			; Get RESE
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 4)
+	MOV	R0,A
+	JC	ADD_SHIFT
+	SJMP	?F_ROUND_L02		; Jump if no change in RESE
+
+ADD_SHIFT:
+	CLR	C
+	MOV	A,R6
+	RRC	A
+	MOV	R6,A
+	MOV	A,R5
+	RRC	A
+	MOV	R5,A
+	MOV	A,R4
+	RRC	A
+	MOV	R4,A
+	MOV	A,R7
+	RRC	A
+	JNC	LL2
+	SETB	ACC.0
+LL2:	MOV	R7,A
+	INC	R0			; RESE++
+	CJNE	R0,#0,ADD_EXIT
+
+?F_OVERFLOW_L02:
+	MOV	R7,#127			; Overflow !!!
+	MOV	A,#255
+	SJMP	LL1	
+
+;
+;	That's all. Round, pack and exit !!
+;
+
+ADD_EXIT:
+?F_ROUND_L02:
+;
+;	First check the G-bit (the 25th),
+;
+
+	MOV	A,R7
+	RLC	A
+	JNC	?F_PACK_L02	; No rounding if G-bit is cleared
+;
+;	then upround if the 24th bit is set or one of the bits after is set.
+;
+
+?F_ROUND_2_L02:
+	MOV	B,R4
+	JB	B.0,?F_UP_ROUND_L02		; Test if L-bit is set
+?F_R_TEST_L02:
+	JZ	?F_PACK_L02	; No rounding if rest is zero
+
+?F_UP_ROUND_L02:
+	INC	R4
+	CJNE	R4,#0,?F_PACK_L02
+	INC	R5
+	CJNE	R5,#0,?F_PACK_L02
+	INC	R6
+	CJNE	R6,#0,?F_PACK_L02
+	INC	R0		; We do not shift down mantissa due
+				; to that the mantissa is always
+				; 8000000, and we will set it so
+				; later on
+	MOV	A,R0
+	JZ	?F_OVERFLOW_L02
+	
+?F_PACK_L02:
+	MOV	A,R1
+	RLC	A
+	MOV	A,R0
+	RRC	A
+	MOV	R7,A
+	MOV	A,R6
+	RL	A
+	RRC	A
+	MOV	R6,A
+
+?F_EXIT_L02:
+	ORL	A,R7
+	ORL	A,R5
+	ORL	A,R4
+	SJMP	AddEnd
+
+?F_UNDERFLOW_L02:
+	MOV	A,R1
+	ANL	A,#128
+	MOV	R7,A
+	CLR	A
+LL1:	MOV	R6,A
+	MOV	R5,A
+	MOV	R4,A
+
+AddEnd:
+;-+-+-+-+-+-+-+-+-+-+-+-+-+-
+	MOV	A,R6
+	RLC	A
+	MOV	A,R7
+	RLC	A
+	CPL	A
+	JNZ	NoInf
+
+	MOV	R4,A
+	MOV	R5,A
+	MOV	R6,#128
+
+NoInf:	POP	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 3)
+	MOV	R3,A
+    cfi R3 samevalue
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 2)
+	MOV	R2,A
+    cfi R2 samevalue
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 1)
+	MOV	R0,A
+    cfi R0 samevalue
+	POP	A	
+    cfi CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	XCH	A,R7
+    cfi R7 samevalue
+	XCH	A,@R0
+	DEC	R0
+	XCH	A,R6
+	XCH	A,@R0
+	DEC	R0
+	XCH	A,R5
+	XCH	A,@R0
+	DEC	R0
+	XCH	A,R4
+	XCH	A,@R0
+	MOV	R1,A
+	RET
+
+
+;
+; End old core
+;-------------
+
+    cfi ENDBLOCK ?FLT_ADD
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Function: ?FLT_DIV
+;
+;	Description: Floating point division (@R0 = @R0 / @R1)
+;
+;	Register input:
+;		R0 Points to LSB of the dividend (destination)
+;		R1 Points to LSB of the divisor
+;
+;	Register output:
+;		A    = Is undefined.
+;		B    = Is undefined.
+;		R0   = R0
+;		R1   = R1
+;		CY   = Is undefined
+;
+;	Stack usage: 6
+;
+;-----------------------------------------------------------------------------
+	MODULE	?FLT_DIV
+	RSEG	RCODE:CODE:NOROOT	
+	PUBLIC	?FLT_DIV
+	PUBLIC	?FLT_DIV_REW
+	EXTERN	?FLT_TEST_INF
+	EXTERN	?FLT_TEST_INF_R1
+	EXTERN	?FLT_TEST_NAN
+	EXTERN	?FLT_TEST_NAN_R1
+	EXTERN	?FLT_TEST_ZERO_REW
+	EXTERN	?FLT_TEST_ZERO_R1_REW
+    cfi BLOCK ?FLT_DIV_REW USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi B undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    cfi R2 undefined
+    cfi R3 undefined
+    cfi R4 undefined
+    cfi R5 undefined
+
+?FLT_DIV_REW:
+
+	DEC	R0
+	DEC	R0
+	DEC	R0
+
+    cfi ENDBLOCK ?FLT_DIV_REW
+	REQUIRE	x
+
+;------
+
+	RSEG	RCODE:CODE:NOROOT
+    cfi BLOCK ?FLT_DIV USING cfi_common
+    cfi NOFUNCTION
+
+    cfi A undefined
+    cfi B undefined
+    cfi R0 undefined
+    cfi R1 undefined
+    cfi R2 undefined
+    cfi R3 undefined
+    cfi R4 undefined
+    cfi R5 undefined
+
+x:
+?FLT_DIV:
+	LCALL	?FLT_TEST_NAN
+	JNZ	TestNanR1
+
+GoBack:	DEC	R0
+	DEC	R0
+	DEC	R0
+	RET
+
+TestNanR1:
+	LCALL	?FLT_TEST_NAN_R1
+	JNZ	SetSign
+
+RetNAN:	MOV	A,#255
+	MOV	@R0,A
+RetZer:	DEC	R0
+	DEC	R1
+	MOV	@R0,A
+	DEC	R0
+	DEC	R1
+	MOV	@R0,A
+	DEC	R0
+	DEC	R1
+	MOV	@R0,A
+Return:	RET
+
+; Combine the sign bits and store in destination (@R0)
+
+SetSign:
+	MOV	A,@R1
+	ANL	A,#128
+	XRL	A,@R0
+	MOV	@R0,A
+
+	LCALL	?FLT_TEST_ZERO_REW
+	JNZ	TestDivisor
+	LCALL	?FLT_TEST_ZERO_R1_REW
+	JNZ	Return
+	DEC	A
+	MOV	@R0,A
+	INC	R0
+	MOV	@R0,A
+	INC	R0
+	MOV	@R0,A
+	INC	R0
+SetHigh:
+	MOV	@R0,A
+	SJMP	GoBack
+
+;------
+
+TestDivisor:
+	LCALL	?FLT_TEST_ZERO_R1_REW
+	JNZ	TestINF
+	MOV	@R0,A
+	INC	R0
+	MOV	@R0,A
+	INC	R0
+	MOV	@R0,#128
+	INC	R0
+	MOV	A,@R0
+	ORL	A,#127
+	SJMP	SetHigh
+
+;------
+
+TestINF:
+
+	LCALL	?FLT_TEST_INF_R1
+	JNZ	TestDividend
+	LCALL	?FLT_TEST_INF
+	JZ	RetNAN
+	MOV	A,@R0
+	ANL	A,#128
+	MOV	@R0,A
+	CLR	A
+	SJMP	RetZer	
+
+TestDividend:
+	LCALL	?FLT_TEST_INF
+	JNZ	CheckSame
+	DEC	R1
+	DEC	R1
+	DEC	R1
+	SJMP	GoBack
+
+;----------------------------------;
+; The algorithm does not allow the ;
+; dividend and the divisor to be   ;
+; at the same memory location, but ;
+; that is 1.0 anyway so...         ;
+;----------------------------------;
+CheckSame:
+	MOV	A,R0
+	XRL	A,R1
+	JNZ	DoDiv
+
+; Return 1.0
+	MOV	@R0,#63
+	DEC	R0
+	MOV	@R0,#128
+	DEC	R0
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	MOV	A,R0
+	MOV	R1,A	
+	RET
+
+;-------
+; Start the algorithm
+;
+DoDiv:	MOV	A,@R0		; Save R5 and put High(dividend) in R5
+	XCH	A,R5
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 1)
+    cfi R5 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 1, 1)
+	DEC	R0
+
+	MOV	A,R4		; Save R4
+	PUSH	A
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 2)
+    cfi R4 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 2, 1)
+
+;------------------------------------;
+;   Register content at this point:  ;
+;                                    ;
+;   R0 = Dividend *(byte 2)          ;
+;   R1 = Divisor *(byte 3)           ;
+;   R5 = Byte 3 of the dividend      ;
+;                                    ;
+; - - - - - - - - - - - - - - - - - -;
+;   Calculate a new preliminary      ;
+;   exponent.                        ;
+;------------------------------------;
+	MOV	A,@R0		; Extract the dividend exponent.
+	RLC	A		;
+	XCH	A,R5		;
+	RLC	A		;
+	XCH	A,R5		;
+	SETB	C		; Set the implicit bit in the dividend mantissa
+	RRC	A		;
+	MOV	@R0,A		; Save the high byte of the dividend mantissa
+
+	MOV	A,@R1		; Extract the divisor exponent
+	DEC	R1		;
+	MOV	R4,A		;
+	MOV	A,@R1		;
+	DEC	R1		; Make sure that R1 points to byte 0 of the
+	DEC	R1		; divisors mantissa.
+	RLC	A		;
+	XCH	A,R4		;
+	RLC	A		;
+	CLR	C		;
+	SUBB	A,#Bias		; Remove Bias from the divisors exponent
+	JC	Small		; 
+
+	XCH	A,R5		; Make the exponent smaller if the divisor is
+	SUBB	A,R5		; larger than 1.0
+	JNC	NoZero		; => Continue if the exponent is not negative
+
+Zero:	INC	R0		; Return a signed zero result
+	MOV	A,@R0		;
+	ANL	A,#128		;
+	MOV	@R0,A		;
+	CLR	A		;
+	DEC	R0		;
+	MOV	@R0,A		;
+	SJMP	EndThis		;
+
+Small:	CPL	A		; Make the exponent larger if the divisor is
+	INC	A		; smaller than 1.0
+	ADDC	A,R5		;
+	DEC	A		;
+	JNC	NoInf		; => Continue if the exponent < 255 (Inf)
+	
+Inf:	INC	R0		; Return a signed Infinit result
+	MOV	A,@R0		;
+	ORL	A,#127		;
+	MOV	@R0,A		;
+	DEC	R0		;
+	MOV	@R0,#128	;
+	CLR	A		;
+EndThis:
+	DEC	R0
+	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 1)
+	MOV	R4,A
+    cfi R4 samevalue
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	MOV	R5,A
+    cfi R5 samevalue
+	RET
+
+;------------------------------------;
+;   Register content at this point:  ;
+;                                    ;
+;   A  = Preliminary exponent        ;
+;   R0 = Destination *(byte 2)       ;
+;  @R0 = Dividend-mantissa (byte 2)  ;
+;   R1 = Divisor *(byte 0)           ;
+;   R4 = Byte 2 of the divisor       ;
+;   R5 = MSB dividend mantissa       ;
+;                                    ;
+; - - - - - - - - - - - - - - - - - -;
+;   Prepare the divisor mantissa     ;
+;   and store the mantissa of the    ;
+;   dividend in registers.           ;
+;------------------------------------;
+NoInf:
+NoZero:
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 2)
+    cfi R4 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 2, 1)
+    cfi R5 undefined
+	XCH	A,R4		; Adjust MSB in the divisor and set MS bit
+	SETB	C		;
+	RRC	A		;
+	XCH	A,R4		;
+
+	MOV	R5,A		; Store exponent in R5
+	DEC	R0		; @R0 = Destination byte 1
+	CLR	A		;
+	XCH	A,@R0		; R3 = Byte 1 of the dividend mantissa
+	XCH	A,R3		;
+	PUSH	A		; Save R3
+    cfi CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 3)
+    cfi R3 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 1, 1)
+	DEC	R0		; @R0 = Destination byte 0
+	CLR	A
+	XCH	A,@R0		; R2 = Byte 0 of the dividend mantissa
+	XCH	A,R2		;
+	PUSH	A		; Save R2
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 4)
+    cfi R2 Frame(CFA_MACHINE, __SIZE_OF_RETADDR__ + 2, 1)
+
+	INC	R0		; @R0 = Byte 2 of the result (destination)
+	INC	R0		;
+	
+;------------------------------------;
+;   Register content at this point:  ;
+;                                    ;
+;   R0 = Destination *(byte 2)       ;
+;   R1 = Divisor *(byte 0)           ;
+;   R2 = Dividend-mantissa (byte 0)  ;
+;   R3 = Dividend-mantissa (byte 1)  ;
+;  @R0 = Dividend-mantissa (byte 2)  ;
+;   R4 = Divisor-mantissa (byte 2)   ;
+;   R5 = Preliminary exponent        ;
+;                                    ;
+; - - - - - - - - - - - - - - - - - -;
+;  Do the first itteration outside   ;
+;  the main loop in order to get     ;
+;  the msb and exponent right.       ;
+;------------------------------------;
+	MOV	A,R5		; Pre-pack sign and exponent in the destination
+	INC	R0		;
+	XCH	A,@R0		;
+	RLC	A		;
+	MOV	A,@R0		;
+	RRC	A		;
+	MOV	@R0,A		;
+	DEC	R0		;
+	CLR	A		;
+	RLC	A		;
+	XCH	A,@R0		;
+	
+	MOV	B,#3
+;
+	CLR	C		;
+	XCH	A,R2
+	SUBB	A,@R1
+	XCH	A,R2
+	INC	R1
+	XCH	A,R3
+	SUBB	A,@R1
+	XCH	A,R3
+	DEC	R1
+	SUBB	A,R4
+	JC	DecExp
+	MOV	R5,#8
+	SJMP	NoDecExp
+
+DecExp:	CJNE	R5,#0,NoUF
+	LJMP	AdjDst
+NoUF:	DEC	@R0			; Decrement the exponent
+	CJNE	@R0,#255,NoDecHigh
+	INC	@R0
+	INC	@R0
+	INC	R0
+	DEC	@R0
+	DEC	R0
+
+NoDecHigh:
+	CLR	C
+	XCH	A,R2
+	RLC	A
+	XCH	A,R2
+	XCH	A,R3
+	RLC	A
+	XCH	A,R3
+	RLC	A
+
+	XCH	A,R2
+	ADD	A,@R1
+	XCH	A,R2
+	INC	R1
+	XCH	A,R3
+	ADDC	A,@R1
+	XCH	A,R3
+	DEC	R1
+	ADDC	A,R4
+	CLR	C
+	MOV	R5,#8
+	SJMP	Entry
+
+;
+; A  = The high byte of the dividend mantissa
+; R3 = The middle byte of the dividend mantissa
+; R2 = The low byte of the dividend mantissa
+;
+; R4 = The high byte of the divisor mantissa
+;
+; B  = Byte counter
+; R5 = Bit counter
+
+
+NextByte:
+	DEC	R0
+	MOV	R5,#8
+DivLoop:
+	JB	ACC.7,DoSub
+
+DivLoop2:
+	XCH	A,@R0
+	RLC	A
+	XCH	A,@R0
+NoDecExp:
+	XCH	A,R2
+	RLC	A
+	XCH	A,R2
+	XCH	A,R3
+	RLC	A
+	XCH	A,R3
+	RLC	A
+DivCon:	DJNZ	R5,DivLoop
+	DJNZ	B,NextByte
+
+	JNB	ACC.7,NoRound
+	XCH	A,R2
+	SUBB	A,@R1
+	XCH	A,R2
+	INC	R1
+	XCH	A,R3
+	SUBB	A,@R1
+	ORL	A,R2
+	XCH	A,R3
+	DEC	R1
+	SUBB	A,R4
+	JC	NoRound
+	ORL	A,R3
+	JNZ	RoundUp
+
+	MOV	A,@R0
+	JB	ACC.0,RoundUp
+	SJMP	NoRound
+
+;------
+	
+NextSub2Byte:
+	DEC	R0
+	MOV	R5,#8
+
+DoSub2:	CLR	C
+	XCH	A,R2
+	SUBB	A,@R1
+	XCH	A,R2
+	INC	R1
+	XCH	A,R3
+	SUBB	A,@R1
+	XCH	A,R3
+	DEC	R1
+	SUBB	A,R4
+	SETB	C
+
+Shift2:	XCH	A,@R0
+	RLC	A
+	XCH	A,@R0
+Entry:	XCH	A,R2
+	RLC	A
+	XCH	A,R2
+	XCH	A,R3
+	RLC	A
+	XCH	A,R3
+	RLC	A
+	JNC	DivCon
+	DJNZ	R5,DoSub2
+	DJNZ	B,NextSub2Byte
+
+RoundUp:
+	SETB	C
+	CLR	A
+	XCH	A,@R0
+	ADDC	A,@R0
+	XCH	A,@R0
+	INC	R0
+	XCH	A,@R0
+	ADDC	A,@R0
+	XCH	A,@R0
+	INC	R0
+	XCH	A,@R0
+	ADDC	A,@R0
+	XCH	A,@R0
+	INC	R0
+	XCH	A,@R0
+	ADDC	A,@R0
+	XCH	A,@R0
+	DEC	R0
+	DEC	R0
+	DEC	R0
+	SJMP	NoRound
+
+;------
+
+DoSub:	CLR	C
+	XCH	A,R2
+	SUBB	A,@R1
+	XCH	A,R2
+	INC	R1
+	XCH	A,R3
+	SUBB	A,@R1
+	XCH	A,R3
+	DEC	R1
+	SUBB	A,R4
+	CPL	C
+	JC	DivLoop2
+
+	XCH	A,@R0
+	RLC	A
+	XCH	A,@R0
+	XCH	A,R2
+	RLC	A
+	XCH	A,R2
+	XCH	A,R3
+	RLC	A
+	XCH	A,R3
+	RLC	A
+
+	DJNZ	R5,DoAdd
+	DJNZ	B,NextAddByte
+
+;------
+
+	XCH	A,@R0
+	MOV	C,ACC.0
+	XCH	A,@R0
+	JC	RoundUp
+
+	XCH	A,R2
+	ADD	A,@R1
+	XCH	A,R2
+	INC	R1
+	XCH	A,R3
+	ADDC	A,@R1
+	DEC	R1
+	ORL	A,R2
+	JNZ	RoundUp
+	XCH	A,R3
+	ADDC	A,R4
+	CJNE	A,#128,RoundUp
+
+;
+; Check underflow
+;
+NoRound:
+	INC	R0
+	INC	R0
+	MOV	A,@R0
+	RLC	A
+	INC	R0
+	MOV	A,@R0
+	RLC	A
+	JZ	CheckEpsilon
+
+	DEC	R0
+AdjDst:	DEC	R0
+	DEC	R0	
+PopAndReturn:
+
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 3)
+	MOV	R2,A
+    cfi R2 samevalue
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 2)
+	MOV	R3,A
+    cfi R3 samevalue
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - (__SIZE_OF_RETADDR__ + 1)
+	MOV	R4,A
+    cfi R4 samevalue
+	POP	A
+    cfi CFA_MACHINE MACHINE_SP - __SIZE_OF_RETADDR__
+	MOV	R5,A
+    cfi R5 samevalue
+	RET
+
+;------
+
+    cfi CFA_MACHINE MACHINE_SP -(__SIZE_OF_RETADDR__ + 4)
+
+NextAddByte:
+	DEC	R0
+	MOV	R5,#8
+
+DoAdd:	XCH	A,R2
+	ADD	A,@R1
+	XCH	A,R2
+	INC	R1
+	XCH	A,R3
+	ADDC	A,@R1
+	XCH	A,R3
+	DEC	R1
+	ADDC	A,R4
+	SETB	C
+	SJMP	Shift2
+
+;------
+
+CheckEpsilon:
+
+	RRC	A
+	MOV	@R0,A
+	DEC	R0
+	CLR	A
+	CJNE	@R0,#127,Zero1
+	MOV	@R0,A
+	DEC	R0
+	CJNE	@R0,#255,Zero2
+	MOV	@R0,A
+	DEC	R0
+	XCH	A,@R0
+	INC	A
+	JNZ	PopAndReturn
+	INC	R0
+	INC	R0
+	MOV	@R0,#128
+	SJMP	AdjDst
+
+Zero1:	MOV	@R0,A
+	DEC	R0
+Zero2:	MOV	@R0,A
+	DEC	R0
+	MOV	@R0,A
+	SJMP	PopAndReturn
+
+    cfi ENDBLOCK ?FLT_DIV
+	END
+
+
+;---------------------------------------------------------------------------
+;  $Log: iar_ieee_float.s51 $
+;  Revision 1.28  2007/06/07 09:21:52Z  larssu
+;  NOROOT'ify RCODE segments
+;  Revision 1.27  2005/09/09 13:15:31Z  anders
+;  Problem with underflow ending up as NaN in Div corrected.
+;  Revision 1.26  2004/11/18 11:34:08Z  owi
+;  Revision 1.25  2004/11/16 16:41:07Z  owi
+;  Revision 1.24  2004/11/10 16:31:03Z  owi
+;  Revision 1.23  2004/04/23 22:35:53Z  anders
+;  Call frame information added in FLT_ADD + some optimizations.
+;  Revision 1.22  2004/04/23 20:30:21Z  anders
+;  Errors around zero corrected in FLT_ADD, FLT_MUL and FLT_DIV.
+;  Revision 1.21  2004/03/23 15:59:19Z  anders
+;  The compare functions ?FLT_LT and ?FLT_GE are now verified and ok!
+;  Revision 1.20  2004/03/17 14:14:47Z  anders
+;  Some corrections in compare.
+;  Revision 1.19.1.2  2004/03/12 15:43:40Z  owi
+;  Added backtrace information
+;  Revision 1.19.1.1  2004/02/23 11:51:17Z  owi
+;  Duplicate revision
+;  Revision 1.19  2004/02/23 11:51:17Z  anders
+;  Some corrections of errors in FLT_LT and FLT_GE.
+;  Revision 1.18  2004/02/07 23:37:12Z  anders
+;  Multiply corrected and tested.
+;  Revision 1.17  2004/02/07 13:01:32Z  anders
+;  Revision 1.16  2004/02/06 11:56:55Z  anders
+;  Revision 1.15  2004/02/05 19:51:45Z  anders
+;  Revision 1.14  2004/02/04 17:14:05Z  anders
+;  Multiplication corrected and tested.
+;  Revision 1.13  2004/02/03 07:59:03Z  anders
+;  The conversion functions have been corrected and tested.
+;  Revision 1.12  2004/01/31 13:54:24Z  anders
+;  Some errors in ?FLT_ADD corrected.
+;  Revision 1.11  2004/01/28 11:20:21Z  anders
+;  The function ?FLT_TEST_INF_R1 was missing.
+;  Revision 1.10  2004/01/21 22:13:29Z  anders
+;  Revision 1.9  2004/01/20 09:07:20Z  anders
+;  Revision 1.8  2004/01/18 22:32:48Z  anders
+;  Revision 1.7  2004/01/15 14:11:18Z  anders
+;  Revision 1.6  2004/01/04 16:17:16Z  anders
+;  Revision 1.5  2004/01/03 11:28:26Z  anders
+;  Revision 1.4  2003/12/08 13:18:32Z  anders
+;  Revision 1.3  2003/11/17 11:34:10Z  anders
+;  Revision 1.2  2003/11/13 09:41:42Z  anders
+;  Revision 1.1  2003/11/03 14:08:39Z  anders
+;  Initial revision

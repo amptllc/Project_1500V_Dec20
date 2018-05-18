@@ -1,0 +1,11 @@
+
+// COMPILER BUG
+??t1_IRQ_8:
+        PUSH 0x76
+//  122                         if( (*((BYTE *)0x7CD5)) & 0x4 ){  asm("PUSH 0x40");  }else{  asm("PUSH 0x4"); }
+        MOV     DPTR,#0x7cd5
+        MOVX    A,@DPTR
+        MOV     C,0xE0 /* A   */.2
+        PUSH 0x4
+//  123                         asm( "RETI" );
+        RETI

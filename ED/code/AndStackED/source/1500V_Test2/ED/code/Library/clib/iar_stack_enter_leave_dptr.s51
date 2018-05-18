@@ -1,0 +1,3114 @@
+;-----------------------------------------------------------------------------
+;
+;	File:		iar_stack_enter_leave_dptr.s51
+;
+;	Version:	6.10
+;
+;	Description:	Saves DPTR registers on stack.
+;
+;
+;       REVISON INFORMATION                                 
+;                                                           
+;       Log information is available at the end of this file
+;-----------------------------------------------------------------------------
+
+#include "iar_common.h"
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: ?OVERLAY_SAVE_DPTRS_nr
+;
+;	Description:
+;		Saves DPTRs on overlay area
+;
+;	Register input:
+;		R0     = Top of overlay frame.
+;               DPSEL  = DPTR0 must be selected (in shadowed mode)
+;
+;	Register output:
+;		R0     = End of overlay frame
+;               DPSEL  = DPTR0 will be active (in shadowed mode)
+;		A      = Undefined
+;
+;	Overlay area output:
+;
+;               FF
+;               :
+;               :
+;	   	+--------+
+;    if exists	|  DPX1  | <-- post R0
+;		+ - - - -+
+;		     :    
+;		+ - - - -+
+;		| DPX_nr |
+;		+ - - - -+
+;		| DPH_nr |
+;		+ - - - -+
+;		| DPL_nr | <-- pre R0
+;		+--------+
+;               :
+;               :
+;               0
+;          
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: 0
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: none
+;
+;	Machine-stack usage :  0
+;
+;-----------------------------------------------------------------------------
+	MODULE	?OVERLAY_SAVE_DPTR
+ 	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+;        CFI BLOCK ?OVERLAY_SAVE_DPTR Using cfi_common
+;        CFI NOFUNCTION
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Shadowed DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#ifdef __DPTR_SHADOWED__
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_7
+	REQUIRE ?OVERLAY_SAVE_DPTRS_6
+
+?OVERLAY_SAVE_DPTRS_7:
+	DPTR0_TO_DPTR7()
+	MOV	@R0,DPL
+	INC	R0
+	MOV	@R0,DPH
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_6
+	REQUIRE ?OVERLAY_SAVE_DPTRS_5
+
+?OVERLAY_SAVE_DPTRS_6:
+	DPTR0_TO_DPTR6()
+	MOV	@R0,DPL
+	INC	R0
+	MOV	@R0,DPH
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_5
+	REQUIRE ?OVERLAY_SAVE_DPTRS_4
+
+?OVERLAY_SAVE_DPTRS_5:
+	DPTR0_TO_DPTR5()
+	MOV	@R0,DPL
+	INC	R0
+	MOV	@R0,DPH
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_4
+	REQUIRE ?OVERLAY_SAVE_DPTRS_3
+
+?OVERLAY_SAVE_DPTRS_4:
+	DPTR0_TO_DPTR4()
+	MOV	@R0,DPL
+	INC	R0
+	MOV	@R0,DPH
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_3
+	REQUIRE ?OVERLAY_SAVE_DPTRS_2
+
+?OVERLAY_SAVE_DPTRS_3:
+	DPTR0_TO_DPTR3()
+	MOV	@R0,DPL
+	INC	R0
+	MOV	@R0,DPH
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_2
+	REQUIRE ?OVERLAY_SAVE_DPTRS_1
+
+?OVERLAY_SAVE_DPTRS_2:
+	DPTR0_TO_DPTR2()
+	MOV	@R0,DPL
+	INC	R0
+	MOV	@R0,DPH
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_1
+
+?OVERLAY_SAVE_DPTRS_1:
+	DPTR0_TO_DPTR1()
+	MOV	@R0,DPL
+	INC	R0
+	MOV	@R0,DPH
+#ifdef __EXTENDED_DPTR__
+	INC	R0
+	MOV	@R0,?DPX
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Separate DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#elif __DPTR_SEPARATE__
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_7
+	REQUIRE ?OVERLAY_SAVE_DPTRS_6
+
+?OVERLAY_SAVE_DPTRS_7:
+	MOV	@R0,?DPL7
+	INC	R0
+	MOV	@R0,?DPH7
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX7
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_6
+	REQUIRE ?OVERLAY_SAVE_DPTRS_5
+
+?OVERLAY_SAVE_DPTRS_6:
+	MOV	@R0,?DPL6
+	INC	R0
+	MOV	@R0,?DPH6
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX6
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_5
+	REQUIRE ?OVERLAY_SAVE_DPTRS_4
+
+?OVERLAY_SAVE_DPTRS_5:
+	MOV	@R0,?DPL5
+	INC	R0
+	MOV	@R0,?DPH5
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX5
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_4
+	REQUIRE ?OVERLAY_SAVE_DPTRS_3
+
+?OVERLAY_SAVE_DPTRS_4:
+	MOV	@R0,?DPL4
+	INC	R0
+	MOV	@R0,?DPH4
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX4
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_3
+	REQUIRE ?OVERLAY_SAVE_DPTRS_2
+
+?OVERLAY_SAVE_DPTRS_3:
+	MOV	@R0,?DPL3
+	INC	R0
+	MOV	@R0,?DPH3
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX3
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_2
+	REQUIRE ?OVERLAY_SAVE_DPTRS_1
+
+?OVERLAY_SAVE_DPTRS_2:
+	MOV	@R0,?DPL2
+	INC	R0
+	MOV	@R0,?DPH2
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	@R0,?DPX2
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_SAVE_DPTRS_1
+
+?OVERLAY_SAVE_DPTRS_1:
+	MOV	@R0,?DPL1
+	INC	R0
+	MOV	@R0,?DPH1
+#ifdef __EXTENDED_DPTR__
+	INC	R0
+	MOV	@R0,?DPX1
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+	RET
+
+;        CFI ENDBLOCK ?OVERLAY_SAVE_DPTR
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: ?OVERLAY_RESTORE_DPTRS_nr
+;
+;	Description:
+;		Restores DPTRs from overlay area
+;
+;	Register input:
+;		R0     = Top of overlay frame.
+;               DPSEL  = DPTR0 must be selected (in shadowed mode)
+;
+;	Register output:
+;		R0     = End of overlay frame
+;               DPSEL  = DPTR0 will be active (in shadowed mode)
+;		A      = Undefined
+;
+;	Overlay area input:
+;               See OVERLAY_RESTORE_DPTRS_nr above
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: 0
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: none
+;
+;	Machine-stack usage :  0
+;
+;-----------------------------------------------------------------------------
+	MODULE	?OVERLAY_RESTORE_DPTR
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+;        CFI BLOCK ?OVERLAY_RESTORE_DPTR Using cfi_common
+;        CFI NOFUNCTION
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Shadowed DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#ifdef __DPTR_SHADOWED__
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_7
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_6
+
+?OVERLAY_RESTORE_DPTRS_7:
+	DPTR0_TO_DPTR7()
+	MOV	DPL,@R0
+	INC	R0
+	MOV	DPH,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX,@R0
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_6
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_5
+
+?OVERLAY_RESTORE_DPTRS_6:
+	DPTR0_TO_DPTR6()
+	MOV	DPL,@R0
+	INC	R0
+	MOV	DPH,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX,@R0
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_5
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_4
+
+?OVERLAY_RESTORE_DPTRS_5:
+	DPTR0_TO_DPTR5()
+	MOV	DPL,@R0
+	INC	R0
+	MOV	DPH,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX,@R0
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_4
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_3
+
+?OVERLAY_RESTORE_DPTRS_4:
+	DPTR0_TO_DPTR4()
+	MOV	DPL,@R0
+	INC	R0
+	MOV	DPH,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX,@R0
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_3
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_2
+
+?OVERLAY_RESTORE_DPTRS_3:
+	DPTR0_TO_DPTR3()
+	MOV	DPL,@R0
+	INC	R0
+	MOV	DPH,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX,@R0
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_2
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_1
+
+?OVERLAY_RESTORE_DPTRS_2:
+	DPTR0_TO_DPTR2()
+	MOV	DPL,@R0
+	INC	R0
+	MOV	DPH,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX,@R0
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_1
+
+?OVERLAY_RESTORE_DPTRS_1:
+	DPTR0_TO_DPTR1()
+	MOV	DPL,@R0
+	INC	R0
+	MOV	DPH,@R0
+#ifdef __EXTENDED_DPTR__
+	INC	R0
+	MOV	?DPX,@R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Separate DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#elif __DPTR_SEPARATE__
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_7
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_6
+
+?OVERLAY_RESTORE_DPTRS_7:
+	MOV	?DPL7,@R0
+	INC	R0
+	MOV	?DPH7,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX7,@R0
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_6
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_5
+
+?OVERLAY_RESTORE_DPTRS_6:
+	MOV	?DPL6,@R0
+	INC	R0
+	MOV	?DPH6,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX6,@R0
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_5
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_4
+
+?OVERLAY_RESTORE_DPTRS_5:
+	MOV	?DPL5,@R0
+	INC	R0
+	MOV	?DPH5,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX5,@R0
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_4
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_3
+
+?OVERLAY_RESTORE_DPTRS_4:
+	MOV	?DPL4,@R0
+	INC	R0
+	MOV	?DPH4,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX4,@R0
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_3
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_2
+
+?OVERLAY_RESTORE_DPTRS_3:
+	MOV	?DPL3,@R0
+	INC	R0
+	MOV	?DPH3,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX3,@R0
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_2
+	REQUIRE ?OVERLAY_RESTORE_DPTRS_1
+
+?OVERLAY_RESTORE_DPTRS_2:
+	MOV	?DPL2,@R0
+	INC	R0
+	MOV	?DPH2,@R0
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	?DPX2,@R0
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?OVERLAY_RESTORE_DPTRS_1
+
+?OVERLAY_RESTORE_DPTRS_1:
+	MOV	?DPL1,@R0
+	INC	R0
+	MOV	?DPH1,@R0
+#ifdef __EXTENDED_DPTR__
+	INC	R0
+	MOV	?DPX1,@R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+	RET
+
+;        CFI ENDBLOCK ?OVERLAY_RESTORE_DPTR
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: ?MACHINE_STACK_SAVE_DPTRS_nr
+;
+;	Description:
+;		Saves DPTRs on a PUSH/POP stack.
+;
+;	Register input:
+;		DPTR0     = Return address - Size of a LJMP
+;		DPSEL     = DPTR0 must be active.
+;
+;	Register output:
+;		DPTR0     = This function return address
+;               DPSEL     = DPTR0 will be active.
+;		A         = Undefined
+;
+;	IDATA Stack output:
+;
+;              FF
+;               :
+;               :
+;	   	+--------+
+;   if exists	|  DPX1  | <-- post SP
+;		+ - - - -+
+;		     :    
+;		+ - - - -+
+;              	| DPX_nr |
+;		+ - - - -+
+;              	| DPH_nr |
+;		+ - - - -+
+;              	| DPL_nr |
+;		+ - - - -+
+;		| xxxxxx | <-- pre SP
+;		+--------+
+;               :
+;               :
+;               0
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: 0
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: 0
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;	Machine-stack usage :  0
+;
+;-----------------------------------------------------------------------------
+	MODULE	?MACHINE_STACK_SAVE_DPTR
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+;        CFI BLOCK ?MACHINE_STACK_SAVE_DPTR Using cfi_common
+;        CFI NOFUNCTION
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Shadowed DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#ifdef __DPTR_SHADOWED__
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_7
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_6
+
+?MACHINE_STACK_SAVE_DPTRS_7:
+	DPTR0_TO_DPTR7()
+	PUSH	DPL
+	PUSH	DPH
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_6
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_5
+
+?MACHINE_STACK_SAVE_DPTRS_6:
+	DPTR0_TO_DPTR6()
+	PUSH	DPL
+	PUSH	DPH
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_5
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_4
+
+?MACHINE_STACK_SAVE_DPTRS_5:
+	DPTR0_TO_DPTR5()
+	PUSH	DPL
+	PUSH	DPH
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_4
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_3
+
+?MACHINE_STACK_SAVE_DPTRS_4:
+	DPTR0_TO_DPTR4()
+	PUSH	DPL
+	PUSH	DPH
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_3
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_2
+
+?MACHINE_STACK_SAVE_DPTRS_3:
+	DPTR0_TO_DPTR3()
+	PUSH	DPL
+	PUSH	DPH
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_2
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_1
+
+?MACHINE_STACK_SAVE_DPTRS_2:
+	DPTR0_TO_DPTR2()
+	PUSH	DPL
+	PUSH	DPH
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_1
+
+?MACHINE_STACK_SAVE_DPTRS_1:
+	DPTR0_TO_DPTR1()
+	PUSH	DPL
+	PUSH	DPH
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+;; Return to enter sequenze
+	INC	DPTR
+	INC	DPTR
+	INC	DPTR
+#if (__CORE__ == __CORE_EXTENDED1__)
+	INC	DPTR
+#endif	
+	CLR	A
+	JMP	@A+DPTR
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Separate DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#elif __DPTR_SEPARATE__
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_7
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_6
+
+?MACHINE_STACK_SAVE_DPTRS_7:
+	PUSH	?DPL7
+	PUSH	?DPH7
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX7
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_6
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_5
+
+?MACHINE_STACK_SAVE_DPTRS_6:
+	PUSH	?DPL6
+	PUSH	?DPH6
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX6
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_5
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_4
+
+?MACHINE_STACK_SAVE_DPTRS_5:
+	PUSH	?DPL5
+	PUSH	?DPH5
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX5
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_4
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_3
+
+?MACHINE_STACK_SAVE_DPTRS_4:
+	PUSH	?DPL4
+	PUSH	?DPH4
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX4
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_3
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_2
+
+?MACHINE_STACK_SAVE_DPTRS_3:
+	PUSH	?DPL3
+	PUSH	?DPH3
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX3
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_2
+	REQUIRE ?MACHINE_STACK_SAVE_DPTRS_1
+
+?MACHINE_STACK_SAVE_DPTRS_2:
+	PUSH	?DPL2
+	PUSH	?DPH2
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX2
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_SAVE_DPTRS_1
+
+?MACHINE_STACK_SAVE_DPTRS_1:
+	PUSH	?DPL1
+	PUSH	?DPH1
+#ifdef __EXTENDED_DPTR__
+	PUSH	?DPX1
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+;; Return to enter sequenze
+	INC	DPTR
+	INC	DPTR
+	INC	DPTR
+#if (__CORE__ == __CORE_EXTENDED1__)
+	INC	DPTR
+#endif	
+	CLR	A
+	JMP	@A+DPTR
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+;        CFI ENDBLOCK ?MACHINE_STACK_SAVE_DPTR
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: ?MACHINE_STACK_RESTORE_DPTRS_nr
+;
+;	Description:
+;		Restore DPTRs on Machine stack.
+;
+;	Register input:
+;               None
+;	Register output:
+;		DPTR0     = Return address.
+;               DPSEL     = DPTR0 will be active
+;		A         = 0
+;
+;	IDATA Stack input:
+;
+;	       See ?MACHINE_STACK_SAVE_DPTRS_nr above
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: restored Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: restored Returns  DPS: 0
+;
+;	Machine-stack usage :  0
+;
+;-----------------------------------------------------------------------------
+	MODULE	?MACHINE_STACK_RESTORE_DPTR
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+;        CFI BLOCK ?MACHINE_STACK_RESTORE_DPTR Using cfi_common
+;        CFI NOFUNCTION
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Shadowed DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#ifdef __DPTR_SHADOWED__
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_1
+
+?MACHINE_STACK_RESTORE_DPTRS_1:
+	SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR0_TO_DPTR1()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+;; Return to leave sequenze
+	SELECT_DPTR0()
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_2
+
+?MACHINE_STACK_RESTORE_DPTRS_2:
+	SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR0_TO_DPTR1()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR1_TO_DPTR2()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+;; Return to leave sequenze
+	SELECT_DPTR0()
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_3
+
+?MACHINE_STACK_RESTORE_DPTRS_3:
+	SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+	DPTR0_TO_DPTR1()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR1_TO_DPTR2()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR2_TO_DPTR3()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+;; Return to leave sequenze
+	SELECT_DPTR0()
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_4
+
+?MACHINE_STACK_RESTORE_DPTRS_4:
+	SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+	DPTR0_TO_DPTR1()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR1_TO_DPTR2()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR2_TO_DPTR3()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR3_TO_DPTR4()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+;; Return to leave sequenze
+	SELECT_DPTR0()
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_5
+
+?MACHINE_STACK_RESTORE_DPTRS_5:
+	SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+	DPTR0_TO_DPTR1()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR1_TO_DPTR2()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR2_TO_DPTR3()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR3_TO_DPTR4()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR4_TO_DPTR5()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+;; Return to leave sequenze
+	SELECT_DPTR0()
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_6
+
+?MACHINE_STACK_RESTORE_DPTRS_6:
+	SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+	DPTR0_TO_DPTR1()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR1_TO_DPTR2()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR2_TO_DPTR3()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR3_TO_DPTR4()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR4_TO_DPTR5()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR5_TO_DPTR6()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+;; Return to leave sequenze
+	SELECT_DPTR0()
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_7
+
+?MACHINE_STACK_RESTORE_DPTRS_7:
+	SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+	DPTR0_TO_DPTR1()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR1_TO_DPTR2()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR2_TO_DPTR3()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR3_TO_DPTR4()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR4_TO_DPTR5()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR5_TO_DPTR6()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+	DPTR6_TO_DPTR7()
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+
+;; Return to leave sequenze
+	SELECT_DPTR0()
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Separate DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#elif __DPTR_SEPARATE__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_1
+
+?MACHINE_STACK_RESTORE_DPTRS_1:
+        SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX1
+#endif
+	POP	?DPH1
+	POP	?DPL1
+
+;; Return to leave sequenze
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_2
+	RSEG	RCODE:CODE:NOROOT
+
+?MACHINE_STACK_RESTORE_DPTRS_2:
+        SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX1
+#endif
+	POP	?DPH1
+	POP	?DPL1
+
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX2
+#endif
+	POP	?DPH2
+	POP	?DPL2
+
+;; Return to leave sequenze
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_3
+	RSEG	RCODE:CODE:NOROOT
+
+?MACHINE_STACK_RESTORE_DPTRS_3:
+        SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX1
+#endif
+	POP	?DPH1
+	POP	?DPL1
+
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX2
+#endif
+	POP	?DPH2
+	POP	?DPL2
+
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX3
+#endif
+	POP	?DPH3
+	POP	?DPL3
+
+;; Return to leave sequenze
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_4
+	RSEG	RCODE:CODE:NOROOT
+
+?MACHINE_STACK_RESTORE_DPTRS_4:
+        SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX1
+#endif
+	POP	?DPH1
+	POP	?DPL1
+
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX2
+#endif
+	POP	?DPH2
+	POP	?DPL2
+
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX3
+#endif
+	POP	?DPH3
+	POP	?DPL3
+
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX4
+#endif
+	POP	?DPH4
+	POP	?DPL4
+
+;; Return to leave sequenze
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_5
+	RSEG	RCODE:CODE:NOROOT
+
+?MACHINE_STACK_RESTORE_DPTRS_5:
+        SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX1
+#endif
+	POP	?DPH1
+	POP	?DPL1
+
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX2
+#endif
+	POP	?DPH2
+	POP	?DPL2
+
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX3
+#endif
+	POP	?DPH3
+	POP	?DPL3
+
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX4
+#endif
+	POP	?DPH4
+	POP	?DPL4
+
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX5
+#endif
+	POP	?DPH5
+	POP	?DPL5
+
+;; Return to leave sequenze
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_6
+	RSEG	RCODE:CODE:NOROOT
+
+?MACHINE_STACK_RESTORE_DPTRS_6:
+        SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX1
+#endif
+	POP	?DPH1
+	POP	?DPL1
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX2
+#endif
+	POP	?DPH2
+	POP	?DPL2
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX3
+#endif
+	POP	?DPH3
+	POP	?DPL3
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX4
+#endif
+	POP	?DPH4
+	POP	?DPL4
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX5
+#endif
+	POP	?DPH5
+	POP	?DPL5
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX6
+#endif
+	POP	?DPH6
+	POP	?DPL6
+;; Return to leave sequenze
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	PUBLIC	?MACHINE_STACK_RESTORE_DPTRS_7
+	RSEG	RCODE:CODE:NOROOT
+
+?MACHINE_STACK_RESTORE_DPTRS_7:
+        SELECT_DPTR0()
+#if (__CORE__ == __CORE_EXTENDED1__)
+	POP	?DPX
+#endif
+	POP	DPH
+	POP	DPL
+	
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX1
+#endif
+	POP	?DPH1
+	POP	?DPL1
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX2
+#endif
+	POP	?DPH2
+	POP	?DPL2
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX3
+#endif
+	POP	?DPH3
+	POP	?DPL3
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX4
+#endif
+	POP	?DPH4
+	POP	?DPL4
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX5
+#endif
+	POP	?DPH5
+	POP	?DPL5
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX6
+#endif
+	POP	?DPH6
+	POP	?DPL6
+#ifdef __EXTENDED_DPTR__
+	POP	?DPX7
+#endif
+	POP	?DPH7
+	POP	?DPL7
+;; Return to leave sequenze
+	CLR	A
+	JMP	@A+DPTR
+#endif ; __NUMBER_OF_DPTRS__
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+
+;        CFI ENDBLOCK ?MACHINE_STACK_RESTORE_DPTR
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: ?PSTACK_SAVE_DPTRS_nr
+;
+;	Description:
+;		Saves DPTRs on PDATA stack
+;
+;	Register input:
+;		R0     = Next free element.
+;               DPSEL  = DPTR0 (if shadowed)
+;
+;	Register output:
+;		R0     = Top of PDATA stack.
+;               DPSEL  = DPTR0 (if shadowed)
+;		A      = Undefined
+;
+;	Overlay area output:
+;
+;               FF
+;               :
+;               :
+;	   	+--------+
+;    if exists	|  DPX1  | <-- post R0
+;		+ - - - -+
+;		     :    
+;		+ - - - -+
+;		| DPX_nr |
+;		+ - - - -+
+;		| DPH_nr |
+;		+ - - - -+
+;		| DPL_nr | <-- pre R0
+;		+--------+
+;               :
+;               :
+;               0
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: 0
+;                               Modifies DPTR: none     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: none     Returns  DPS: none
+;
+;	Machine-stack usage :  0
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PSTACK_SAVE_DPTR
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+;        CFI BLOCK ?PSTACK_SAVE_DPTR Using cfi_common
+;        CFI NOFUNCTION
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Shadowed DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#ifdef __DPTR_SHADOWED__
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_7
+	REQUIRE ?PSTACK_SAVE_DPTRS_6
+
+?PSTACK_SAVE_DPTRS_7:
+	DPTR0_TO_DPTR7()
+	MOV	A,DPL
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,DPH
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX
+	MOVX	@R0,A
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_6
+	REQUIRE ?PSTACK_SAVE_DPTRS_5
+
+?PSTACK_SAVE_DPTRS_6:
+	DPTR0_TO_DPTR6()
+	MOV	A,DPL
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,DPH
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX
+	MOVX	@R0,A
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_5
+	REQUIRE ?PSTACK_SAVE_DPTRS_4
+
+?PSTACK_SAVE_DPTRS_5:
+	DPTR0_TO_DPTR5()
+	MOV	A,DPL
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,DPH
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX
+	MOVX	@R0,A
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_4
+	REQUIRE ?PSTACK_SAVE_DPTRS_3
+
+?PSTACK_SAVE_DPTRS_4:
+	DPTR0_TO_DPTR4()
+	MOV	A,DPL
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,DPH
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX
+	MOVX	@R0,A
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_3
+	REQUIRE ?PSTACK_SAVE_DPTRS_2
+
+?PSTACK_SAVE_DPTRS_3:
+	DPTR0_TO_DPTR3()
+	MOV	A,DPL
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,DPH
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX
+	MOVX	@R0,A
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_2
+	REQUIRE ?PSTACK_SAVE_DPTRS_1
+
+?PSTACK_SAVE_DPTRS_2:
+	DPTR0_TO_DPTR2()
+	MOV	A,DPL
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,DPH
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX
+	MOVX	@R0,A
+	INC	R0
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	PUBLIC	?PSTACK_SAVE_DPTRS_1
+	RSEG	RCODE:CODE:NOROOT
+
+?PSTACK_SAVE_DPTRS_1:
+	DPTR0_TO_DPTR1()
+	MOV	A,DPL
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,DPH
+	MOVX	@R0,A
+#ifdef __EXTENDED_DPTR__
+	INC	R0
+	MOV	A,?DPX
+	MOVX	@R0,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Separate DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#elif __DPTR_SEPARATE__
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_7
+	REQUIRE ?PSTACK_SAVE_DPTRS_6
+
+?PSTACK_SAVE_DPTRS_7:
+	MOV	A,?DPL7
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,?DPH7
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX7
+	MOVX	@R0,A
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_6
+	REQUIRE ?PSTACK_SAVE_DPTRS_5
+
+?PSTACK_SAVE_DPTRS_6:
+	MOV	A,?DPL6
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,?DPH6
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX6
+	MOVX	@R0,A
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_5
+	REQUIRE ?PSTACK_SAVE_DPTRS_4
+
+?PSTACK_SAVE_DPTRS_5:
+	MOV	A,?DPL5
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,?DPH5
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX5
+	MOVX	@R0,A
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_4
+	REQUIRE ?PSTACK_SAVE_DPTRS_3
+
+?PSTACK_SAVE_DPTRS_4:
+	MOV	A,?DPL4
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,?DPH4
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX4
+	MOVX	@R0,A
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_3
+	REQUIRE ?PSTACK_SAVE_DPTRS_2
+
+?PSTACK_SAVE_DPTRS_3:
+	MOV	A,?DPL3
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,?DPH3
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX3
+	MOVX	@R0,A
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_2
+	REQUIRE ?PSTACK_SAVE_DPTRS_1
+
+?PSTACK_SAVE_DPTRS_2:
+	MOV	A,?DPL2
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,?DPH2
+	MOVX	@R0,A
+	INC	R0
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX2
+	MOVX	@R0,A
+	INC	R0
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_SAVE_DPTRS_1
+
+?PSTACK_SAVE_DPTRS_1:
+	MOV	A,?DPL1
+	MOVX	@R0,A
+	INC	R0
+	MOV	A,?DPH1
+	MOVX	@R0,A
+#ifdef __EXTENDED_DPTR__
+	INC	R0
+	MOV	A,?DPX1
+	MOVX	@R0,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+	RET
+
+;        CFI ENDBLOCK ?PSTACK_SAVE_DPTR
+	ENDMOD
+
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: ?PSTACK_RESTORE_DPTRS_nr
+;
+;	Description:
+;		Restores DPTRs from PDATA stack.
+;
+;	Register input:
+;		R0     = Next place on Pdata stack.
+;		DPSEL  = DPTR0 (if shadowed)
+;
+;	Register output:
+;		R0     = Top of Pdata stack.
+;		DPSEL  = DPTR0 (if shadowed)
+;		A      = Undefined
+;
+;	XDATA Stack input:
+;
+;             FFFFFF
+;               :
+;               :
+;	   	+--------+
+;		| xxxxxx | <-- post R0
+;		+ - - - -+
+;		| DPL_nr |
+;		+ - - - -+
+;		| DPH_nr |
+;		+ - - - -+
+;		| DPX_nr |
+;		+ - - - -+
+;		     :    
+;		+ - - - -+
+;    if exists	|  DPX1  | <-- pre R0
+;		+--------+
+;               :
+;               :
+;               0
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: none     Requires DPS: 0
+;                               Modifies DPTR: restored Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: none     Requires DPS: none
+;                               Modifies DPTR: restored Returns  DPS: none
+;
+;
+;	Machine-stack usage :  0
+;
+;-----------------------------------------------------------------------------
+	MODULE	?PSTACK_RESTORE_DPTR
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+;        CFI BLOCK ?PSTACK_RESTORE_DPTR Using cfi_common
+;        CFI NOFUNCTION
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Shadowed DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#ifdef __DPTR_SHADOWED__
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_7
+	REQUIRE ?PSTACK_RESTORE_DPTRS_6
+
+?PSTACK_RESTORE_DPTRS_7:
+	DPTR0_TO_DPTR7()
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPL,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_6
+	REQUIRE ?PSTACK_RESTORE_DPTRS_5
+
+?PSTACK_RESTORE_DPTRS_6:
+	DPTR0_TO_DPTR6()
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPL,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_5
+	REQUIRE ?PSTACK_RESTORE_DPTRS_4
+
+?PSTACK_RESTORE_DPTRS_5:
+	DPTR0_TO_DPTR5()
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPL,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_4
+	REQUIRE ?PSTACK_RESTORE_DPTRS_3
+
+?PSTACK_RESTORE_DPTRS_4:
+	DPTR0_TO_DPTR4()
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPL,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_3
+	REQUIRE ?PSTACK_RESTORE_DPTRS_2
+
+?PSTACK_RESTORE_DPTRS_3:
+	DPTR0_TO_DPTR3()
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPL,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_2
+	REQUIRE ?PSTACK_RESTORE_DPTRS_1
+
+?PSTACK_RESTORE_DPTRS_2:
+	DPTR0_TO_DPTR2()
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPL,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_1
+
+?PSTACK_RESTORE_DPTRS_1:
+	DPTR0_TO_DPTR1()
+	MOVX	A,@R0
+	INC	R0
+	MOV	DPL,A
+	MOVX	A,@R0
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	INC	R0
+	MOVX	A,@R0
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Separate DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#elif __DPTR_SEPARATE__
+
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_7
+	REQUIRE ?PSTACK_RESTORE_DPTRS_6
+
+?PSTACK_RESTORE_DPTRS_7:
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPL7,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPH7,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX7,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_6
+	REQUIRE ?PSTACK_RESTORE_DPTRS_5
+
+?PSTACK_RESTORE_DPTRS_6:
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPL6,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPH6,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX6,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_5
+	REQUIRE ?PSTACK_RESTORE_DPTRS_4
+
+?PSTACK_RESTORE_DPTRS_5:
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPL5,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPH5,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX5,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_4
+	REQUIRE ?PSTACK_RESTORE_DPTRS_3
+
+?PSTACK_RESTORE_DPTRS_4:
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPL4,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPH4,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX4,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_3
+	REQUIRE ?PSTACK_RESTORE_DPTRS_2
+
+?PSTACK_RESTORE_DPTRS_3:
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPL3,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPH3,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX3,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_2
+	REQUIRE ?PSTACK_RESTORE_DPTRS_1
+
+?PSTACK_RESTORE_DPTRS_2:
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPL2,A
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPH2,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPX2,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?PSTACK_RESTORE_DPTRS_1
+
+?PSTACK_RESTORE_DPTRS_1:
+	MOVX	A,@R0
+	INC	R0
+	MOV	?DPL1,A
+	MOVX	A,@R0
+	MOV	?DPH1,A
+#ifdef __EXTENDED_DPTR__
+	INC	R0
+	MOVX	A,@R0
+	MOV	?DPX1,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+	RET
+
+;        CFI ENDBLOCK ?PSTACK_RESTORE_DPTR
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: ?XSTACK_SAVE_DPTRS_nr
+;
+;	Description:
+;		Saves DPTRs on Xdata stack.
+;
+;	Register input:
+;		DPTR0     = Top of Xdata stack (pre).
+;		DPSEL     = DPTR0 (if shadowed)
+;
+;	Register output:
+;		DPTR0     = Top of Xdata stack (post).
+;		DPSEL     = DPTR0 (if shadowed)
+;		A         = Undefined
+;
+;	XDATA Stack output:
+;
+;             FFFFFF
+;               :
+;               :
+;	   	+--------+
+;		| xxxxxx | <-- post XSP
+;		+ - - - -+
+;		| DPL_nr |
+;		+ - - - -+
+;		| DPH_nr |
+;		+ - - - -+
+;		| DPX_nr |
+;		+ - - - -+
+;		     :    
+;		+ - - - -+
+;    if exists	|  DPX1  | <-- pre XSP
+;		+--------+
+;               :
+;               :
+;               0
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: 0     Requires DPS: 0
+;                               Modifies DPTR: 0     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: 0     Requires DPS: 0
+;                               Modifies DPTR: 0     Returns  DPS: 0
+;          
+;
+;	Machine-stack usage :  0
+;
+;-----------------------------------------------------------------------------
+	MODULE	?XSTACK_SAVE_DPTR
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+;        CFI BLOCK ?XSTACK_SAVE_DPTR Using cfi_common
+;        CFI NOFUNCTION
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Shadowed DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#ifdef __DPTR_SHADOWED__
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_7
+	REQUIRE ?XSTACK_SAVE_DPTRS_6
+
+?XSTACK_SAVE_DPTRS_7:
+	DPTR0_TO_DPTR7()
+	MOV	A,DPL
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+	DPTR0_TO_DPTR7()
+	MOV	A,DPH
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	DPTR0_TO_DPTR7()
+	MOV	A,?DPX
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_6
+	REQUIRE ?XSTACK_SAVE_DPTRS_5
+
+?XSTACK_SAVE_DPTRS_6:
+	DPTR0_TO_DPTR6()
+	MOV	A,DPL
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+	DPTR0_TO_DPTR6()
+	MOV	A,DPH
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	DPTR0_TO_DPTR6()
+	MOV	A,?DPX
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_5
+	REQUIRE ?XSTACK_SAVE_DPTRS_4
+
+?XSTACK_SAVE_DPTRS_5:
+	DPTR0_TO_DPTR5()
+	MOV	A,DPL
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+	DPTR0_TO_DPTR5()
+	MOV	A,DPH
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	DPTR0_TO_DPTR5()
+	MOV	A,?DPX
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_4
+	REQUIRE ?XSTACK_SAVE_DPTRS_3
+
+?XSTACK_SAVE_DPTRS_4:
+	DPTR0_TO_DPTR4()
+	MOV	A,DPL
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+	DPTR0_TO_DPTR4()
+	MOV	A,DPH
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	DPTR0_TO_DPTR4()
+	MOV	A,?DPX
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_3
+	REQUIRE ?XSTACK_SAVE_DPTRS_2
+
+?XSTACK_SAVE_DPTRS_3:
+	DPTR0_TO_DPTR3()
+	MOV	A,DPL
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+	DPTR0_TO_DPTR3()
+	MOV	A,DPH
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	DPTR0_TO_DPTR3()
+	MOV	A,?DPX
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_2
+	REQUIRE ?XSTACK_SAVE_DPTRS_1
+
+?XSTACK_SAVE_DPTRS_2:
+	DPTR0_TO_DPTR2()
+	MOV	A,DPL
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+	DPTR0_TO_DPTR2()
+	MOV	A,DPH
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	DPTR0_TO_DPTR2()
+	MOV	A,?DPX
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_1
+
+?XSTACK_SAVE_DPTRS_1:
+	DPTR0_TO_DPTR1()
+	MOV	A,DPL
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+	INC	DPTR
+	DPTR0_TO_DPTR1()
+	MOV	A,DPH
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+#ifdef __EXTENDED_DPTR__
+	INC	DPTR
+	DPTR0_TO_DPTR1()
+	MOV	A,?DPX
+	SELECT_DPTR0()
+	MOVX	@DPTR,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Separate DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#elif __DPTR_SEPARATE__
+
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_7
+	REQUIRE ?XSTACK_SAVE_DPTRS_6
+
+?XSTACK_SAVE_DPTRS_7:
+	MOV	A,?DPL7
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,?DPH7
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX7
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_6
+	REQUIRE ?XSTACK_SAVE_DPTRS_5
+
+?XSTACK_SAVE_DPTRS_6:
+	MOV	A,?DPL6
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,?DPH6
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX6
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_5
+	REQUIRE ?XSTACK_SAVE_DPTRS_4
+
+?XSTACK_SAVE_DPTRS_5:
+	MOV	A,?DPL5
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,?DPH5
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX5
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_4
+	REQUIRE ?XSTACK_SAVE_DPTRS_3
+
+?XSTACK_SAVE_DPTRS_4:
+	MOV	A,?DPL4
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,?DPH4
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX4
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_3
+	REQUIRE ?XSTACK_SAVE_DPTRS_2
+
+?XSTACK_SAVE_DPTRS_3:
+	MOV	A,?DPL3
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,?DPH3
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX3
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_2
+	REQUIRE ?XSTACK_SAVE_DPTRS_1
+
+?XSTACK_SAVE_DPTRS_2:
+	MOV	A,?DPL2
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,?DPH2
+	MOVX	@DPTR,A
+	INC	DPTR
+#ifdef __EXTENDED_DPTR__
+	MOV	A,?DPX2
+	MOVX	@DPTR,A
+	INC	DPTR
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_SAVE_DPTRS_1
+
+?XSTACK_SAVE_DPTRS_1:
+	MOV	A,?DPL1
+	MOVX	@DPTR,A
+	INC	DPTR
+	MOV	A,?DPH1
+	MOVX	@DPTR,A
+#ifdef __EXTENDED_DPTR__
+	INC	DPTR
+	MOV	A,?DPX1
+	MOVX	@DPTR,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+	RET
+
+;        CFI ENDBLOCK ?XSTACK_SAVE_DPTR
+	ENDMOD
+
+;-----------------------------------------------------------------------------
+;
+;	Functions: ?XSTACK_RESTORE_DPTRS_nr
+;
+;	Description:
+;		Restores DPTRs from Xdata stack.
+;
+;	Register input:
+;		DPTR0     = Next place on Xdata stack.
+;		DPSEL     = DPTR0 (if shadowed)
+;
+;	Register output:
+;		DPTR0     = Top of Xdata stack.
+;		DPSEL     = DPTR0 (if shadowed)
+;		A         = Undefined
+;
+;	XDATA Stack input:
+;
+;             FFFFFF
+;               :
+;               :
+;	   	+--------+
+;		| xxxxxx | <-- post DPTR0
+;		+ - - - -+
+;		| DPL_nr |
+;		+ - - - -+
+;		| DPH_nr |
+;		+ - - - -+
+;		| DPX_nr |
+;		+ - - - -+
+;		     :    
+;		+ - - - -+
+;    if exists	|  DPX1  | <-- pre DPTR0
+;		+--------+
+;               :
+;               :
+;               0
+;
+;       Multiple DPTR
+;               Shadowed:       Requires DPTR: 0     Requires DPS: 0
+;                               Modifies DPTR: 0     Returns  DPS: 0
+;
+;               Separate:       Requires DPTR: 0     Requires DPS: 0
+;                               Modifies DPTR: 0     Returns  DPS: 0
+;          
+;
+;	Machine-stack usage :  0
+;
+;-----------------------------------------------------------------------------
+	MODULE	?XSTACK_RESTORE_DPTR
+	EXTERNS_FOR_ALL_DPTR_SYMBOLS()
+
+;        CFI BLOCK ?XSTACK_RESTORE_DPTR Using cfi_common
+;        CFI NOFUNCTION
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Shadowed DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#ifdef __DPTR_SHADOWED__
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_7
+	REQUIRE ?XSTACK_RESTORE_DPTRS_6
+
+?XSTACK_RESTORE_DPTRS_7:
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR7()
+	MOV	DPL,A
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR7()
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR7()
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_6
+	REQUIRE ?XSTACK_RESTORE_DPTRS_5
+
+?XSTACK_RESTORE_DPTRS_6:
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR6()
+	MOV	DPL,A
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR6()
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR6()
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_5
+	REQUIRE ?XSTACK_RESTORE_DPTRS_4
+
+?XSTACK_RESTORE_DPTRS_5:
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR5()
+	MOV	DPL,A
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR5()
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR5()
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_4
+	REQUIRE ?XSTACK_RESTORE_DPTRS_3
+
+?XSTACK_RESTORE_DPTRS_4:
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR4()
+	MOV	DPL,A
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR4()
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR4()
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_3
+	REQUIRE ?XSTACK_RESTORE_DPTRS_2
+
+?XSTACK_RESTORE_DPTRS_3:
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR3()
+	MOV	DPL,A
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR3()
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR3()
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_2
+	REQUIRE ?XSTACK_RESTORE_DPTRS_1
+
+?XSTACK_RESTORE_DPTRS_2:
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR2()
+	MOV	DPL,A
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR2()
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR2()
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_1
+
+?XSTACK_RESTORE_DPTRS_1:
+	MOVX	A,@DPTR
+	INC	DPTR
+	DPTR0_TO_DPTR1()
+	MOV	DPL,A
+	SELECT_DPTR0()
+	MOVX	A,@DPTR
+	DPTR0_TO_DPTR1()
+	MOV	DPH,A
+#ifdef __EXTENDED_DPTR__
+	SELECT_DPTR0()
+	INC	DPTR
+	MOVX	A,@DPTR
+	DPTR0_TO_DPTR1()
+	MOV	?DPX,A
+#endif
+	SELECT_DPTR0()
+#endif ; __NUMBER_OF_DPTRS__
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Separate DPTRs
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#elif __DPTR_SEPARATE__
+
+#if (__NUMBER_OF_DPTRS__ > 7)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_7
+	REQUIRE ?XSTACK_RESTORE_DPTRS_6
+
+?XSTACK_RESTORE_DPTRS_7:
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPL7,A
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPH7,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPX7,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 6)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_6
+	REQUIRE ?XSTACK_RESTORE_DPTRS_5
+
+?XSTACK_RESTORE_DPTRS_6:
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPL6,A
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPH6,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPX6,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 5)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_5
+	REQUIRE ?XSTACK_RESTORE_DPTRS_4
+
+?XSTACK_RESTORE_DPTRS_5:
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPL5,A
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPH5,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPX5,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 4)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_4
+	REQUIRE ?XSTACK_RESTORE_DPTRS_3
+
+?XSTACK_RESTORE_DPTRS_4:
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPL4,A
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPH4,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPX4,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 3)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_3
+	REQUIRE ?XSTACK_RESTORE_DPTRS_2
+
+?XSTACK_RESTORE_DPTRS_3:
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPL3,A
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPH3,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPX3,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 2)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_2
+	REQUIRE ?XSTACK_RESTORE_DPTRS_1
+
+?XSTACK_RESTORE_DPTRS_2:
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPL2,A
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPH2,A
+#ifdef __EXTENDED_DPTR__
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPX2,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#if (__NUMBER_OF_DPTRS__ > 1)
+	RSEG	RCODE:CODE:NOROOT
+	PUBLIC	?XSTACK_RESTORE_DPTRS_1
+
+?XSTACK_RESTORE_DPTRS_1:
+	MOVX	A,@DPTR
+	INC	DPTR
+	MOV	?DPL1,A
+	MOVX	A,@DPTR
+	MOV	?DPH1,A
+#ifdef __EXTENDED_DPTR__
+	INC	DPTR
+	MOVX	A,@DPTR
+	MOV	?DPX1,A
+#endif
+#endif ; __NUMBER_OF_DPTRS__
+
+#else
+#error "You must define __DPTR_SHADOWED__ or __DPTR_SEPARATE__"
+#endif
+	RET
+
+;        CFI ENDBLOCK ?XSTACK_RESTORE_DPTR
+	ENDMOD
+
+
+#endif ; (__NUMBER_OF_DPTRS__ > 1)
+
+	END
+
+
+
+
+;
+;   Revision control system
+;       $Log: iar_stack_enter_leave_dptr.s51 $
+;       Revision 1.28  2005/01/25 09:16:49Z  ola
+;       Revision 1.27  2004/11/18 15:21:35Z  owi
+;       Revision 1.26  2004/11/10 16:31:05Z  owi
+;       Revision 1.25  2004/09/23 08:33:38Z  ola
+;       Revision 1.24  2004/09/01 08:57:25Z  ola
+;       Revision 1.23  2004/08/20 07:59:59Z  ola
+;       Revision 1.22  2004/08/02 10:27:51Z  owi
+;       Revision 1.21  2003/12/03 14:59:37Z  ola
+;       Revision 1.20  2003/11/28 09:04:50Z  ola
+;       Revision 1.19  2003/11/25 18:28:57Z  ola
+;       Revision 1.18  2003/11/25 16:27:42Z  ola
+;       Revision 1.17  2003/11/20 11:38:22Z  ola
+;       Revision 1.16  2003/11/18 14:55:37Z  ola
+;       Revision 1.15  2003/11/11 09:42:44Z  owi
+;       Revision 1.14  2003/09/24 09:14:02Z  ola
+;       Revision 1.12  2003/09/22 17:05:44Z  owi
+;       Revision 1.11  2003/09/17 12:33:14Z  ola
+;       Revision 1.10  2003/08/29 15:30:10Z  owi
+;       Revision 1.9  2003/07/03 14:25:09Z  owi
+;       Revision 1.8  2003/06/26 11:23:56Z  owi
+;       Revision 1.7  2003/06/03 16:28:25Z  owi
+;       Revision 1.6  2003/05/26 14:10:05Z  owi
+;       Revision 1.5  2003/05/26 08:51:43Z  owi
+;       Revision 1.4  2003/05/25 19:01:49Z  owi
+;       Revision 1.3  2003/05/21 08:59:13Z  owi
+;       Revision 1.2  2003/05/21 07:57:52Z  owi
+;       Revision 1.1  2003/05/20 18:23:59Z  owi
+;       Initial revision
+;
+	
